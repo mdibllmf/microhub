@@ -1300,7 +1300,6 @@ function filterByInstitution(institutionSlug) {
         
         let enrichmentHtml = '';
         const items = [];
-        if (paper.protocols?.length) items.push(`<span class="mh-enrichment-item protocols">📋 ${paper.protocols.length}</span>`);
         if (paper.github_url) items.push(`<span class="mh-enrichment-item github">💻 Code</span>`);
         if (paper.repositories?.length) items.push(`<span class="mh-enrichment-item">💾 Data</span>`);
         if (paper.has_figures || paper.figure_count > 0) items.push(`<span class="mh-enrichment-item figures">📊 ${paper.figure_count || 'Figs'}</span>`);

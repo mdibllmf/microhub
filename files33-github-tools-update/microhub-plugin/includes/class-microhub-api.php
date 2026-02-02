@@ -310,10 +310,15 @@ class MicroHub_API {
 
         $formatted = array();
         foreach ($terms as $term) {
+            $url = get_term_link($term);
+            // Handle WP_Error from get_term_link
+            if (is_wp_error($url)) {
+                $url = home_url('/?s=' . urlencode($term->name));
+            }
             $formatted[] = array(
                 'name' => $term->name,
                 'slug' => $term->slug,
-                'url' => get_term_link($term),
+                'url' => $url,
                 'count' => $term->count,
             );
         }
