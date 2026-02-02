@@ -22,6 +22,9 @@ if (!function_exists('mh_plugin_active') || !mh_plugin_active()) {
 $api_base = rest_url('microhub/v1');
 ?>
 
+<div class="microhub-wrapper">
+    <?php echo mh_render_nav(); ?>
+
 <!-- Compact Hero -->
 <section class="mh-hero-compact">
     <div class="mh-container">
@@ -90,19 +93,19 @@ $api_base = rest_url('microhub/v1');
     <div class="mh-container">
         <div class="mh-gh-stats-row">
             <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-total">—</span>
+                <span class="mh-gh-stat-value" id="gh-stat-total">&mdash;</span>
                 <span class="mh-gh-stat-label">Total Tools</span>
             </div>
             <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-shown">—</span>
+                <span class="mh-gh-stat-value" id="gh-stat-shown">&mdash;</span>
                 <span class="mh-gh-stat-label">Showing</span>
             </div>
             <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-active">—</span>
+                <span class="mh-gh-stat-value" id="gh-stat-active">&mdash;</span>
                 <span class="mh-gh-stat-label">Active</span>
             </div>
             <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-total-stars">—</span>
+                <span class="mh-gh-stat-value" id="gh-stat-total-stars">&mdash;</span>
                 <span class="mh-gh-stat-label">Total Stars</span>
             </div>
         </div>
@@ -122,6 +125,8 @@ $api_base = rest_url('microhub/v1');
         </div>
     </div>
 </section>
+
+</div><!-- .microhub-wrapper -->
 
 <!-- Page Styles -->
 <style>
@@ -275,9 +280,7 @@ $api_base = rest_url('microhub/v1');
     gap: 4px;
     white-space: nowrap;
 }
-.mh-gh-metric .icon {
-    font-size: 0.9rem;
-}
+.mh-gh-metric .icon { font-size: 0.9rem; }
 .mh-gh-metric-highlight {
     color: var(--text-light);
     font-weight: 600;
@@ -297,22 +300,10 @@ $api_base = rest_url('microhub/v1');
     border-radius: 8px;
     white-space: nowrap;
 }
-.mh-gh-rel-badge.introduces {
-    background: rgba(163, 113, 247, 0.15);
-    color: var(--accent);
-}
-.mh-gh-rel-badge.uses {
-    background: rgba(88, 166, 255, 0.1);
-    color: var(--primary);
-}
-.mh-gh-rel-badge.extends {
-    background: rgba(35, 134, 54, 0.15);
-    color: var(--secondary);
-}
-.mh-gh-rel-badge.benchmarks {
-    background: rgba(210, 153, 34, 0.1);
-    color: var(--warning);
-}
+.mh-gh-rel-badge.introduces { background: rgba(163, 113, 247, 0.15); color: var(--accent); }
+.mh-gh-rel-badge.uses { background: rgba(88, 166, 255, 0.1); color: var(--primary); }
+.mh-gh-rel-badge.extends { background: rgba(35, 134, 54, 0.15); color: var(--secondary); }
+.mh-gh-rel-badge.benchmarks { background: rgba(210, 153, 34, 0.1); color: var(--warning); }
 
 /* Paper Links */
 .mh-gh-papers {
@@ -341,9 +332,7 @@ $api_base = rest_url('microhub/v1');
     overflow: hidden;
     text-decoration: none;
 }
-.mh-gh-paper-link:hover {
-    color: var(--primary);
-}
+.mh-gh-paper-link:hover { color: var(--primary); }
 
 /* Topics */
 .mh-gh-topics {
@@ -376,9 +365,7 @@ $api_base = rest_url('microhub/v1');
     animation: mh-spin 0.8s linear infinite;
     margin: 0 auto 16px;
 }
-@keyframes mh-spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes mh-spin { to { transform: rotate(360deg); } }
 
 /* Empty */
 .mh-empty-state {
@@ -390,155 +377,130 @@ $api_base = rest_url('microhub/v1');
 
 /* Responsive */
 @media (max-width: 768px) {
-    .mh-gh-tools-grid {
-        grid-template-columns: 1fr;
-    }
-    .mh-gh-stats-row {
-        gap: 16px;
-    }
-    .mh-gh-stat-value {
-        font-size: 1.1rem;
-    }
+    .mh-gh-tools-grid { grid-template-columns: 1fr; }
+    .mh-gh-stats-row { gap: 16px; }
+    .mh-gh-stat-value { font-size: 1.1rem; }
 }
 </style>
 
 <!-- Page Script -->
 <script>
 (function() {
-    const API_BASE = <?php echo json_encode(esc_url_raw($api_base)); ?>;
-    let allTools = [];
-    let filteredTools = [];
+    var API_BASE = <?php echo json_encode(esc_url_raw($api_base)); ?>;
+    var allTools = [];
+    var filteredTools = [];
 
-    // DOM elements
-    const grid = document.getElementById('mh-gh-tools-grid');
-    const loading = document.getElementById('mh-gh-loading');
-    const empty = document.getElementById('mh-gh-empty');
-    const searchInput = document.getElementById('mh-gh-search');
-    const searchBtn = document.getElementById('mh-gh-search-btn');
-    const sortSelect = document.getElementById('gh-sort');
-    const minPapersSelect = document.getElementById('gh-min-papers');
-    const languageSelect = document.getElementById('gh-language');
-    const healthFilter = document.getElementById('gh-health-filter');
-    const showArchived = document.getElementById('gh-show-archived');
+    var grid = document.getElementById('mh-gh-tools-grid');
+    var loading = document.getElementById('mh-gh-loading');
+    var empty = document.getElementById('mh-gh-empty');
+    var searchInput = document.getElementById('mh-gh-search');
+    var searchBtn = document.getElementById('mh-gh-search-btn');
+    var sortSelect = document.getElementById('gh-sort');
+    var minPapersSelect = document.getElementById('gh-min-papers');
+    var languageSelect = document.getElementById('gh-language');
+    var healthFilter = document.getElementById('gh-health-filter');
+    var showArchived = document.getElementById('gh-show-archived');
 
-    // Stats elements
-    const statTotal = document.getElementById('gh-stat-total');
-    const statShown = document.getElementById('gh-stat-shown');
-    const statActive = document.getElementById('gh-stat-active');
-    const statTotalStars = document.getElementById('gh-stat-total-stars');
+    var statTotal = document.getElementById('gh-stat-total');
+    var statShown = document.getElementById('gh-stat-shown');
+    var statActive = document.getElementById('gh-stat-active');
+    var statTotalStars = document.getElementById('gh-stat-total-stars');
 
-    // Fetch tools from API
-    async function fetchTools() {
-        const sort = sortSelect.value;
-        const minPapers = minPapersSelect.value;
-        const archived = showArchived.checked ? '1' : '';
+    function fetchTools() {
+        var sort = sortSelect.value;
+        var minPapers = minPapersSelect.value;
+        var archived = showArchived.checked ? '1' : '';
 
-        const params = new URLSearchParams({
-            sort: sort,
-            limit: '100',
-            min_papers: minPapers,
-        });
-        if (archived) params.set('show_archived', '1');
+        var url = API_BASE + '/github-tools?sort=' + sort + '&limit=100&min_papers=' + minPapers;
+        if (archived) url += '&show_archived=1';
 
-        try {
-            const resp = await fetch(API_BASE + '/github-tools?' + params.toString());
-            const data = await resp.json();
-            allTools = data.tools || [];
-            statTotal.textContent = data.total || allTools.length;
-            
-            populateLanguageFilter();
-            applyFilters();
-        } catch (err) {
-            console.error('Failed to load GitHub tools:', err);
-            loading.style.display = 'none';
-            empty.style.display = 'block';
-            empty.querySelector('p').textContent = 'Failed to load GitHub tools. Please try again.';
-        }
+        loading.style.display = 'block';
+        grid.style.display = 'none';
+        empty.style.display = 'none';
+
+        fetch(url)
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                allTools = data.tools || [];
+                statTotal.textContent = data.total || allTools.length;
+                populateLanguageFilter();
+                applyFilters();
+            })
+            .catch(function(err) {
+                console.error('Failed to load GitHub tools:', err);
+                loading.style.display = 'none';
+                empty.style.display = 'block';
+                empty.querySelector('p').textContent = 'Failed to load GitHub tools. Please try again.';
+            });
     }
 
-    // Populate language filter dynamically
     function populateLanguageFilter() {
-        const languages = {};
-        allTools.forEach(t => {
+        var languages = {};
+        allTools.forEach(function(t) {
             if (t.language) languages[t.language] = (languages[t.language] || 0) + 1;
         });
-        
-        const sorted = Object.entries(languages).sort((a, b) => b[1] - a[1]);
-        const current = languageSelect.value;
-        
-        // Keep first option
+
+        var sorted = Object.entries(languages).sort(function(a, b) { return b[1] - a[1]; });
+        var current = languageSelect.value;
+
         languageSelect.innerHTML = '<option value="">All Languages</option>';
-        sorted.forEach(([lang, count]) => {
-            const opt = document.createElement('option');
-            opt.value = lang;
-            opt.textContent = lang + ' (' + count + ')';
-            if (lang === current) opt.selected = true;
+        sorted.forEach(function(item) {
+            var opt = document.createElement('option');
+            opt.value = item[0];
+            opt.textContent = item[0] + ' (' + item[1] + ')';
+            if (item[0] === current) opt.selected = true;
             languageSelect.appendChild(opt);
         });
     }
 
-    // Apply client-side filters
     function applyFilters() {
-        const query = searchInput.value.toLowerCase().trim();
-        const lang = languageSelect.value;
-        const health = healthFilter.value;
+        var query = searchInput.value.toLowerCase().trim();
+        var lang = languageSelect.value;
+        var health = healthFilter.value;
 
-        filteredTools = allTools.filter(t => {
-            // Search filter
+        filteredTools = allTools.filter(function(t) {
             if (query) {
-                const searchable = [
-                    t.full_name, t.description, t.language,
-                    ...(t.topics || []),
-                    ...(t.paper_titles || [])
-                ].join(' ').toLowerCase();
-                if (!searchable.includes(query)) return false;
+                var searchable = [
+                    t.full_name || '', t.description || '', t.language || ''
+                ].concat(t.topics || []).concat(t.paper_titles || []).join(' ').toLowerCase();
+                if (searchable.indexOf(query) === -1) return false;
             }
-
-            // Language filter
             if (lang && t.language !== lang) return false;
-
-            // Health filter
             if (health) {
-                const score = t.health_score || 0;
-                const archived = t.is_archived;
-                if (health === 'active' && (score < 70 || archived)) return false;
-                if (health === 'moderate' && (score < 40 || score >= 70 || archived)) return false;
-                if (health === 'low' && (score >= 40 || archived)) return false;
+                var score = t.health_score || 0;
+                var arch = t.is_archived;
+                if (health === 'active' && (score < 70 || arch)) return false;
+                if (health === 'moderate' && (score < 40 || score >= 70 || arch)) return false;
+                if (health === 'low' && (score >= 40 || arch)) return false;
             }
-
             return true;
         });
 
-        // Update stats
         statShown.textContent = filteredTools.length;
-        const activeCount = filteredTools.filter(t => (t.health_score || 0) >= 70 && !t.is_archived).length;
+        var activeCount = filteredTools.filter(function(t) { return (t.health_score || 0) >= 70 && !t.is_archived; }).length;
         statActive.textContent = activeCount;
-        const totalStars = filteredTools.reduce((sum, t) => sum + (t.stars || 0), 0);
+        var totalStars = filteredTools.reduce(function(sum, t) { return sum + (t.stars || 0); }, 0);
         statTotalStars.textContent = totalStars.toLocaleString();
 
         renderTools();
     }
 
-    // Render tools grid
     function renderTools() {
         loading.style.display = 'none';
-
         if (filteredTools.length === 0) {
             grid.style.display = 'none';
             empty.style.display = 'block';
             return;
         }
-
         empty.style.display = 'none';
         grid.style.display = 'grid';
         grid.innerHTML = filteredTools.map(renderToolCard).join('');
     }
 
-    // Render a single tool card
     function renderToolCard(tool) {
-        const health = tool.health_score || 0;
-        const archived = tool.is_archived;
-        let healthClass, healthLabel;
+        var health = tool.health_score || 0;
+        var archived = tool.is_archived;
+        var healthClass, healthLabel;
 
         if (archived) { healthClass = 'archived'; healthLabel = 'Archived'; }
         else if (health >= 70) { healthClass = 'active'; healthLabel = 'Active'; }
@@ -546,53 +508,50 @@ $api_base = rest_url('microhub/v1');
         else if (health > 0) { healthClass = 'low'; healthLabel = 'Low Activity'; }
         else { healthClass = 'unknown'; healthLabel = 'Unknown'; }
 
-        const stars = tool.stars || 0;
-        const forks = tool.forks || 0;
-        const paperCount = tool.paper_count || 0;
-        const desc = tool.description ? escapeHtml(truncate(tool.description, 120)) : '';
-        const language = tool.language || '';
-        const topics = (tool.topics || []).slice(0, 5);
-        const license = tool.license || '';
-        const lastCommit = tool.last_commit_date ? formatDate(tool.last_commit_date) : '';
+        var stars = tool.stars || 0;
+        var forks = tool.forks || 0;
+        var paperCount = tool.paper_count || 0;
+        var desc = tool.description ? escapeHtml(truncate(tool.description, 120)) : '';
+        var language = tool.language || '';
+        var topics = (tool.topics || []).slice(0, 5);
+        var license = tool.license || '';
+        var lastCommit = tool.last_commit_date ? formatDate(tool.last_commit_date) : '';
 
         // Relationship badges
-        let relBadges = '';
-        if (tool.papers_introducing > 0)
-            relBadges += '<span class="mh-gh-rel-badge introduces">Introduced in ' + tool.papers_introducing + ' paper' + (tool.papers_introducing > 1 ? 's' : '') + '</span>';
-        if (tool.papers_using > 0)
-            relBadges += '<span class="mh-gh-rel-badge uses">Used in ' + tool.papers_using + ' paper' + (tool.papers_using > 1 ? 's' : '') + '</span>';
-        if (tool.papers_extending > 0)
-            relBadges += '<span class="mh-gh-rel-badge extends">Extended in ' + tool.papers_extending + ' paper' + (tool.papers_extending > 1 ? 's' : '') + '</span>';
-        if (tool.papers_benchmarking > 0)
-            relBadges += '<span class="mh-gh-rel-badge benchmarks">Benchmarked in ' + tool.papers_benchmarking + ' paper' + (tool.papers_benchmarking > 1 ? 's' : '') + '</span>';
+        var relBadges = '';
+        if (tool.papers_introducing > 0) relBadges += '<span class="mh-gh-rel-badge introduces">Introduced in ' + tool.papers_introducing + ' paper' + (tool.papers_introducing > 1 ? 's' : '') + '</span>';
+        if (tool.papers_using > 0) relBadges += '<span class="mh-gh-rel-badge uses">Used in ' + tool.papers_using + ' paper' + (tool.papers_using > 1 ? 's' : '') + '</span>';
+        if (tool.papers_extending > 0) relBadges += '<span class="mh-gh-rel-badge extends">Extended in ' + tool.papers_extending + ' paper' + (tool.papers_extending > 1 ? 's' : '') + '</span>';
+        if (tool.papers_benchmarking > 0) relBadges += '<span class="mh-gh-rel-badge benchmarks">Benchmarked in ' + tool.papers_benchmarking + ' paper' + (tool.papers_benchmarking > 1 ? 's' : '') + '</span>';
 
         // Paper links
-        let paperLinks = '';
-        if (tool.paper_titles && tool.paper_ids) {
-            const links = tool.paper_titles.slice(0, 3).map((title, i) => {
-                const pid = tool.paper_ids[i];
-                const url = '/?p=' + pid;
-                return '<a href="' + url + '" class="mh-gh-paper-link" title="' + escapeAttr(title) + '">' + escapeHtml(truncate(title, 80)) + '</a>';
-            }).join('');
-
-            const extra = paperCount > 3 ? '<span class="mh-gh-paper-link" style="color: var(--text-muted); font-style: italic;">+' + (paperCount - 3) + ' more</span>' : '';
+        var paperLinks = '';
+        if (tool.paper_titles && tool.paper_ids && paperCount > 0) {
+            var links = '';
+            for (var i = 0; i < Math.min(3, tool.paper_titles.length); i++) {
+                var title = tool.paper_titles[i];
+                var pid = tool.paper_ids[i];
+                links += '<a href="/?p=' + pid + '" class="mh-gh-paper-link" title="' + escapeAttr(title) + '">' + escapeHtml(truncate(title, 80)) + '</a>';
+            }
+            var extra = paperCount > 3 ? '<span class="mh-gh-paper-link" style="color: var(--text-muted); font-style: italic;">+' + (paperCount - 3) + ' more</span>' : '';
             paperLinks = '<div class="mh-gh-papers"><div class="mh-gh-papers-label">Referenced in ' + paperCount + ' paper' + (paperCount > 1 ? 's' : '') + '</div><div class="mh-gh-paper-list">' + links + extra + '</div></div>';
         }
 
         // Topics
-        let topicsHtml = '';
+        var topicsHtml = '';
         if (topics.length > 0) {
-            topicsHtml = '<div class="mh-gh-topics">' + topics.map(t => '<span class="mh-gh-topic">' + escapeHtml(t) + '</span>').join('') + '</div>';
+            topicsHtml = '<div class="mh-gh-topics">';
+            topics.forEach(function(t) { topicsHtml += '<span class="mh-gh-topic">' + escapeHtml(t) + '</span>'; });
+            topicsHtml += '</div>';
         }
 
         // Metrics
-        let metrics = '';
-        metrics += '<span class="mh-gh-metric"><span class="icon">⭐</span> <span class="mh-gh-metric-highlight">' + stars.toLocaleString() + '</span></span>';
-        if (forks) metrics += '<span class="mh-gh-metric"><span class="icon">🍴</span> ' + forks.toLocaleString() + '</span>';
-        if (language) metrics += '<span class="mh-gh-metric"><span class="icon">📝</span> ' + escapeHtml(language) + '</span>';
-        if (license) metrics += '<span class="mh-gh-metric"><span class="icon">📄</span> ' + escapeHtml(license) + '</span>';
-        if (lastCommit) metrics += '<span class="mh-gh-metric"><span class="icon">🕐</span> ' + lastCommit + '</span>';
-        metrics += '<span class="mh-gh-metric mh-gh-metric-highlight"><span class="icon">📊</span> ' + paperCount + ' paper' + (paperCount > 1 ? 's' : '') + '</span>';
+        var metrics = '<span class="mh-gh-metric"><span class="icon">&#11088;</span> <span class="mh-gh-metric-highlight">' + stars.toLocaleString() + '</span></span>';
+        if (forks) metrics += '<span class="mh-gh-metric"><span class="icon">&#127860;</span> ' + forks.toLocaleString() + '</span>';
+        if (language) metrics += '<span class="mh-gh-metric"><span class="icon">&#128221;</span> ' + escapeHtml(language) + '</span>';
+        if (license) metrics += '<span class="mh-gh-metric"><span class="icon">&#128196;</span> ' + escapeHtml(license) + '</span>';
+        if (lastCommit) metrics += '<span class="mh-gh-metric"><span class="icon">&#128336;</span> ' + lastCommit + '</span>';
+        metrics += '<span class="mh-gh-metric mh-gh-metric-highlight"><span class="icon">&#128202;</span> ' + paperCount + ' paper' + (paperCount > 1 ? 's' : '') + '</span>';
 
         return '<div class="mh-gh-tool-card health-' + healthClass + '">' +
             '<div class="mh-gh-card-header">' +
@@ -607,35 +566,33 @@ $api_base = rest_url('microhub/v1');
         '</div>';
     }
 
-    // Utilities
     function escapeHtml(str) {
-        const d = document.createElement('div');
+        var d = document.createElement('div');
         d.textContent = str;
         return d.innerHTML;
     }
 
     function escapeAttr(str) {
-        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function truncate(str, len) {
         if (!str) return '';
-        return str.length > len ? str.substring(0, len) + '…' : str;
+        return str.length > len ? str.substring(0, len) + '...' : str;
     }
 
     function formatDate(dateStr) {
         if (!dateStr) return '';
-        const d = new Date(dateStr);
+        var d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        const now = new Date();
-        const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+        var now = new Date();
+        var diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
         if (diff < 1) return 'today';
         if (diff < 30) return diff + 'd ago';
         if (diff < 365) return Math.floor(diff / 30) + 'mo ago';
         return Math.floor(diff / 365) + 'y ago';
     }
 
-    // Event Listeners
     searchBtn.addEventListener('click', applyFilters);
     searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') applyFilters(); });
     sortSelect.addEventListener('change', fetchTools);
@@ -644,7 +601,6 @@ $api_base = rest_url('microhub/v1');
     healthFilter.addEventListener('change', applyFilters);
     showArchived.addEventListener('change', fetchTools);
 
-    // Initial load
     fetchTools();
 })();
 </script>

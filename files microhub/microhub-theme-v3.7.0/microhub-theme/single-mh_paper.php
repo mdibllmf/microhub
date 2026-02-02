@@ -1,1030 +1,551 @@
 <?php
 /**
- * Single Paper Template v2.1
- * With comments, GitHub, protocols, facilities
+ * Single Paper Template
  */
 get_header();
 
-$post_id = get_the_ID();
-$doi = get_post_meta($post_id, '_mh_doi', true);
-$pubmed_id = get_post_meta($post_id, '_mh_pubmed_id', true);
-$authors = get_post_meta($post_id, '_mh_authors', true);
-$journal = get_post_meta($post_id, '_mh_journal', true);
-$year = get_post_meta($post_id, '_mh_publication_year', true);
-$citations = get_post_meta($post_id, '_mh_citation_count', true);
-$abstract = get_post_meta($post_id, '_mh_abstract', true);
-$pdf_url = get_post_meta($post_id, '_mh_pdf_url', true);
-$github_url = get_post_meta($post_id, '_mh_github_url', true);
-$facility = get_post_meta($post_id, '_mh_facility', true);
-$full_text = get_post_meta($post_id, '_mh_full_text', true);
-
-$protocols = json_decode(get_post_meta($post_id, '_mh_protocols', true), true) ?: array();
-$repos = json_decode(get_post_meta($post_id, '_mh_repositories', true), true) ?: array();
-$rrids = json_decode(get_post_meta($post_id, '_mh_rrids', true), true) ?: array();
-$rors = json_decode(get_post_meta($post_id, '_mh_rors', true), true) ?: array();
-$references = json_decode(get_post_meta($post_id, '_mh_references', true), true) ?: array();
-$github_tools = json_decode(get_post_meta($post_id, '_mh_github_tools', true), true) ?: array();
-
-$techniques = wp_get_post_terms($post_id, 'mh_technique', array('fields' => 'names'));
-$microscopes = wp_get_post_terms($post_id, 'mh_microscope', array('fields' => 'names'));
-$organisms = wp_get_post_terms($post_id, 'mh_organism', array('fields' => 'names'));
+$meta = mh_get_paper_meta();
 ?>
 
-<div class="microhub-wrapper">
-    <?php echo mh_render_nav(); ?>
-    <article class="mh-single-paper">
-        <!-- Paper Header -->
-        <header class="mh-paper-header">
-            <div class="mh-paper-header-inner">
-                <?php if ($citations >= 100) : ?>
-                    <span class="mh-badge foundational">ðŸ† Foundational Paper</span>
-                <?php elseif ($citations >= 50) : ?>
-                    <span class="mh-badge high-impact">â­ High Impact</span>
-                <?php endif; ?>
+<div class="mh-container">
+    <div class="mh-layout-sidebar">
+        <!-- Main Content -->
+        <div class="mh-paper-content">
+            <!-- Header -->
+            <header class="mh-paper-header">
+                <?php mh_paper_badge($meta['citations']); ?>
                 
                 <h1><?php the_title(); ?></h1>
                 
-                <?php if ($authors) : ?>
-                    <p class="mh-paper-authors"><?php echo esc_html($authors); ?></p>
-                <?php endif; ?>
-                
-                <div class="mh-paper-meta">
-                    <?php if ($journal) : ?>
-                        <span class="mh-meta-item">ðŸ“° <?php echo esc_html($journal); ?></span>
-                    <?php endif; ?>
-                    <?php if ($year) : ?>
-                        <span class="mh-meta-item">ðŸ“… <?php echo esc_html($year); ?></span>
-                    <?php endif; ?>
-                    <?php if ($citations) : ?>
-                        <span class="mh-meta-item">ðŸ“Š <?php echo number_format($citations); ?> citations</span>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="mh-paper-links">
-                    <?php if ($doi) : ?>
-                        <a href="https://doi.org/<?php echo esc_attr($doi); ?>" class="mh-btn doi" target="_blank">DOI</a>
-                    <?php endif; ?>
-                    <?php if ($pubmed_id) : ?>
-                        <a href="https://pubmed.ncbi.nlm.nih.gov/<?php echo esc_attr($pubmed_id); ?>/" class="mh-btn pubmed" target="_blank">PubMed</a>
-                    <?php endif; ?>
-                    <?php if ($pdf_url) : ?>
-                        <a href="<?php echo esc_url($pdf_url); ?>" class="mh-btn pdf" target="_blank">PDF</a>
-                    <?php endif; ?>
-                    <?php if ($github_url) : ?>
-                        <a href="<?php echo esc_url($github_url); ?>" class="mh-btn github" target="_blank">ðŸ’» GitHub</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </header>
-        
-        <div class="mh-paper-content">
-            <div class="mh-paper-main">
-                <!-- Abstract -->
-                <?php if ($abstract) : ?>
-                <section class="mh-paper-section">
-                    <h2>Abstract</h2>
-                    <p><?php echo esc_html($abstract); ?></p>
-                </section>
-                <?php endif; ?>
-                
-                <!-- Techniques & Methods -->
-                <?php if (!empty($techniques) || !empty($microscopes)) : ?>
-                <section class="mh-paper-section">
-                    <h2>Methods</h2>
-                    <div class="mh-tags-grid">
-                        <?php foreach ($techniques as $tech) : ?>
-                            <a href="<?php echo get_term_link($tech, 'mh_technique'); ?>" class="mh-tag technique"><?php echo esc_html($tech); ?></a>
-                        <?php endforeach; ?>
-                        <?php foreach ($microscopes as $mic) : ?>
-                            <a href="<?php echo get_term_link($mic, 'mh_microscope'); ?>" class="mh-tag microscope">ðŸ”¬ <?php echo esc_html($mic); ?></a>
-                        <?php endforeach; ?>
+                <?php if ($meta['authors']): ?>
+                    <div class="mh-paper-authors">
+                        <?php mh_display_clickable_authors($meta['authors'], 8, true); ?>
                     </div>
-                </section>
-                <?php endif; ?>
-                
-                <!-- Protocols -->
-                <?php if (!empty($protocols)) : ?>
-                <section class="mh-paper-section">
-                    <h2>ðŸ“‹ Protocols</h2>
-                    <div class="mh-protocol-list">
-                        <?php foreach ($protocols as $protocol) : ?>
-                            <a href="<?php echo esc_url($protocol['url'] ?? '#'); ?>" class="mh-protocol-item" target="_blank">
-                                <span class="icon">ðŸ“„</span>
-                                <span class="name"><?php echo esc_html($protocol['name'] ?? 'View Protocol'); ?></span>
-                                <span class="source"><?php echo esc_html($protocol['source'] ?? 'protocols.io'); ?></span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-                <?php endif; ?>
-                
-                <!-- GitHub & Software Tools -->
-                <?php if ($github_url || !empty($github_tools)) : ?>
-                <section class="mh-paper-section">
-                    <h2>ð» Code & Software Tools</h2>
-                    <?php if ($github_url) : ?>
-                    <a href="<?php echo esc_url($github_url); ?>" class="mh-github-card" target="_blank">
-                        <span class="icon">ð</span>
-                        <div class="info">
-                            <strong>GitHub Repository</strong>
-                            <span><?php echo esc_html(preg_replace('/^https?:\/\/(www\.)?github\.com\//', '', $github_url)); ?></span>
-                        </div>
-                        <span class="arrow">â</span>
-                    </a>
-                    <?php endif; ?>
-                    
-                    <?php if (!empty($github_tools)) : ?>
-                    <div class="mh-github-tools">
-                        <?php foreach ($github_tools as $tool) : 
-                            $health = intval($tool['health_score'] ?? 0);
-                            $stars = intval($tool['stars'] ?? 0);
-                            $archived = !empty($tool['is_archived']);
-                            $rel = $tool['relationship'] ?? 'uses';
-                            
-                            if ($archived) { $health_class = 'archived'; $health_label = 'Archived'; }
-                            elseif ($health >= 70) { $health_class = 'healthy'; $health_label = 'Active'; }
-                            elseif ($health >= 40) { $health_class = 'moderate'; $health_label = 'Moderate'; }
-                            elseif ($health > 0) { $health_class = 'stale'; $health_label = 'Low Activity'; }
-                            else { $health_class = 'unknown'; $health_label = 'Unknown'; }
-                            
-                            $rel_labels = array('introduces' => 'Introduced here', 'uses' => 'Used', 'extends' => 'Extended', 'benchmarks' => 'Benchmarked');
-                            $rel_label = $rel_labels[$rel] ?? 'Used';
-                        ?>
-                        <a href="<?php echo esc_url($tool['url']); ?>" class="mh-tool-card <?php echo $health_class; ?>" target="_blank">
-                            <div class="mh-tool-header">
-                                <strong><?php echo esc_html($tool['full_name']); ?></strong>
-                                <span class="mh-tool-health <?php echo $health_class; ?>"><?php echo $health_label; ?></span>
-                            </div>
-                            <?php if (!empty($tool['description'])) : ?>
-                            <p class="mh-tool-desc"><?php echo esc_html(wp_trim_words($tool['description'], 20, '...')); ?></p>
-                            <?php endif; ?>
-                            <div class="mh-tool-meta">
-                                <span class="mh-tool-rel"><?php echo $rel_label; ?></span>
-                                <?php if ($stars) : ?><span><?php echo number_format($stars); ?> stars</span><?php endif; ?>
-                                <?php if (!empty($tool['language'])) : ?><span><?php echo esc_html($tool['language']); ?></span><?php endif; ?>
-                                <?php if (intval($tool['paper_count'] ?? 0) > 1) : ?><span><?php echo intval($tool['paper_count']); ?> papers</span><?php endif; ?>
-                                <?php if (!empty($tool['last_release'])) : ?><span><?php echo esc_html($tool['last_release']); ?></span><?php endif; ?>
-                            </div>
+                    <?php 
+                    $last_author = mh_get_last_author($meta['authors']);
+                    if ($last_author): 
+                    ?>
+                    <div class="mh-last-author-note">
+                        <strong>Last Author:</strong> 
+                        <a href="<?php echo esc_url(mh_author_search_url($last_author)); ?>" class="mh-author-link mh-last-author">
+                            <?php echo esc_html($last_author); ?>
                         </a>
-                        <?php endforeach; ?>
                     </div>
                     <?php endif; ?>
-                </section>
-                <?php endif; ?>
-
-                <!-- Repositories -->
-                <?php if (!empty($repos)) : ?>
-                <section class="mh-paper-section">
-                    <h2>ðŸ’¾ Data Repositories</h2>
-                    <div class="mh-repo-list">
-                        <?php foreach ($repos as $repo) : 
-                            $url = $repo['url'] ?? '#';
-                            
-                            // Handle both formats: name/type
-                            $repo_name = '';
-                            if (!empty($repo['name']) && strtolower($repo['name']) !== 'unknown') {
-                                $repo_name = $repo['name'];
-                            } elseif (!empty($repo['type']) && strtolower($repo['type']) !== 'unknown') {
-                                $repo_name = $repo['type'];
-                            }
-                            
-                            // If still no name, detect from URL
-                            if (empty($repo_name) && $url && $url !== '#') {
-                                if (strpos($url, 'zenodo') !== false) {
-                                    $repo_name = 'Zenodo';
-                                } elseif (strpos($url, 'figshare') !== false) {
-                                    $repo_name = 'Figshare';
-                                } elseif (strpos($url, 'github') !== false) {
-                                    $repo_name = 'GitHub';
-                                } elseif (strpos($url, 'dryad') !== false) {
-                                    $repo_name = 'Dryad';
-                                } elseif (strpos($url, 'osf.io') !== false) {
-                                    $repo_name = 'OSF';
-                                } elseif (strpos($url, 'dataverse') !== false) {
-                                    $repo_name = 'Dataverse';
-                                } elseif (strpos($url, 'mendeley') !== false) {
-                                    $repo_name = 'Mendeley Data';
-                                } elseif (strpos($url, 'synapse') !== false) {
-                                    $repo_name = 'Synapse';
-                                } elseif (strpos($url, 'ebi.ac.uk') !== false || strpos($url, 'empiar') !== false) {
-                                    $repo_name = 'EMPIAR';
-                                } elseif (strpos($url, 'ncbi') !== false || strpos($url, 'geo') !== false) {
-                                    $repo_name = 'GEO/NCBI';
-                                } else {
-                                    $repo_name = 'Data Repository';
-                                }
-                            }
-                            
-                            if (empty($repo_name)) {
-                                $repo_name = 'Data Repository';
-                            }
-                            
-                            // Get ID from various fields
-                            $repo_id = '';
-                            if (!empty($repo['identifier'])) {
-                                $repo_id = $repo['identifier'];
-                            } elseif (!empty($repo['accession_id'])) {
-                                $repo_id = $repo['accession_id'];
-                            } elseif (!empty($repo['id'])) {
-                                $repo_id = $repo['id'];
-                            }
-                        ?>
-                            <a href="<?php echo esc_url($url); ?>" class="mh-repo-item" target="_blank">
-                                <span><?php echo esc_html($repo_name); ?></span>
-                                <?php if ($repo_id) : ?>
-                                    <span class="mh-repo-id"><?php echo esc_html($repo_id); ?></span>
-                                <?php endif; ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
                 <?php endif; ?>
                 
-                <!-- Full Text -->
-                <?php if ($full_text) : 
-                    // Get all taxonomy terms for highlighting
-                    $all_tags = array();
-                    $tax_terms = array('mh_technique', 'mh_microscope', 'mh_organism', 'mh_software');
-                    foreach ($tax_terms as $tax) {
-                        if (taxonomy_exists($tax)) {
-                            $terms = get_the_terms($post_id, $tax);
-                            if ($terms && !is_wp_error($terms)) {
-                                foreach ($terms as $term) {
-                                    $all_tags[] = array(
-                                        'name' => $term->name,
-                                        'url' => get_term_link($term),
-                                        'taxonomy' => $tax
-                                    );
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Sort by length (longest first)
-                    usort($all_tags, function($a, $b) {
-                        return strlen($b['name']) - strlen($a['name']);
-                    });
-                    
-                    // Process full text
-                    $processed_text = esc_html($full_text);
-                    $processed_text = nl2br($processed_text);
-                    
-                    // Highlight tags
-                    foreach ($all_tags as $tag) {
-                        if (strlen($tag['name']) < 3) continue;
-                        $class = 'mh-text-tag';
-                        switch ($tag['taxonomy']) {
-                            case 'mh_technique': $class .= ' mh-text-tag-technique'; break;
-                            case 'mh_microscope': $class .= ' mh-text-tag-microscope'; break;
-                            case 'mh_organism': $class .= ' mh-text-tag-organism'; break;
-                            case 'mh_software': $class .= ' mh-text-tag-software'; break;
-                        }
-                        $pattern = '/\b(' . preg_quote($tag['name'], '/') . ')\b/i';
-                        if (!is_wp_error($tag['url'])) {
-                            $replacement = '<a href="' . esc_url($tag['url']) . '" class="' . esc_attr($class) . '">$1</a>';
-                        } else {
-                            $replacement = '<span class="' . esc_attr($class) . '">$1</span>';
-                        }
-                        $processed_text = preg_replace($pattern, $replacement, $processed_text);
-                    }
-                    
-                    // Link references
-                    if (!empty($references)) {
-                        $processed_text = preg_replace_callback(
-                            '/\[(\d+(?:\s*,\s*\d+)*)\]/',
-                            function($matches) use ($references) {
-                                $nums = preg_split('/\s*,\s*/', $matches[1]);
-                                $linked = array();
-                                foreach ($nums as $num) {
-                                    $linked[] = '<a href="#ref-' . intval($num) . '" class="mh-ref-link">' . $num . '</a>';
-                                }
-                                return '[' . implode(', ', $linked) . ']';
-                            },
-                            $processed_text
-                        );
-                    }
+                <?php mh_display_paper_meta($meta); ?>
+                <?php mh_display_paper_tags(); ?>
+                <?php mh_display_paper_links($meta); ?>
+            </header>
+            
+            <!-- Abstract with Tag Highlighting -->
+            <?php mh_display_abstract_with_tags(); ?>
+            
+            <!-- Techniques -->
+            <?php 
+            if (taxonomy_exists('mh_technique')) {
+                $techniques = get_the_terms(get_the_ID(), 'mh_technique');
+                if ($techniques && !is_wp_error($techniques)): 
+            ?>
+            <section class="mh-paper-section">
+                <h2>🔬 Techniques</h2>
+                <div class="mh-tags">
+                    <?php foreach ($techniques as $term): 
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-technique"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
+                </div>
+            </section>
+            <?php endif; 
+            }
+            
+            <!-- Microscope Details -->
+            <?php if ($meta['microscope_details']): ?>
+            <section class="mh-paper-section">
+                <h2>🔭 Microscope Details</h2>
+                <p style="color: var(--text-light);"><?php echo nl2br(esc_html($meta['microscope_details'])); ?></p>
+            </section>
+            <?php endif; ?>
+            
+            <!-- Protocols -->
+            <?php mh_display_protocols($meta['protocols']); ?>
+            
+            <!-- GitHub -->
+            <?php mh_display_github($meta['github_url'], $meta['github_tools']); ?>
+            
+            <!-- Data Repositories -->
+            <?php mh_display_repositories($meta['repositories']); ?>
+            
+            <!-- RRIDs in Main Content -->
+            <?php if (!empty($meta['rrids'])): ?>
+            <section class="mh-paper-section">
+                <h2>🏷️ Research Resource Identifiers (RRIDs)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">Verified research resources used in this paper:</p>
+                <?php mh_display_rrids($meta['rrids']); ?>
+            </section>
+            <?php endif; ?>
+            
+            <!-- RORs in Main Content -->
+            <?php if (!empty($meta['rors'])): ?>
+            <section class="mh-paper-section">
+                <h2>🏛️ Research Organizations (ROR)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">Affiliated research institutions:</p>
+                <?php mh_display_rors($meta['rors']); ?>
+            </section>
+            <?php endif; ?>
+            
+            <!-- Fluorophores & Dyes -->
+            <?php 
+            if (!empty($meta['fluorophores'])) {
+                mh_display_fluorophores($meta['fluorophores']);
+            }
+            ?>
+            
+            <!-- Sample Preparation -->
+            <?php 
+            if (!empty($meta['sample_preparation'])) {
+                mh_display_sample_preparation($meta['sample_preparation']);
+            }
+            ?>
+            
+            <!-- Cell Lines -->
+            <?php 
+            if (!empty($meta['cell_lines'])) {
+                mh_display_cell_lines($meta['cell_lines']);
+            }
+            ?>
+            
+            <!-- Microscope Equipment -->
+            <?php mh_display_equipment($meta); ?>
+            
+            <!-- Methods Section -->
+            <?php 
+            if (!empty($meta['methods'])) {
+                mh_display_methods($meta['methods']);
+            }
+            ?>
+            
+            <!-- Figures -->
+            <?php 
+            if (!empty($meta['figures'])) {
+                mh_display_figures($meta['figures']);
+            }
+            ?>
+            
+            <!-- Full Text removed - no longer stored to save space -->
+            
+            <!-- References -->
+            <?php mh_display_references(); ?>
+            
+            <!-- Research Institutions -->
+            <?php mh_display_facility($meta['facility']); ?>
+            
+            <!-- Comments/Discussion -->
+            <section class="mh-paper-section">
+                <div class="mh-comments-header">
+                    <h2>💬 Discussion</h2>
+                    <span class="mh-comments-count"><?php echo get_comments_number(); ?></span>
+                </div>
+                
+                <?php
+                $comments = get_comments(array('post_id' => get_the_ID(), 'status' => 'approve'));
+                
+                if ($comments):
+                    foreach ($comments as $comment):
+                        $initials = strtoupper(substr($comment->comment_author, 0, 2));
                 ?>
-                <section class="mh-paper-section mh-full-text-section">
-                    <div class="mh-full-text-header">
-                        <h2>ðŸ“„ Full Text</h2>
-                        <div class="mh-full-text-controls">
-                            <button type="button" class="mh-btn mh-btn-sm" id="mh-toggle-highlights">
-                                <span class="highlight-on">Hide Highlights</span>
-                                <span class="highlight-off" style="display:none;">Show Highlights</span>
-                            </button>
-                            <button type="button" class="mh-btn mh-btn-sm" id="mh-expand-text">
-                                <span class="expand-text">Expand All</span>
-                                <span class="collapse-text" style="display:none;">Collapse</span>
-                            </button>
+                    <div class="mh-comment">
+                        <div class="mh-comment-avatar"><?php echo esc_html($initials); ?></div>
+                        <div class="mh-comment-content">
+                            <div class="mh-comment-meta">
+                                <span class="mh-comment-author"><?php echo esc_html($comment->comment_author); ?></span>
+                                <span class="mh-comment-date"><?php echo human_time_diff(strtotime($comment->comment_date), current_time('timestamp')); ?> ago</span>
+                            </div>
+                            <div class="mh-comment-text"><?php echo esc_html($comment->comment_content); ?></div>
                         </div>
                     </div>
-                    
-                    <div class="mh-tag-legend">
-                        <span class="mh-legend-item"><span class="mh-text-tag mh-text-tag-technique">Technique</span></span>
-                        <span class="mh-legend-item"><span class="mh-text-tag mh-text-tag-microscope">Microscope</span></span>
-                        <span class="mh-legend-item"><span class="mh-text-tag mh-text-tag-organism">Organism</span></span>
-                        <span class="mh-legend-item"><span class="mh-text-tag mh-text-tag-software">Software</span></span>
-                    </div>
-                    
-                    <div class="mh-full-text-content" id="mh-full-text-content">
-                        <?php echo $processed_text; ?>
-                    </div>
-                </section>
+                <?php 
+                    endforeach;
+                else:
+                ?>
+                    <p style="color: var(--text-muted);">No comments yet. Be the first to discuss this paper!</p>
                 <?php endif; ?>
                 
-                <!-- References -->
-                <?php if (!empty($references)) : ?>
-                <section class="mh-paper-section mh-references-section">
-                    <h2>ðŸ“š References</h2>
-                    <ol class="mh-reference-list">
-                        <?php foreach ($references as $idx => $ref) : 
-                            $num = isset($ref['num']) ? $ref['num'] : ($idx + 1);
-                            $text = isset($ref['text']) ? $ref['text'] : '';
-                            $ref_doi = isset($ref['doi']) ? $ref['doi'] : '';
-                            $pmid = isset($ref['pmid']) ? $ref['pmid'] : '';
-                            $url = isset($ref['url']) ? $ref['url'] : '';
-                            
-                            $link = '';
-                            if ($ref_doi) {
-                                $link = 'https://doi.org/' . $ref_doi;
-                            } elseif ($pmid) {
-                                $link = 'https://pubmed.ncbi.nlm.nih.gov/' . $pmid;
-                            } elseif ($url) {
-                                $link = $url;
-                            }
+                <!-- Comment Form -->
+                <div class="mh-comment-form">
+                    <h4>Add a Comment</h4>
+                    <form action="<?php echo esc_url(site_url('/wp-comments-post.php')); ?>" method="post">
+                        <?php if (!is_user_logged_in()): ?>
+                        <div class="mh-form-row">
+                            <div class="mh-form-group">
+                                <label>Name <span class="required">*</span></label>
+                                <input type="text" name="author" required>
+                            </div>
+                            <div class="mh-form-group">
+                                <label>Email <span style="color: var(--text-muted);">(optional)</span></label>
+                                <input type="email" name="email">
+                            </div>
+                        </div>
+                        <?php else: 
+                            $current_user = wp_get_current_user();
                         ?>
-                            <li id="ref-<?php echo esc_attr($num); ?>" class="mh-reference-item">
-                                <span class="mh-ref-text"><?php echo esc_html($text); ?></span>
-                                <?php if ($link) : ?>
-                                    <a href="<?php echo esc_url($link); ?>" class="mh-ref-external-link" target="_blank" rel="noopener">
-                                        <?php if ($ref_doi) : ?>
-                                            <span class="mh-ref-doi">DOI</span>
-                                        <?php elseif ($pmid) : ?>
-                                            <span class="mh-ref-pmid">PubMed</span>
-                                        <?php else : ?>
-                                            <span>ðŸ”—</span>
-                                        <?php endif; ?>
-                                    </a>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                </section>
-                <?php endif; ?>
-                
-                <!-- Facility -->
-                <?php if ($facility) : ?>
-                <section class="mh-paper-section">
-                    <h2>ðŸ›ï¸ Imaging Facility</h2>
-                    <div class="mh-facility-card">
-                        <span class="icon">ðŸ›ï¸</span>
-                        <span class="name"><?php echo esc_html($facility); ?></span>
-                    </div>
-                </section>
-                <?php endif; ?>
-                
-                <!-- Comments Section -->
-                <section class="mh-paper-section mh-comments-section">
-                    <div class="mh-comments-header">
-                        <h2>ðŸ’¬ Discussion</h2>
-                        <span class="mh-comments-count"><?php echo get_comments_number(); ?> comments</span>
-                    </div>
-                    
-                    <?php if (comments_open()) : ?>
-                        <div class="mh-comments-list">
-                            <?php
-                            $comments = get_comments(array(
-                                'post_id' => $post_id,
-                                'status' => 'approve',
-                                'order' => 'ASC',
-                            ));
-                            
-                            if ($comments) :
-                                foreach ($comments as $comment) :
-                                    $initials = strtoupper(substr($comment->comment_author, 0, 2));
-                            ?>
-                                <div class="mh-comment">
-                                    <div class="mh-comment-avatar"><?php echo $initials; ?></div>
-                                    <div class="mh-comment-content">
-                                        <div class="mh-comment-meta">
-                                            <span class="mh-comment-author"><?php echo esc_html($comment->comment_author); ?></span>
-                                            <span class="mh-comment-date"><?php echo human_time_diff(strtotime($comment->comment_date), current_time('timestamp')); ?> ago</span>
-                                        </div>
-                                        <div class="mh-comment-text"><?php echo wpautop(esc_html($comment->comment_content)); ?></div>
-                                    </div>
-                                </div>
-                            <?php 
-                                endforeach;
-                            else :
-                            ?>
-                                <p class="mh-no-comments">No comments yet. Be the first to start a discussion!</p>
-                            <?php endif; ?>
+                        <p style="color: var(--text-muted); margin-bottom: 16px;">Commenting as <strong><?php echo esc_html($current_user->display_name); ?></strong></p>
+                        <?php endif; ?>
+                        
+                        <div class="mh-form-group">
+                            <label>Comment <span class="required">*</span></label>
+                            <textarea name="comment" rows="4" required placeholder="Share your thoughts on this paper..."></textarea>
                         </div>
                         
-                        <!-- Comment Form - Open to all with name required -->
-                        <div class="mh-comment-form">
-                            <h4>Leave a Comment</h4>
-                            <form method="post" action="<?php echo site_url('/wp-comments-post.php'); ?>">
-                                <?php if (!is_user_logged_in()) : ?>
-                                    <div class="mh-form-row">
-                                        <div class="mh-form-group">
-                                            <label for="author">Your Name <span class="required">*</span></label>
-                                            <input type="text" name="author" id="author" required placeholder="Enter your name">
-                                        </div>
-                                        <div class="mh-form-group">
-                                            <label for="email">Email <span class="optional">(optional)</span></label>
-                                            <input type="email" name="email" id="email" placeholder="For notifications only">
-                                        </div>
-                                    </div>
-                                <?php else : 
-                                    $current_user = wp_get_current_user();
-                                ?>
-                                    <p class="mh-logged-in-as">
-                                        Commenting as <strong><?php echo esc_html($current_user->display_name); ?></strong>
-                                    </p>
-                                <?php endif; ?>
-                                
-                                <div class="mh-form-group">
-                                    <label for="comment">Your Comment <span class="required">*</span></label>
-                                    <textarea name="comment" id="comment" rows="4" required placeholder="Share your thoughts about this paper..."></textarea>
-                                </div>
-                                
-                                <input type="hidden" name="comment_post_ID" value="<?php echo $post_id; ?>" />
-                                <?php wp_nonce_field('unfiltered-html-comment'); ?>
-                                <button type="submit" class="mh-submit-btn">Post Comment</button>
-                            </form>
-                        </div>
+                        <input type="hidden" name="comment_post_ID" value="<?php echo get_the_ID(); ?>">
+                        <?php wp_nonce_field('unfiltered-html-comment'); ?>
+                        <button type="submit" class="mh-submit-btn">Post Comment</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="mh-sidebar">
+            <!-- Paper Info -->
+            <div class="mh-sidebar-widget">
+                <h3>📊 Paper Info</h3>
+                <div class="mh-stats-list">
+                    <?php if ($meta['citations']): ?>
+                    <div class="mh-stat-row">
+                        <span class="mh-stat-label">Citations</span>
+                        <span class="mh-stat-value"><?php echo number_format($meta['citations']); ?></span>
+                    </div>
                     <?php endif; ?>
-                </section>
+                    <?php if ($meta['year']): ?>
+                    <div class="mh-stat-row">
+                        <span class="mh-stat-label">Year</span>
+                        <span class="mh-stat-value"><?php echo esc_html($meta['year']); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($meta['journal']): ?>
+                    <div class="mh-stat-row">
+                        <span class="mh-stat-label">Journal</span>
+                        <span class="mh-stat-value"><?php echo esc_html($meta['journal']); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($meta['doi']): ?>
+                    <div class="mh-stat-row">
+                        <span class="mh-stat-label">DOI</span>
+                        <span class="mh-stat-value" style="font-family: monospace; font-size: 0.8rem;"><?php echo esc_html($meta['doi']); ?></span>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
             
-            <!-- Sidebar -->
-            <aside class="mh-paper-sidebar">
-                <!-- Related Papers -->
-                <div class="mh-sidebar-widget">
-                    <h3>Related Papers</h3>
-                    <?php
-                    $related = get_posts(array(
-                        'post_type' => 'mh_paper',
-                        'posts_per_page' => 5,
-                        'post__not_in' => array($post_id),
-                        'tax_query' => array(
-                            'relation' => 'OR',
-                            array(
-                                'taxonomy' => 'mh_technique',
-                                'field' => 'slug',
-                                'terms' => wp_get_post_terms($post_id, 'mh_technique', array('fields' => 'slugs')),
-                            ),
-                        ),
-                    ));
-                    
-                    if ($related) :
-                        foreach ($related as $paper) :
-                    ?>
-                        <a href="<?php echo get_permalink($paper->ID); ?>" class="mh-related-item">
-                            <?php echo esc_html(wp_trim_words($paper->post_title, 10)); ?>
-                        </a>
-                    <?php 
-                        endforeach;
-                    else :
-                    ?>
-                        <p style="color: #8b949e; font-size: 0.85rem;">No related papers found.</p>
+            <!-- Quick Links -->
+            <div class="mh-sidebar-widget">
+                <h3>🔗 Quick Links</h3>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <?php if ($meta['github_url'] || !empty($meta['github_tools'])): ?>
+                        <?php 
+                        $gh_link = $meta['github_url'];
+                        if (!$gh_link && !empty($meta['github_tools'])) {
+                            $gh_link = $meta['github_tools'][0]['url'] ?? '';
+                        }
+                        if ($gh_link):
+                        ?>
+                        <a href="<?php echo esc_url($gh_link); ?>" class="mh-btn mh-btn-github" target="_blank" style="justify-content: center;">🐙 View Code</a>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    <?php if ($meta['pdf_url']): ?>
+                        <a href="<?php echo esc_url($meta['pdf_url']); ?>" class="mh-btn mh-btn-pdf" target="_blank" style="justify-content: center;">📄 Download PDF</a>
+                    <?php endif; ?>
+                    <?php if (!empty($meta['protocols'])): ?>
+                        <a href="#protocols" class="mh-btn mh-btn-secondary" style="justify-content: center;">📋 <?php echo count($meta['protocols']); ?> Protocol(s)</a>
                     <?php endif; ?>
                 </div>
-                
-                <!-- Organisms -->
-                <?php if (!empty($organisms)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>ðŸ§¬ Organisms</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($organisms as $org) : ?>
-                            <a href="<?php echo get_term_link($org, 'mh_organism'); ?>" class="mh-tag organism"><?php echo esc_html($org); ?></a>
-                        <?php endforeach; ?>
-                    </div>
+            </div>
+            
+            <!-- RRIDs -->
+            <?php if (!empty($meta['rrids'])): ?>
+            <div class="mh-sidebar-widget">
+                <h3>🏷️ RRIDs</h3>
+                <?php mh_display_rrids($meta['rrids']); ?>
+            </div>
+            <?php endif; ?>
+            
+            <!-- RORs -->
+            <?php if (!empty($meta['rors'])): ?>
+            <div class="mh-sidebar-widget">
+                <h3>🏛️ RORs</h3>
+                <?php mh_display_rors($meta['rors']); ?>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Microscopes -->
+            <?php 
+            if (taxonomy_exists('mh_microscope')) {
+                $microscopes = get_the_terms(get_the_ID(), 'mh_microscope');
+                if ($microscopes && !is_wp_error($microscopes)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🔬 Microscopes</h3>
+                <div class="mh-tags">
+                    <?php foreach ($microscopes as $term): 
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-microscope"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
                 </div>
-                <?php endif; ?>
-                
-                <!-- RRIDs -->
-                <?php if (!empty($rrids)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>ðŸ”¬ Resources (RRIDs)</h3>
-                    <div class="mh-rrid-list">
-                        <?php foreach ($rrids as $rrid) : ?>
-                            <div class="mh-rrid-item">
-                                <span class="type"><?php echo esc_html($rrid['type'] ?? 'Resource'); ?></span>
-                                <span class="id"><?php echo esc_html($rrid['id'] ?? ''); ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+            </div>
+            <?php endif;
+            } ?>
+            
+            <!-- Software -->
+            <?php 
+            if (taxonomy_exists('mh_software')) {
+                $software = get_the_terms(get_the_ID(), 'mh_software');
+                if ($software && !is_wp_error($software)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>💻 Software</h3>
+                <div class="mh-tags">
+                    <?php foreach ($software as $term): 
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-software"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
                 </div>
-                <?php endif; ?>
-                
-                <!-- RORs (Research Organization Registry) -->
-                <?php if (!empty($rors)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>ðŸ›ï¸ Research Organizations (ROR)</h3>
-                    <div class="mh-ror-list">
-                        <?php foreach ($rors as $ror) : 
-                            $ror_id = is_array($ror) ? ($ror['id'] ?? '') : $ror;
-                            $ror_url = is_array($ror) ? ($ror['url'] ?? 'https://ror.org/' . $ror_id) : 'https://ror.org/' . $ror;
-                            if ($ror_id) :
-                        ?>
-                            <a href="<?php echo esc_url($ror_url); ?>" class="mh-ror-item" target="_blank" rel="noopener">
-                                <span class="ror-icon">ðŸ›</span>
-                                <span class="ror-id"><?php echo esc_html($ror_id); ?></span>
-                            </a>
-                        <?php endif; endforeach; ?>
-                    </div>
+            </div>
+            <?php endif;
+            } ?>
+            
+            <!-- Organisms -->
+            <?php 
+            if (taxonomy_exists('mh_organism')) {
+                $organisms = get_the_terms(get_the_ID(), 'mh_organism');
+                if ($organisms && !is_wp_error($organisms)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🧬 Organisms</h3>
+                <div class="mh-tags">
+                    <?php foreach ($organisms as $term): 
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-organism"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
                 </div>
-                <?php endif; ?>
-            </aside>
-        </div>
-    </article>
-    
-    <!-- AI Chat Widget (Microsoft Copilot) -->
-    <?php 
-    $copilot_url = get_option('microhub_copilot_bot_url', '');
-    $copilot_name = get_option('microhub_copilot_bot_name', 'MicroHub Assistant');
-    if ($copilot_url) : 
-    ?>
-    <div class="mh-ai-chat-toggle" id="mh-ai-toggle">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-        </svg>
+            </div>
+            <?php endif;
+            } ?>
+            
+            <!-- Fluorophores (from meta) -->
+            <?php 
+            $fluorophores = json_decode(get_post_meta(get_the_ID(), '_mh_fluorophores', true), true) ?: array();
+            if (!empty($fluorophores)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🔬 Fluorophores</h3>
+                <div class="mh-tags">
+                    <?php foreach ($fluorophores as $fluor): ?>
+                        <span class="mh-tag mh-tag-fluorophore"><?php echo esc_html($fluor); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Cell Lines (from meta) -->
+            <?php 
+            $cell_lines = json_decode(get_post_meta(get_the_ID(), '_mh_cell_lines', true), true) ?: array();
+            if (!empty($cell_lines)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🧫 Cell Lines</h3>
+                <div class="mh-tags">
+                    <?php foreach ($cell_lines as $cell): ?>
+                        <span class="mh-tag mh-tag-cell_line"><?php echo esc_html($cell); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Sample Preparation (from meta) -->
+            <?php 
+            $sample_prep = json_decode(get_post_meta(get_the_ID(), '_mh_sample_preparation', true), true) ?: array();
+            if (empty($sample_prep)) {
+                $sample_prep = json_decode(get_post_meta(get_the_ID(), '_mh_sample_prep', true), true) ?: array();
+            }
+            if (!empty($sample_prep)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🧪 Sample Preparation</h3>
+                <div class="mh-tags">
+                    <?php foreach ($sample_prep as $prep): ?>
+                        <span class="mh-tag mh-tag-sample_prep"><?php echo esc_html($prep); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Microscope Brands (from meta) -->
+            <?php 
+            $brands = json_decode(get_post_meta(get_the_ID(), '_mh_microscope_brands', true), true) ?: array();
+            if (!empty($brands)): 
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🏭 Equipment Brands</h3>
+                <div class="mh-tags">
+                    <?php foreach ($brands as $brand): ?>
+                        <span class="mh-tag mh-tag-microscope_brand"><?php echo esc_html($brand); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Related Papers -->
+            <?php
+            $related_terms = array();
+            $taxonomies = array('mh_technique', 'mh_microscope', 'mh_organism');
+            foreach ($taxonomies as $tax) {
+                if (!taxonomy_exists($tax)) continue;
+                $terms = get_the_terms(get_the_ID(), $tax);
+                if ($terms && !is_wp_error($terms)) {
+                    foreach ($terms as $term) {
+                        $related_terms[] = $term->term_id;
+                    }
+                }
+            }
+            
+            if (!empty($related_terms) && mh_plugin_active()):
+                $related = new WP_Query(array(
+                    'post_type' => 'mh_paper',
+                    'posts_per_page' => 5,
+                    'post__not_in' => array(get_the_ID()),
+                    'tax_query' => array(
+                        'relation' => 'OR',
+                        array('taxonomy' => 'mh_technique', 'terms' => $related_terms),
+                        array('taxonomy' => 'mh_microscope', 'terms' => $related_terms),
+                        array('taxonomy' => 'mh_organism', 'terms' => $related_terms)
+                    )
+                ));
+                
+                if ($related->have_posts()):
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>📚 Related Papers</h3>
+                <ul style="display: flex; flex-direction: column; gap: 12px;">
+                    <?php while ($related->have_posts()): $related->the_post(); ?>
+                    <li>
+                        <a href="<?php the_permalink(); ?>" style="color: var(--text-light); font-size: 0.9rem; display: block;">
+                            <?php the_title(); ?>
+                        </a>
+                    </li>
+                    <?php endwhile; wp_reset_postdata(); ?>
+                </ul>
+            </div>
+            <?php 
+                endif;
+            endif; 
+            ?>
+        </aside>
     </div>
-    
-    <div class="mh-ai-chat-panel" id="mh-ai-panel">
-        <div class="mh-ai-chat-header">
-            <h4><?php echo esc_html($copilot_name); ?></h4>
-            <button class="mh-ai-chat-close" id="mh-ai-close">x</button>
-        </div>
-        <div class="mh-ai-chat-iframe-container">
-            <iframe 
-                id="mh-copilot-iframe"
-                src="<?php echo esc_url($copilot_url); ?>"
-                frameborder="0"
-                style="width: 100%; height: 100%; border: none;"
-                allow="microphone *"
-            ></iframe>
-        </div>
-    </div>
-    <?php endif; ?>
 </div>
 
+<!-- GitHub Tools Styles (for enriched per-paper tools from scraper v5.1+) -->
 <style>
-/* Single Paper Styles */
-.mh-single-paper {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.mh-paper-header {
-    background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-    padding: 40px 24px;
-    border-bottom: 1px solid #30363d;
-}
-
-.mh-paper-header-inner {
-    max-width: 900px;
-}
-
-.mh-paper-header h1 {
-    color: #e6edf3;
-    font-size: 1.75rem;
-    line-height: 1.3;
-    margin: 10px 0;
-}
-
-.mh-paper-authors {
-    color: #8b949e;
-    font-size: 0.95rem;
-    margin-bottom: 16px;
-}
-
-.mh-paper-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.mh-meta-item {
-    color: #8b949e;
-    font-size: 0.9rem;
-}
-
-.mh-paper-links {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.mh-btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.mh-btn.doi { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
-.mh-btn.pubmed { background: rgba(88, 166, 255, 0.15); color: #58a6ff; }
-.mh-btn.pdf { background: rgba(247, 129, 102, 0.15); color: #f78166; }
-.mh-btn.github { background: rgba(110, 118, 129, 0.15); color: #e6edf3; }
-
-.mh-paper-content {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 24px;
-    padding: 24px;
-    background: #0d1117;
-}
-
-.mh-paper-section {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.mh-paper-section h2 {
-    color: #e6edf3;
-    font-size: 1.1rem;
-    margin: 0 0 16px 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #30363d;
-}
-
-.mh-paper-section p {
-    color: #8b949e;
-    line-height: 1.6;
-}
-
-.mh-tags-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.mh-tag {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.mh-tag.technique { background: rgba(88, 166, 255, 0.15); color: #58a6ff; }
-.mh-tag.microscope { background: rgba(163, 113, 247, 0.15); color: #a371f7; }
-.mh-tag.organism { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
-
-.mh-protocol-list, .mh-repo-list {
+.mh-github-tools-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-}
-
-.mh-protocol-item, .mh-repo-item {
-    display: flex;
-    align-items: center;
     gap: 12px;
-    padding: 12px;
-    background: #21262d;
-    border-radius: 6px;
-    color: #e6edf3;
-    transition: all 0.2s;
 }
-
-.mh-protocol-item:hover, .mh-repo-item:hover {
-    background: #30363d;
-}
-
-.mh-github-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+.mh-github-tool-card {
+    display: block;
     padding: 16px;
-    background: #21262d;
+    background: var(--bg-card, #21262d);
+    border: 1px solid var(--border, #30363d);
+    border-left: 4px solid var(--border, #30363d);
     border-radius: 8px;
-    color: #e6edf3;
-    transition: all 0.2s;
-}
-
-.mh-github-card:hover {
-    background: #30363d;
-}
-
-.mh-github-card .icon {
-    font-size: 2rem;
-}
-
-.mh-github-card .info {
-    flex: 1;
-}
-
-.mh-github-card .info strong {
-    display: block;
-    margin-bottom: 4px;
-}
-
-.mh-github-card .info span {
-    color: #8b949e;
-    font-size: 0.85rem;
-}
-
-/* GitHub Tools Cards */
-.mh-github-tools {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 12px;
-}
-
-.mh-tool-card {
-    display: block;
-    padding: 14px 16px;
-    background: #21262d;
-    border-radius: 8px;
-    color: #e6edf3;
+    color: var(--text, #e6edf3);
     text-decoration: none;
     transition: all 0.2s;
-    border-left: 3px solid #30363d;
 }
-.mh-tool-card:hover { background: #30363d; }
-.mh-tool-card.healthy { border-left-color: #3fb950; }
-.mh-tool-card.moderate { border-left-color: #d29922; }
-.mh-tool-card.stale { border-left-color: #f85149; }
-.mh-tool-card.archived { border-left-color: #6e7681; opacity: 0.7; }
-.mh-tool-card.unknown { border-left-color: #8b949e; }
+.mh-github-tool-card:hover {
+    background: var(--bg-hover, #30363d);
+    border-color: var(--primary, #58a6ff);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.mh-github-tool-card.health-active { border-left-color: #3fb950; }
+.mh-github-tool-card.health-moderate { border-left-color: #d29922; }
+.mh-github-tool-card.health-low { border-left-color: #f85149; }
+.mh-github-tool-card.health-archived { border-left-color: #6e7681; opacity: 0.8; }
 
-.mh-tool-header {
+.mh-ght-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     margin-bottom: 6px;
 }
-.mh-tool-header strong { font-size: 0.95rem; }
-
-.mh-tool-health {
-    font-size: 0.7rem;
+.mh-ght-name {
+    font-size: 1rem;
+    color: var(--primary, #58a6ff);
+    word-break: break-word;
+}
+.mh-ght-health {
+    font-size: 0.68rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-.mh-tool-health.healthy { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
-.mh-tool-health.moderate { background: rgba(210, 153, 34, 0.15); color: #d29922; }
-.mh-tool-health.stale { background: rgba(248, 81, 73, 0.15); color: #f85149; }
-.mh-tool-health.archived { background: rgba(110, 118, 129, 0.15); color: #6e7681; }
-.mh-tool-health.unknown { background: rgba(139, 148, 158, 0.1); color: #8b949e; }
-
-.mh-tool-desc {
-    font-size: 0.82rem;
-    color: #8b949e;
-    margin: 0 0 8px 0;
-    line-height: 1.4;
-}
-
-.mh-tool-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 0.78rem;
-    color: #8b949e;
-}
-.mh-tool-meta span { white-space: nowrap; }
-.mh-tool-rel {
-    font-weight: 600;
-    color: #58a6ff;
-}
-
-.mh-facility-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: #21262d;
-    border-radius: 6px;
-    color: #e6edf3;
-}
-
-/* Comments */
-.mh-comments-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #30363d;
-}
-
-.mh-comments-count {
-    background: #58a6ff;
-    color: white;
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 0.8rem;
-}
-
-.mh-comment {
-    display: flex;
-    gap: 12px;
-    padding: 16px;
-    background: #0d1117;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-
-.mh-comment-avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #58a6ff, #a371f7);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 0.85rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
     flex-shrink: 0;
 }
+.mh-ght-health.active { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+.mh-ght-health.moderate { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+.mh-ght-health.low { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+.mh-ght-health.archived { background: rgba(110, 118, 129, 0.15); color: #6e7681; }
 
-.mh-comment-content {
-    flex: 1;
-}
-
-.mh-comment-meta {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 6px;
-}
-
-.mh-comment-author {
-    font-weight: 600;
-    color: #e6edf3;
-    font-size: 0.9rem;
-}
-
-.mh-comment-date {
-    font-size: 0.8rem;
-    color: #8b949e;
-}
-
-.mh-comment-text {
-    color: #8b949e;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.mh-comment-actions {
-    display: flex;
-    gap: 16px;
-    margin-top: 8px;
-}
-
-.mh-comment-action {
-    font-size: 0.8rem;
-    color: #8b949e;
-    cursor: pointer;
-}
-
-.mh-comment-action:hover {
-    color: #58a6ff;
-}
-
-.mh-comment-form textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    background: #0d1117;
-    color: #e6edf3;
-    font-size: 0.9rem;
-    resize: vertical;
-    min-height: 80px;
-    margin-bottom: 10px;
-}
-
-.mh-comment-form button {
-    padding: 8px 20px;
-    background: #58a6ff;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.mh-no-comments, .mh-login-prompt {
-    color: #8b949e;
-    font-size: 0.9rem;
-    text-align: center;
-    padding: 20px;
-}
-
-.mh-login-prompt a {
-    color: #58a6ff;
-}
-
-/* Sidebar */
-.mh-paper-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.mh-sidebar-widget {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 16px;
-}
-
-.mh-sidebar-widget h3 {
-    color: #e6edf3;
-    font-size: 0.9rem;
-    margin: 0 0 12px 0;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #30363d;
-}
-
-.mh-related-item {
-    display: block;
-    padding: 8px;
-    color: #58a6ff;
+.mh-ght-desc {
     font-size: 0.85rem;
-    border-bottom: 1px solid #21262d;
+    color: var(--text-muted, #8b949e);
+    margin: 0 0 8px;
+    line-height: 1.4;
 }
-
-.mh-related-item:hover {
-    background: #21262d;
-}
-
-.mh-tag-list {
+.mh-ght-metrics {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-}
-
-.mh-rrid-item {
-    padding: 8px;
-    background: #21262d;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    font-size: 0.85rem;
-}
-
-.mh-rrid-item .type {
-    color: #8b949e;
-    display: block;
-    font-size: 0.75rem;
-}
-
-.mh-rrid-item .id {
-    color: #e6edf3;
-}
-
-/* ROR Styles */
-.mh-ror-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.mh-ror-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-    border-radius: 8px;
-    color: #bee3f8;
-    text-decoration: none;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-    border: 1px solid #2b6cb0;
-}
-
-.mh-ror-item:hover {
-    background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
-    color: #fff;
-    transform: translateX(4px);
-}
-
-.mh-ror-item .ror-icon {
-    font-size: 1rem;
-}
-
-.mh-ror-item .ror-id {
-    font-family: 'SFMono-Regular', Consolas, monospace;
+    gap: 10px;
     font-size: 0.8rem;
+    color: var(--text-muted, #8b949e);
+    margin-bottom: 8px;
 }
+.mh-ght-rel {
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+}
+.mh-ght-rel.introduces { background: rgba(163, 113, 247, 0.15); color: #a371f7; }
+.mh-ght-rel.uses { background: rgba(88, 166, 255, 0.1); color: #58a6ff; }
+.mh-ght-rel.extends { background: rgba(35, 134, 54, 0.15); color: #3fb950; }
+.mh-ght-rel.benchmarks { background: rgba(210, 153, 34, 0.1); color: #d29922; }
 
-@media (max-width: 900px) {
-    .mh-paper-content {
-        grid-template-columns: 1fr;
-    }
+.mh-ght-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.mh-ght-topic {
+    font-size: 0.7rem;
+    background: rgba(88, 166, 255, 0.08);
+    color: var(--primary, #58a6ff);
+    padding: 1px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(88, 166, 255, 0.2);
 }
 </style>
 

@@ -86,7 +86,6 @@ function microhub_import_page() {
             <li><strong>Organisms:</strong> Mouse, Human, Zebrafish, Drosophila, C. elegans, Yeast, etc.</li>
             <li><strong>Cell Lines:</strong> HeLa, HEK293, U2OS, COS-7, CHO, iPSC, etc.</li>
             <li><strong>Sample Prep:</strong> PFA fixation, Immunostaining, Tissue clearing, CLARITY, Expansion, etc.</li>
-            <li><strong>Institutions:</strong> Research institutions from author affiliations (Stanford, MIT, Harvard, etc.)</li>
             <li><strong>Protocols:</strong> protocols.io, Bio-protocol, JoVE, Nature Protocols, STAR Protocols</li>
             <li><strong>Repositories:</strong> IDR, Zenodo, GitHub, Figshare, EMPIAR, BioImage Archive</li>
             <li><strong>RRIDs:</strong> Antibodies (AB_), Software (SCR_), Cell Lines (CVCL_), Plasmids (Addgene_)</li>
@@ -118,15 +117,6 @@ function microhub_import_page() {
     "cell_lines": ["HeLa", "U2OS"],
     "sample_preparation": ["PFA fixation", "Immunostaining"],
     
-    <span style="color:#6a9955">// Institutions (v5 cleanup script - extracted from affiliations)</span>
-    "institutions": ["Stanford University", "Harvard Medical School"],
-    
-    <span style="color:#6a9955">// Affiliations (v5 scraper - raw author affiliation strings)</span>
-    "affiliations": [
-      "Department of Neurology, Stanford University, Stanford, CA, USA",
-      "Department of Cell Biology, Harvard Medical School, Boston, MA, USA"
-    ],
-    
     <span style="color:#6a9955">// Enrichment Data</span>
     "protocols": [
       {"name": "protocols.io", "url": "https://protocols.io/view/..."}
@@ -148,7 +138,7 @@ function microhub_import_page() {
     ]
   }
 ]</code></pre>
-        <p><em><?php _e('Note: Both v3/v4/v5 scraper formats are supported. Legacy fields like "tags" and "microscope.brand" also work.', 'microhub'); ?></em></p>
+        <p><em><?php _e('Note: Both v3/v4/v5 scraper formats are supported. Legacy fields like "tags" and "microscope.brand" also work. v5.1+ includes github_tools with enriched repository metrics.', 'microhub'); ?></em></p>
     </div>
 
     <?php
@@ -183,14 +173,16 @@ function microhub_process_import() {
 
     // Track enrichment stats
     $enrichment_stats = array(
-        'protocols' => 0,          // Number of protocol URLs found
-        'protocol_papers' => 0,    // Number of papers with protocols
+        'protocols' => 0,          // Protocol URLs linked in papers
+        'protocol_papers' => 0,    // Papers FROM protocol journals (JoVE, Nature Protocols, etc.)
         'repositories' => 0,
         'rrids' => 0,
         'rors' => 0,
         'microscopes' => 0,
         'github' => 0,
-        'facilities' => 0,         // Also used for institutions
+        'github_tools' => 0,       // Number of GitHub tool entries
+        'github_tools_papers' => 0, // Number of papers with github_tools
+        'facilities' => 0,
     );
 
     // For large files (>50MB), use streaming parser
@@ -274,9 +266,9 @@ function microhub_process_import() {
         $imported, $updated, $skipped, $errors);
     echo '</p>';
     echo '<p><strong>' . __('Enrichment Data Imported:', 'microhub') . '</strong><br>';
-    echo sprintf(__('Protocol URLs: %d, Protocol Papers: %d, Repositories: %d, GitHub: %d, Institutions: %d, RRIDs: %d, RORs: %d, Microscopes: %d', 'microhub'),
+    echo sprintf(__('Protocol URLs: %d, Protocol Papers: %d, Repositories: %d, GitHub: %d, GitHub Tools: %d (across %d papers), Facilities: %d, Affiliations: %d, RRIDs: %d, RORs: %d, Microscopes: %d', 'microhub'),
         $enrichment_stats['protocols'], $enrichment_stats['protocol_papers'] ?? 0, $enrichment_stats['repositories'],
-        $enrichment_stats['github'] ?? 0, $enrichment_stats['facilities'] ?? 0,
+        $enrichment_stats['github'] ?? 0, $enrichment_stats['github_tools'] ?? 0, $enrichment_stats['github_tools_papers'] ?? 0, $enrichment_stats['facilities'] ?? 0, $enrichment_stats['affiliations'] ?? 0,
         $enrichment_stats['rrids'], $enrichment_stats['rors'] ?? 0, $enrichment_stats['microscopes']);
     echo '</p></div>';
 }
@@ -445,9 +437,9 @@ function microhub_stream_import($file_path, $skip_existing, $update_existing, &$
 function microhub_import_paper($data, $skip_existing, $update_existing, &$enrichment_stats) {
     $doi = sanitize_text_field($data['doi']);
 
-    // Check if paper already exists
+    // Check if paper already exists (check BOTH post types)
     $existing = get_posts(array(
-        'post_type' => 'mh_paper',
+        'post_type' => array('mh_paper', 'mh_protocol'),
         'meta_key' => '_mh_doi',
         'meta_value' => $doi,
         'posts_per_page' => 1,
@@ -463,9 +455,64 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         $is_update = false;
     }
 
+    // ============================================
+    // DETERMINE POST TYPE FROM JSON DATA
+    // The Python cleanup script sets post_type and protocol_type
+    // ============================================
+    $post_type = 'mh_paper'; // Default
+    $protocol_type = null;
+    
+    // Check if JSON specifies post_type (from Python cleanup script)
+    if (!empty($data['post_type']) && $data['post_type'] === 'mh_protocol') {
+        $post_type = 'mh_protocol';
+        $protocol_type = !empty($data['protocol_type']) ? sanitize_text_field($data['protocol_type']) : null;
+    }
+    // Also check is_protocol flag
+    elseif (!empty($data['is_protocol'])) {
+        $post_type = 'mh_paper'; // Keep as paper but will tag with protocol_type
+        $protocol_type = !empty($data['protocol_type']) ? sanitize_text_field($data['protocol_type']) : null;
+    }
+    
+    // Fallback: detect protocol journals by name if not already set
+    if (!$protocol_type) {
+        $journal = isset($data['journal']) ? strtolower($data['journal']) : '';
+        $protocol_journal_map = array(
+            'jove' => 'JoVE',
+            'journal of visualized experiments' => 'JoVE',
+            'j. vis. exp' => 'JoVE',
+            'nature protocols' => 'Nature Protocols',
+            'nat protoc' => 'Nature Protocols',
+            'nat. protoc' => 'Nature Protocols',
+            'bio-protocol' => 'Bio-protocol',
+            'bio protocol' => 'Bio-protocol',
+            'bioprotocol' => 'Bio-protocol',
+            'star protocols' => 'STAR Protocols',
+            'current protocols' => 'Current Protocols',
+            'curr protoc' => 'Current Protocols',
+            'cold spring harbor protocols' => 'Cold Spring Harbor Protocols',
+            'cold spring harb protoc' => 'Cold Spring Harbor Protocols',
+            'csh protocols' => 'Cold Spring Harbor Protocols',
+            'methods in molecular biology' => 'Methods in Molecular Biology',
+            'methods mol biol' => 'Methods in Molecular Biology',
+            'methods in enzymology' => 'Methods in Enzymology',
+            'meth enzymol' => 'Methods in Enzymology',
+            'methodsx' => 'MethodsX',
+            'methods x' => 'MethodsX',
+            'protocol exchange' => 'Protocol Exchange',
+            'biotechniques' => 'Biotechniques',
+        );
+        
+        foreach ($protocol_journal_map as $pattern => $type) {
+            if (stripos($journal, $pattern) !== false) {
+                $protocol_type = $type;
+                break;
+            }
+        }
+    }
+
     // Create or update post
     $post_data = array(
-        'post_type' => 'mh_paper',
+        'post_type' => $post_type,
         'post_title' => sanitize_text_field($data['title']),
         'post_status' => 'publish',
         'post_content' => '',
@@ -543,8 +590,7 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         if (!empty($protocols)) {
             update_post_meta($post_id, '_mh_protocols', wp_json_encode(array_values($protocols)));
             update_post_meta($post_id, '_mh_has_protocols', '1');
-            $enrichment_stats['protocols'] += count($protocols);  // Count protocol URLs
-            $enrichment_stats['protocol_papers']++;               // Count papers with protocols
+            $enrichment_stats['protocols'] += count($protocols);
         }
     }
     
@@ -744,92 +790,124 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         update_post_meta($post_id, '_mh_has_github', '1');
     }
 
-    // Save GitHub tools data (v5.1+ - enriched repo info with health metrics)
+    // Save GitHub tools data (detailed repo info from scraper v5.1+)
     if (!empty($data['github_tools']) && is_array($data['github_tools'])) {
         $github_tools = array_map(function($tool) {
             return array(
-                'full_name' => sanitize_text_field($tool['full_name'] ?? ''),
-                'url' => esc_url_raw($tool['url'] ?? ''),
-                'description' => sanitize_text_field(wp_trim_words($tool['description'] ?? '', 30, '...')),
-                'stars' => intval($tool['stars'] ?? 0),
-                'forks' => intval($tool['forks'] ?? 0),
-                'open_issues' => intval($tool['open_issues'] ?? 0),
+                'full_name'        => sanitize_text_field($tool['full_name'] ?? ''),
+                'url'              => esc_url_raw($tool['url'] ?? ''),
+                'description'      => sanitize_text_field($tool['description'] ?? ''),
+                'stars'            => intval($tool['stars'] ?? 0),
+                'forks'            => intval($tool['forks'] ?? 0),
+                'open_issues'      => intval($tool['open_issues'] ?? 0),
                 'last_commit_date' => sanitize_text_field($tool['last_commit_date'] ?? ''),
-                'last_release' => sanitize_text_field($tool['last_release'] ?? ''),
-                'health_score' => intval($tool['health_score'] ?? 0),
-                'is_archived' => !empty($tool['is_archived']),
-                'language' => sanitize_text_field($tool['language'] ?? ''),
-                'license' => sanitize_text_field($tool['license'] ?? ''),
-                'topics' => is_array($tool['topics'] ?? null) ? array_map('sanitize_text_field', $tool['topics']) : array(),
-                'paper_count' => intval($tool['paper_count'] ?? 0),
+                'last_release'     => sanitize_text_field($tool['last_release'] ?? ''),
+                'health_score'     => intval($tool['health_score'] ?? 0),
+                'is_archived'      => !empty($tool['is_archived']),
+                'language'         => sanitize_text_field($tool['language'] ?? ''),
+                'license'          => sanitize_text_field($tool['license'] ?? ''),
+                'topics'           => is_array($tool['topics'] ?? null) ? array_map('sanitize_text_field', $tool['topics']) : array(),
+                'paper_count'      => intval($tool['paper_count'] ?? 0),
                 'citing_paper_count' => intval($tool['citing_paper_count'] ?? 0),
-                'relationship' => sanitize_text_field($tool['relationship'] ?? 'uses'),
+                'relationship'     => sanitize_text_field($tool['relationship'] ?? 'uses'),
             );
         }, $data['github_tools']);
-        
-        // Filter out empty entries
+
+        // Filter out entries with no full_name
         $github_tools = array_filter($github_tools, function($t) {
-            return !empty($t['full_name']) && !empty($t['url']);
+            return !empty($t['full_name']);
         });
-        
+
         if (!empty($github_tools)) {
             update_post_meta($post_id, '_mh_github_tools', wp_json_encode(array_values($github_tools)));
+            update_post_meta($post_id, '_mh_has_github_tools', '1');
             $enrichment_stats['github_tools'] = ($enrichment_stats['github_tools'] ?? 0) + count($github_tools);
-        }
-    }
+            $enrichment_stats['github_tools_papers'] = ($enrichment_stats['github_tools_papers'] ?? 0) + 1;
 
-    // Save facility/institution info
-    // v5 cleanup script outputs 'institutions' array
-    // v5 scraper outputs 'affiliations' array (raw affiliation strings)
-    // Legacy formats use 'facility' or 'imaging_facility' as single string
-    
-    $institutions = array();
-    
-    // v5 cleanup script format - institutions array (preferred, already normalized)
-    if (!empty($data['institutions']) && is_array($data['institutions'])) {
-        $institutions = array_map('sanitize_text_field', $data['institutions']);
-    }
-    // v5 scraper format - affiliations array (raw affiliation strings)
-    elseif (!empty($data['affiliations']) && is_array($data['affiliations'])) {
-        // Store raw affiliations as meta for reference
-        update_post_meta($post_id, '_mh_affiliations', wp_json_encode($data['affiliations']));
-        // Extract institution names from affiliation strings (basic extraction)
-        foreach ($data['affiliations'] as $affiliation) {
-            // Try to extract institution name - usually after department, before city/country
-            $aff_clean = sanitize_text_field($affiliation);
-            if (!empty($aff_clean)) {
-                $institutions[] = $aff_clean;
+            // Auto-populate github_url from tools if it wasn't already set
+            if (empty($github_url)) {
+                // Prefer 'introduces' relationship (paper's own tool)
+                $introduced = array_filter($github_tools, function($t) { return $t['relationship'] === 'introduces'; });
+                $best_tool = !empty($introduced) ? reset($introduced) : reset($github_tools);
+                if (!empty($best_tool['url'])) {
+                    update_post_meta($post_id, '_mh_github_url', esc_url_raw($best_tool['url']));
+                    update_post_meta($post_id, '_mh_has_github', '1');
+                    $enrichment_stats['github'] = ($enrichment_stats['github'] ?? 0) + 1;
+                }
             }
         }
     }
-    // Legacy single facility format
+    // Also check has_github_tools flag from JSON data
+    if (!empty($data['has_github_tools'])) {
+        update_post_meta($post_id, '_mh_has_github_tools', '1');
+    }
+
+    // Save raw affiliations from scraper v5 (author affiliation strings from PubMed)
+    if (!empty($data['affiliations']) && is_array($data['affiliations'])) {
+        $affiliations = array_map('sanitize_text_field', $data['affiliations']);
+        update_post_meta($post_id, '_mh_affiliations', wp_json_encode($affiliations));
+        if (!isset($enrichment_stats['affiliations'])) {
+            $enrichment_stats['affiliations'] = 0;
+        }
+        $enrichment_stats['affiliations']++;
+    }
+
+    // Save facility/institution info and set as taxonomy
+    $facility = '';
+    $facilities = array();
+    $facility_url = '';
+    
+    // NEW: Check for institutions field first (v3 cleanup script)
+    if (!empty($data['institutions']) && is_array($data['institutions'])) {
+        $facilities = $data['institutions'];
+        $facility = $facilities[0] ?? '';
+    }
+    // Check for affiliations and extract institution names if no institutions field
+    elseif (!empty($data['affiliations']) && is_array($data['affiliations'])) {
+        // Use affiliations as facilities for display
+        $facilities = array_map('sanitize_text_field', $data['affiliations']);
+        $facility = $facilities[0] ?? '';
+    }
+    // Fall back to facilities field
+    elseif (!empty($data['facilities']) && is_array($data['facilities'])) {
+        $facilities = $data['facilities'];
+        $facility = $facilities[0] ?? '';
+    }
+    // Fall back to single facility field
     elseif (!empty($data['facility'])) {
-        $institutions[] = sanitize_text_field($data['facility']);
+        $facility = $data['facility'];
+        $facilities = array($facility);
     } elseif (!empty($data['imaging_facility'])) {
-        $institutions[] = sanitize_text_field($data['imaging_facility']);
+        $facility = $data['imaging_facility'];
+        $facilities = array($facility);
     } elseif (!empty($data['meta_data']['facility'])) {
-        $institutions[] = sanitize_text_field($data['meta_data']['facility']);
+        $facility = $data['meta_data']['facility'];
+        $facilities = array($facility);
     }
     
-    if (!empty($institutions)) {
-        // Remove duplicates
-        $institutions = array_unique($institutions);
-        
-        // Assign to mh_facility taxonomy (taxonomy name is still mh_facility for backward compatibility)
-        wp_set_object_terms($post_id, $institutions, 'mh_facility');
-        
-        // Also store as JSON meta for theme compatibility
-        update_post_meta($post_id, '_mh_institutions', wp_json_encode($institutions));
-        
-        // Legacy single facility field (first institution)
-        update_post_meta($post_id, '_mh_facility', $institutions[0]);
-        
-        $enrichment_stats['facilities'] = ($enrichment_stats['facilities'] ?? 0) + count($institutions);
+    // Get facility URL/website if present
+    if (!empty($data['facility_url'])) {
+        $facility_url = $data['facility_url'];
+    } elseif (!empty($data['facility_website'])) {
+        $facility_url = $data['facility_website'];
     }
     
-    // Store has_affiliations flag from scraper v5
-    if (!empty($data['has_affiliations'])) {
-        update_post_meta($post_id, '_mh_has_affiliations', '1');
+    if ($facility) {
+        update_post_meta($post_id, '_mh_facility', sanitize_text_field($facility));
+        $enrichment_stats['facilities'] = ($enrichment_stats['facilities'] ?? 0) + 1;
+    }
+    
+    // Save all institutions/facilities as JSON and set taxonomy
+    if (!empty($facilities)) {
+        update_post_meta($post_id, '_mh_institutions', wp_json_encode($facilities));
+        update_post_meta($post_id, '_mh_facilities', wp_json_encode($facilities)); // Backward compatibility
+        // Set facility taxonomy for searchability
+        wp_set_object_terms($post_id, $facilities, 'mh_facility');
+    }
+    
+    // Save facility URL
+    if ($facility_url) {
+        update_post_meta($post_id, '_mh_facility_url', esc_url_raw($facility_url));
     }
 
     // Save figure URLs (for thumbnails)
@@ -968,6 +1046,98 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         update_post_meta($post_id, '_mh_cell_lines', wp_json_encode($data['cell_lines']));
     }
 
+    // ============================================
+    // APPLY PROTOCOL TYPE TAXONOMY
+    // Uses $protocol_type determined at post creation time
+    // ============================================
+    if (!empty($protocol_type)) {
+        // Set the protocol type taxonomy on the post
+        wp_set_object_terms($post_id, $protocol_type, 'mh_protocol_type');
+        
+        // Set the is_protocol flag
+        update_post_meta($post_id, '_mh_is_protocol', '1');
+        
+        // IMPORTANT: Papers from protocol journals ARE protocols!
+        // Set has_protocols so they show up in the Protocols filter
+        update_post_meta($post_id, '_mh_has_protocols', '1');
+        
+        // Store the protocol type as meta too
+        update_post_meta($post_id, '_mh_protocol_type', $protocol_type);
+        
+        // Track for stats
+        if (!isset($enrichment_stats['protocol_papers'])) {
+            $enrichment_stats['protocol_papers'] = 0;
+        }
+        $enrichment_stats['protocol_papers']++;
+    }
+    // ============================================
+    // END PROTOCOL TYPE TAXONOMY
+    // ============================================
+
+    // ============================================
+    // KNOWLEDGE BASE ENHANCED TAGGING
+    // Use uploaded knowledge documents to suggest additional tags
+    // ============================================
+    if (function_exists('mh_get_tag_suggestions')) {
+        $title = !empty($data['title']) ? $data['title'] : '';
+        $abstract = !empty($data['abstract']) ? $data['abstract'] : '';
+        
+        if ($title || $abstract) {
+            // Get existing tags to avoid duplicates
+            $existing_techniques = wp_get_object_terms($post_id, 'mh_technique', array('fields' => 'names'));
+            $existing_software = wp_get_object_terms($post_id, 'mh_software', array('fields' => 'names'));
+            $existing_microscopes = wp_get_object_terms($post_id, 'mh_microscope', array('fields' => 'names'));
+            $existing_all = array_merge(
+                is_array($existing_techniques) ? $existing_techniques : array(),
+                is_array($existing_software) ? $existing_software : array(),
+                is_array($existing_microscopes) ? $existing_microscopes : array()
+            );
+            
+            // Get suggestions from knowledge base
+            $suggestions = mh_get_tag_suggestions($title, $abstract, $existing_all);
+            
+            // Apply suggested techniques
+            if (!empty($suggestions['techniques'])) {
+                wp_set_object_terms($post_id, $suggestions['techniques'], 'mh_technique', true);
+                if (!isset($enrichment_stats['kb_techniques'])) {
+                    $enrichment_stats['kb_techniques'] = 0;
+                }
+                $enrichment_stats['kb_techniques'] += count($suggestions['techniques']);
+            }
+            
+            // Apply suggested software
+            if (!empty($suggestions['software'])) {
+                wp_set_object_terms($post_id, $suggestions['software'], 'mh_software', true);
+                if (!isset($enrichment_stats['kb_software'])) {
+                    $enrichment_stats['kb_software'] = 0;
+                }
+                $enrichment_stats['kb_software'] += count($suggestions['software']);
+            }
+            
+            // Apply suggested microscopes
+            if (!empty($suggestions['microscopes'])) {
+                wp_set_object_terms($post_id, $suggestions['microscopes'], 'mh_microscope', true);
+                if (!isset($enrichment_stats['kb_microscopes'])) {
+                    $enrichment_stats['kb_microscopes'] = 0;
+                }
+                $enrichment_stats['kb_microscopes'] += count($suggestions['microscopes']);
+            }
+            
+            // Apply suggested fluorophores
+            if (!empty($suggestions['fluorophores'])) {
+                wp_set_object_terms($post_id, $suggestions['fluorophores'], 'mh_fluorophore', true);
+            }
+            
+            // Apply suggested organisms
+            if (!empty($suggestions['organisms'])) {
+                wp_set_object_terms($post_id, $suggestions['organisms'], 'mh_organism', true);
+            }
+        }
+    }
+    // ============================================
+    // END KNOWLEDGE BASE ENHANCED TAGGING
+    // ============================================
+
     // v4.1 scraper fields - figures (full objects with captions)
     if (!empty($data['figures']) && is_array($data['figures'])) {
         update_post_meta($post_id, '_mh_figures', wp_json_encode($data['figures']));
@@ -981,11 +1151,9 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         update_post_meta($post_id, '_mh_methods', sanitize_textarea_field($data['methods']));
     }
 
-    // v4.1 scraper fields - full text
-    if (!empty($data['full_text'])) {
-        update_post_meta($post_id, '_mh_full_text', $data['full_text']);
-        update_post_meta($post_id, '_mh_has_full_text', '1');
-    }
+    // NOTE: full_text is no longer imported to save database space
+    // Tags are still extracted from full_text by the cleanup script, but the text itself is not stored
+    // The website displays the abstract with tag highlighting instead
     
     // References (JSON array)
     if (!empty($data['references']) && is_array($data['references'])) {
