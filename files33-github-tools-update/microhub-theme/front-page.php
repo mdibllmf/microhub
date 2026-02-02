@@ -214,7 +214,6 @@ $meta_filter_options = mh_get_all_filter_options();
             <span class="mh-quick-label">Quick:</span>
             <button type="button" class="mh-quick-btn" data-filter="foundational">🏆 Foundational</button>
             <button type="button" class="mh-quick-btn" data-filter="high_impact">⭐ High Impact</button>
-            <button type="button" class="mh-quick-btn" data-filter="has_protocols">📋 Protocols <span id="count-protocols"><?php echo $stats['with_protocols']; ?></span></button>
             <button type="button" class="mh-quick-btn" data-filter="has_github">💻 GitHub <span id="count-github"><?php echo $stats['with_github']; ?></span></button>
             <button type="button" class="mh-quick-btn" data-filter="has_repositories">💾 Data <span id="count-repos"><?php echo $stats['with_repositories']; ?></span></button>
             <button type="button" class="mh-quick-btn" data-filter="has_figures">📊 Figures <span id="count-figures"><?php echo $stats['with_figures']; ?></span></button>
@@ -258,54 +257,49 @@ $meta_filter_options = mh_get_all_filter_options();
             
             <!-- Sidebar (Right) -->
             <?php
-            // Get recent protocol papers (from protocol journals)
-            $protocol_papers = mh_get_recent_protocol_papers(8);
-            // Get institutions
-            $institutions = mh_get_institutions(10);
+            // Get newest papers by date
+            $newest_papers = mh_get_newest_papers(8);
+            // Get papers with RORs
+            $ror_papers = mh_get_papers_with_rors(8);
             ?>
             <aside class="mh-sidebar">
-                <!-- Recent Protocols Widget -->
+                <!-- Newest Papers Widget -->
                 <div class="mh-sidebar-widget">
-                    <h3><span class="icon">📋</span> Recent Protocols</h3>
-                    <?php if (!empty($protocol_papers)) : ?>
-                    <ul class="mh-protocol-list">
-                        <?php foreach ($protocol_papers as $paper) : ?>
-                        <li class="mh-protocol-item">
-                            <a href="<?php echo esc_url($paper['permalink']); ?>" class="protocol-link">
+                    <h3><span class="icon">📄</span> Newest Papers</h3>
+                    <?php if (!empty($newest_papers)) : ?>
+                    <ul class="mh-newest-list">
+                        <?php foreach ($newest_papers as $paper) : ?>
+                        <li class="mh-newest-item">
+                            <a href="<?php echo esc_url($paper['permalink']); ?>" class="newest-link">
                                 <?php echo esc_html(wp_trim_words($paper['title'], 8)); ?>
                             </a>
-                            <span class="source"><?php echo esc_html($paper['source']); ?></span>
+                            <span class="source"><?php echo esc_html($paper['year']); ?></span>
                         </li>
                         <?php endforeach; ?>
                     </ul>
                     <?php else : ?>
-                    <p class="mh-empty-item">No protocol papers found</p>
+                    <p class="mh-empty-item">No papers found</p>
                     <?php endif; ?>
                 </div>
-                
-                <!-- Research Institutions Widget -->
+
+                <!-- Papers with RORs Widget -->
                 <div class="mh-sidebar-widget">
-                    <h3><span class="icon">🏛️</span> Research Institutions</h3>
-                    <?php if (!empty($institutions)) : ?>
-                    <ul class="mh-institution-list">
-                        <?php foreach ($institutions as $institution) : 
-                            $institution_slug = isset($institution['slug']) ? $institution['slug'] : sanitize_title($institution['name']);
-                        ?>
-                        <li class="mh-institution-item">
-                            <a href="#" class="institution-link" data-institution="<?php echo esc_attr($institution_slug); ?>" onclick="filterByInstitution('<?php echo esc_js($institution_slug); ?>'); return false;">
-                                <?php echo esc_html(wp_trim_words($institution['name'], 6)); ?>
+                    <h3><span class="icon">🏛️</span> Papers with RORs</h3>
+                    <?php if (!empty($ror_papers)) : ?>
+                    <ul class="mh-ror-list">
+                        <?php foreach ($ror_papers as $paper) : ?>
+                        <li class="mh-ror-item">
+                            <a href="<?php echo esc_url($paper['permalink']); ?>" class="ror-link">
+                                <?php echo esc_html(wp_trim_words($paper['title'], 8)); ?>
                             </a>
-                            <?php if (!empty($institution['website'])) : ?>
-                            <a href="<?php echo esc_url($institution['website']); ?>" class="institution-website" target="_blank" title="Visit institution website">🔗</a>
-                            <?php endif; ?>
-                            <?php if ($institution['count'] > 0) : ?>
-                            <span class="count">(<?php echo $institution['count']; ?> papers)</span>
+                            <?php if (!empty($paper['ror_count'])) : ?>
+                            <span class="count">(<?php echo $paper['ror_count']; ?> RORs)</span>
                             <?php endif; ?>
                         </li>
                         <?php endforeach; ?>
                     </ul>
                     <?php else : ?>
-                    <p class="mh-empty-item">No institutions listed</p>
+                    <p class="mh-empty-item">No papers with RORs found</p>
                     <?php endif; ?>
                 </div>
             </aside>
@@ -644,26 +638,26 @@ $meta_filter_options = mh_get_all_filter_options();
     font-size: 1rem;
 }
 
-.mh-protocol-list,
-.mh-institution-list {
+.mh-newest-list,
+.mh-ror-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.mh-protocol-item,
-.mh-institution-item {
+.mh-newest-item,
+.mh-ror-item {
     padding: 8px 0;
     border-bottom: 1px solid var(--border);
 }
 
-.mh-protocol-item:last-child,
-.mh-institution-item:last-child {
+.mh-newest-item:last-child,
+.mh-ror-item:last-child {
     border-bottom: none;
 }
 
-.mh-protocol-item .protocol-link,
-.mh-institution-item .institution-link {
+.mh-newest-item .newest-link,
+.mh-ror-item .ror-link {
     display: block;
     color: var(--text);
     text-decoration: none;
@@ -672,40 +666,13 @@ $meta_filter_options = mh_get_all_filter_options();
     transition: color 0.2s;
 }
 
-.mh-protocol-item .protocol-link:hover,
-.mh-institution-item .institution-link:hover {
+.mh-newest-item .newest-link:hover,
+.mh-ror-item .ror-link:hover {
     color: var(--primary);
 }
 
-.mh-institution-item .institution-link.active {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.mh-institution-item {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px;
-}
-
-.mh-institution-item .institution-link {
-    flex: 1;
-}
-
-.mh-institution-item .institution-website {
-    font-size: 0.75rem;
-    text-decoration: none;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-}
-
-.mh-institution-item .institution-website:hover {
-    opacity: 1;
-}
-
-.mh-protocol-item .source,
-.mh-institution-item .count {
+.mh-newest-item .source,
+.mh-ror-item .count {
     display: block;
     font-size: 0.75rem;
     color: var(--text-muted);
