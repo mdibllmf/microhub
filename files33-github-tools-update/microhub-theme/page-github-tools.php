@@ -4,6 +4,8 @@
  * WordPress automatically uses this for pages with slug "github-tools"
  * Displays the most utilized GitHub repositories across MicroHub papers
  * with health metrics, sorting, and filtering.
+ *
+ * Structure matches page-protocols.php for visual consistency
  */
 get_header();
 
@@ -33,31 +35,47 @@ $api_base = rest_url('microhub/v1');
     </div>
 </section>
 
-<!-- Search & Sort Section -->
+<!-- Search Section -->
 <section class="mh-search-section">
     <div class="mh-container">
-        <!-- Search Bar -->
+        <!-- Main Search Bar -->
         <div class="mh-search-bar">
             <div class="mh-search-input-wrapper">
                 <svg class="mh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" id="mh-gh-search" placeholder="Search by repository name, language, or description...">
+                <input type="text" id="mh-search-input" placeholder="Search by repository name, language, description, or topic...">
             </div>
-            <button type="button" id="mh-gh-search-btn" class="mh-search-button">Search</button>
+            <button type="button" id="mh-search-btn" class="mh-search-button">Search</button>
         </div>
 
-        <!-- Sort & Filter Controls -->
+        <!-- Filter Row -->
         <div class="mh-filter-row">
             <div class="mh-filter-item">
-                <select id="gh-sort">
+                <select id="filter-sort" data-filter="sort">
                     <option value="paper_count">Most Referenced</option>
                     <option value="stars">Most Stars</option>
                     <option value="health">Healthiest</option>
+                    <option value="forks">Most Forks</option>
+                    <option value="recent">Recent Activity</option>
                 </select>
             </div>
             <div class="mh-filter-item">
-                <select id="gh-min-papers">
+                <select id="filter-language" data-filter="language">
+                    <option value="">All Languages</option>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-health" data-filter="health">
+                    <option value="">All Health Status</option>
+                    <option value="active">Active (70+)</option>
+                    <option value="moderate">Moderate (40-69)</option>
+                    <option value="low">Low Activity (&lt;40)</option>
+                    <option value="archived">Archived</option>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-min-papers" data-filter="min_papers">
                     <option value="1">Min 1 Paper</option>
                     <option value="2" selected>Min 2 Papers</option>
                     <option value="3">Min 3 Papers</option>
@@ -66,441 +84,438 @@ $api_base = rest_url('microhub/v1');
                 </select>
             </div>
             <div class="mh-filter-item">
-                <select id="gh-language">
-                    <option value="">All Languages</option>
+                <select id="filter-relationship" data-filter="relationship">
+                    <option value="">All Relationships</option>
+                    <option value="introduces">Introduced</option>
+                    <option value="uses">Used</option>
+                    <option value="extends">Extended</option>
+                    <option value="benchmarks">Benchmarked</option>
                 </select>
             </div>
             <div class="mh-filter-item">
-                <select id="gh-health-filter">
-                    <option value="">All Health</option>
-                    <option value="active">Active (70+)</option>
-                    <option value="moderate">Moderate (40-69)</option>
-                    <option value="low">Low Activity (&lt;40)</option>
+                <select id="filter-license" data-filter="license">
+                    <option value="">All Licenses</option>
                 </select>
             </div>
-            <div class="mh-filter-item">
-                <label class="mh-checkbox-label">
-                    <input type="checkbox" id="gh-show-archived">
-                    Include Archived
-                </label>
-            </div>
+        </div>
+
+        <!-- Quick Filters -->
+        <div class="mh-quick-filters">
+            <span class="mh-quick-label">Quick:</span>
+            <button type="button" class="mh-quick-btn" data-filter="active">🟢 Active</button>
+            <button type="button" class="mh-quick-btn" data-filter="popular">⭐ Popular (10+ stars)</button>
+            <button type="button" class="mh-quick-btn" data-filter="foundational">🏆 Foundational (5+ papers)</button>
+            <button type="button" class="mh-quick-btn" data-filter="python">🐍 Python</button>
+            <button type="button" class="mh-quick-btn" data-filter="imaging">🔬 Imaging Tools</button>
+            <button type="button" id="mh-clear-filters" class="mh-clear-btn">✕ Clear</button>
         </div>
     </div>
 </section>
 
-<!-- Stats Row -->
-<section class="mh-gh-stats-section">
+<!-- Results Section -->
+<section class="mh-results-section">
     <div class="mh-container">
-        <div class="mh-gh-stats-row">
-            <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-total">&mdash;</span>
-                <span class="mh-gh-stat-label">Total Tools</span>
+        <div class="mh-results-header">
+            <div class="mh-results-info">
+                Showing <strong id="mh-showing">0</strong> of <strong id="mh-total">0</strong> tools
             </div>
-            <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-shown">&mdash;</span>
-                <span class="mh-gh-stat-label">Showing</span>
-            </div>
-            <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-active">&mdash;</span>
-                <span class="mh-gh-stat-label">Active</span>
-            </div>
-            <div class="mh-gh-stat">
-                <span class="mh-gh-stat-value" id="gh-stat-total-stars">&mdash;</span>
-                <span class="mh-gh-stat-label">Total Stars</span>
+            <div class="mh-results-sort">
+                <select id="mh-sort">
+                    <option value="paper_count">Most Referenced</option>
+                    <option value="stars">Most Stars</option>
+                    <option value="health">Healthiest</option>
+                </select>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- Tools Grid -->
-<section class="mh-gh-tools-section">
-    <div class="mh-container">
-        <div id="mh-gh-loading" class="mh-loading-indicator">
-            <div class="mh-spinner"></div>
-            <p>Loading GitHub tools...</p>
+        <!-- Stats Bar -->
+        <div class="mh-protocol-stats-bar">
+            <div class="mh-stat-item">
+                <span class="stat-icon">💻</span>
+                <span class="stat-num" id="stat-total-tools">0</span>
+                <span class="stat-label">Total Tools</span>
+            </div>
+            <div class="mh-stat-item">
+                <span class="stat-icon">🟢</span>
+                <span class="stat-num" id="stat-active-tools">0</span>
+                <span class="stat-label">Active</span>
+            </div>
+            <div class="mh-stat-item">
+                <span class="stat-icon">⭐</span>
+                <span class="stat-num" id="stat-total-stars">0</span>
+                <span class="stat-label">Total Stars</span>
+            </div>
+            <div class="mh-stat-item">
+                <span class="stat-icon">📝</span>
+                <span class="stat-num" id="stat-languages">0</span>
+                <span class="stat-label">Languages</span>
+            </div>
         </div>
-        <div id="mh-gh-tools-grid" class="mh-gh-tools-grid" style="display: none;"></div>
-        <div id="mh-gh-empty" class="mh-empty-state" style="display: none;">
-            <p>No GitHub tools found matching your criteria.</p>
+
+        <!-- Tools Grid -->
+        <div id="mh-tools-grid" class="mh-papers-grid">
+            <div class="mh-loading-indicator">
+                <div class="mh-spinner"></div>
+                <p>Loading GitHub tools...</p>
+            </div>
         </div>
+
+        <!-- Pagination -->
+        <div id="mh-pagination" class="mh-pagination"></div>
     </div>
 </section>
 
 </div><!-- .microhub-wrapper -->
 
-<!-- Page Styles -->
 <style>
-/* Hero - reuse compact hero from theme */
-.mh-hero-compact {
-    background: linear-gradient(135deg, var(--bg-card), var(--bg-dark));
-    padding: 28px 0 20px;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-}
-.mh-hero-compact h1 { font-size: 1.75rem; margin-bottom: 4px; }
-.mh-hero-compact p { color: var(--text-muted); margin: 0; }
+/* Core Layout - matches protocols page */
+.mh-hero-compact { padding: 40px 20px; text-align: center; background: linear-gradient(180deg, var(--bg-card, #161b22) 0%, var(--bg, #0d1117) 100%); border-bottom: 1px solid var(--border, #30363d); }
+.mh-hero-compact h1 { font-size: 2rem; margin: 0 0 8px 0; color: var(--text, #c9d1d9); }
+.mh-hero-compact p { color: var(--text-muted, #8b949e); margin: 0; font-size: 1.1rem; }
+.mh-container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
 
-/* Checkbox label */
-.mh-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-    height: 40px;
-}
-.mh-checkbox-label input[type="checkbox"] {
-    accent-color: var(--primary);
-    width: 16px;
-    height: 16px;
-}
+/* Search Section */
+.mh-search-section { padding: 24px 0; background: var(--bg-card, #161b22); border-bottom: 1px solid var(--border, #30363d); }
+.mh-search-bar { display: flex; gap: 12px; margin-bottom: 20px; }
+.mh-search-input-wrapper { flex: 1; position: relative; }
+.mh-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--text-muted, #8b949e); }
+.mh-search-input-wrapper input { width: 100%; padding: 12px 14px 12px 44px; background: var(--bg, #0d1117); border: 1px solid var(--border, #30363d); border-radius: 8px; color: var(--text, #c9d1d9); font-size: 1rem; }
+.mh-search-input-wrapper input:focus { outline: none; border-color: var(--primary, #58a6ff); }
+.mh-search-button { padding: 12px 24px; background: var(--primary, #58a6ff); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.mh-search-button:hover { background: var(--primary-hover, #79b8ff); }
 
-/* Stats Row */
-.mh-gh-stats-section {
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border);
-}
-.mh-gh-stats-row {
-    display: flex;
-    gap: 32px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-.mh-gh-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-}
-.mh-gh-stat-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text);
-}
-.mh-gh-stat-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+/* Filter Rows */
+.mh-filter-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.mh-filter-item select { padding: 8px 12px; background: var(--bg, #0d1117); border: 1px solid var(--border, #30363d); border-radius: 6px; color: var(--text, #c9d1d9); font-size: 0.85rem; min-width: 140px; cursor: pointer; }
+.mh-filter-item select:focus { outline: none; border-color: var(--primary, #58a6ff); }
 
-/* Tools Section */
-.mh-gh-tools-section {
-    padding: 24px 0 60px;
-}
-.mh-gh-tools-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 16px;
-}
+/* Quick Filters */
+.mh-quick-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mh-quick-label { color: var(--text-muted, #8b949e); font-size: 0.85rem; font-weight: 500; }
+.mh-quick-btn { padding: 6px 12px; background: var(--bg, #0d1117); border: 1px solid var(--border, #30363d); border-radius: 20px; color: var(--text-muted, #8b949e); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.mh-quick-btn:hover { border-color: var(--primary, #58a6ff); color: var(--primary, #58a6ff); }
+.mh-quick-btn.active { background: var(--primary, #58a6ff); border-color: var(--primary, #58a6ff); color: #fff; }
+.mh-clear-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border, #30363d); border-radius: 20px; color: var(--text-light, #6e7681); cursor: pointer; font-size: 0.8rem; }
+.mh-clear-btn:hover { border-color: #f85149; color: #f85149; }
 
-/* Tool Card */
-.mh-gh-tool-card {
-    display: block;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-decoration: none;
-    color: var(--text);
-    transition: all 0.2s;
-    border-left: 4px solid var(--border);
-    position: relative;
-}
-.mh-gh-tool-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-.mh-gh-tool-card.health-active { border-left-color: #3fb950; }
-.mh-gh-tool-card.health-moderate { border-left-color: #d29922; }
-.mh-gh-tool-card.health-low { border-left-color: #f85149; }
-.mh-gh-tool-card.health-archived { border-left-color: #6e7681; opacity: 0.75; }
-.mh-gh-tool-card.health-unknown { border-left-color: #8b949e; }
+/* Results Section */
+.mh-results-section { padding: 24px 0 60px; }
+.mh-results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.mh-results-info { color: var(--text-muted, #8b949e); font-size: 0.9rem; }
+.mh-results-info strong { color: var(--text, #c9d1d9); }
+.mh-results-sort select { padding: 8px 12px; background: var(--bg-card, #161b22); border: 1px solid var(--border, #30363d); border-radius: 6px; color: var(--text, #c9d1d9); font-size: 0.85rem; }
 
-/* Card Header */
-.mh-gh-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-    gap: 12px;
-}
-.mh-gh-card-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--primary);
-    word-break: break-word;
-}
-.mh-gh-card-name:hover { color: var(--accent); }
+/* Stats Bar */
+.mh-protocol-stats-bar { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding: 16px; background: var(--bg-card, #161b22); border: 1px solid var(--border, #30363d); border-radius: 8px; }
+.mh-stat-item { display: flex; align-items: center; gap: 8px; }
+.mh-stat-item .stat-icon { font-size: 1.25rem; }
+.mh-stat-item .stat-num { font-weight: 700; color: var(--primary, #58a6ff); font-size: 1.1rem; }
+.mh-stat-item .stat-label { color: var(--text-muted, #8b949e); font-size: 0.85rem; }
 
-/* Health Badge */
-.mh-gh-health-badge {
-    font-size: 0.68rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 10px;
-    border-radius: 12px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.mh-gh-health-badge.active { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
-.mh-gh-health-badge.moderate { background: rgba(210, 153, 34, 0.15); color: #d29922; }
-.mh-gh-health-badge.low { background: rgba(248, 81, 73, 0.15); color: #f85149; }
-.mh-gh-health-badge.archived { background: rgba(110, 118, 129, 0.15); color: #6e7681; }
-.mh-gh-health-badge.unknown { background: rgba(139, 148, 158, 0.1); color: #8b949e; }
-
-/* Card Description */
-.mh-gh-card-desc {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin: 0 0 12px;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-/* Metrics Row */
-.mh-gh-metrics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-}
-.mh-gh-metric {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-}
-.mh-gh-metric .icon { font-size: 0.9rem; }
-.mh-gh-metric-highlight {
-    color: var(--text-light);
-    font-weight: 600;
-}
-
-/* Relationship Badges */
-.mh-gh-relationships {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-}
-.mh-gh-rel-badge {
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 8px;
-    white-space: nowrap;
-}
-.mh-gh-rel-badge.introduces { background: rgba(163, 113, 247, 0.15); color: var(--accent); }
-.mh-gh-rel-badge.uses { background: rgba(88, 166, 255, 0.1); color: var(--primary); }
-.mh-gh-rel-badge.extends { background: rgba(35, 134, 54, 0.15); color: var(--secondary); }
-.mh-gh-rel-badge.benchmarks { background: rgba(210, 153, 34, 0.1); color: var(--warning); }
-
-/* Paper Links */
-.mh-gh-papers {
-    border-top: 1px solid var(--border);
-    padding-top: 10px;
-    margin-top: 4px;
-}
-.mh-gh-papers-label {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-.mh-gh-paper-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-.mh-gh-paper-link {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-decoration: none;
-}
-.mh-gh-paper-link:hover { color: var(--primary); }
-
-/* Topics */
-.mh-gh-topics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 10px;
-}
-.mh-gh-topic {
-    font-size: 0.7rem;
-    background: rgba(88, 166, 255, 0.08);
-    color: var(--primary);
-    padding: 1px 8px;
-    border-radius: 10px;
-    border: 1px solid rgba(88, 166, 255, 0.2);
-}
+/* Tools Grid - same as papers grid */
+.mh-papers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
 
 /* Loading */
-.mh-loading-indicator {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-}
-.mh-spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: mh-spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-}
-@keyframes mh-spin { to { transform: rotate(360deg); } }
+.mh-loading-indicator { grid-column: 1 / -1; text-align: center; padding: 60px 20px; }
+.mh-spinner { width: 40px; height: 40px; border: 3px solid var(--border, #30363d); border-top-color: var(--primary, #58a6ff); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Empty */
-.mh-empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-}
+/* No Results */
+.mh-no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--bg-card, #161b22); border-radius: 8px; }
+.mh-no-results h3 { margin: 0 0 8px 0; color: var(--text, #c9d1d9); }
+.mh-no-results p { color: var(--text-muted, #8b949e); margin: 0; }
+
+/* Tool Card - matches paper card styling */
+.mh-paper-card { background: var(--bg-card, #161b22); border: 1px solid var(--border, #30363d); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; transition: border-color 0.2s, transform 0.2s; }
+.mh-paper-card:hover { border-color: var(--primary, #58a6ff); transform: translateY(-2px); }
+.mh-paper-card.health-active { border-left: 3px solid #3fb950; }
+.mh-paper-card.health-moderate { border-left: 3px solid #d29922; }
+.mh-paper-card.health-low { border-left: 3px solid #f85149; }
+.mh-paper-card.health-archived { border-left: 3px solid #6e7681; opacity: 0.8; }
+.mh-paper-card.health-unknown { border-left: 3px solid #8b949e; }
+
+/* Card Header */
+.mh-card-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+.mh-card-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
+.mh-card-badge.active { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+.mh-card-badge.moderate { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+.mh-card-badge.low { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+.mh-card-badge.archived { background: rgba(110, 118, 129, 0.15); color: #6e7681; }
+.mh-card-badge.unknown { background: rgba(139, 148, 158, 0.1); color: #8b949e; }
+
+/* Card Title */
+.mh-card-title { font-size: 1rem; font-weight: 600; line-height: 1.4; margin: 0 0 8px 0; }
+.mh-card-title a { color: var(--primary, #58a6ff); text-decoration: none; }
+.mh-card-title a:hover { color: var(--accent, #a371f7); }
+
+/* Card Meta */
+.mh-card-meta { font-size: 0.8rem; color: var(--text-muted, #8b949e); margin-bottom: 10px; line-height: 1.4; }
+.mh-card-meta span { margin-right: 12px; }
+
+/* Card Abstract/Description */
+.mh-card-abstract { font-size: 0.85rem; color: var(--text-light, #8b949e); line-height: 1.5; margin-bottom: 12px; flex: 1; }
+
+/* Card Tags */
+.mh-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.mh-card-tag { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 500; }
+.mh-card-tag.language { background: var(--tag-technique, #1e6091); color: white; }
+.mh-card-tag.topic { background: rgba(88, 166, 255, 0.1); color: var(--primary, #58a6ff); border: 1px solid rgba(88, 166, 255, 0.2); }
+.mh-card-tag.license { background: var(--tag-software, #0891b2); color: white; }
+.mh-card-tag.relationship { padding: 2px 6px; font-size: 0.68rem; }
+.mh-card-tag.relationship.introduces { background: rgba(163, 113, 247, 0.15); color: var(--accent, #a371f7); }
+.mh-card-tag.relationship.uses { background: rgba(88, 166, 255, 0.1); color: var(--primary, #58a6ff); }
+.mh-card-tag.relationship.extends { background: rgba(35, 134, 54, 0.15); color: #3fb950; }
+.mh-card-tag.relationship.benchmarks { background: rgba(210, 153, 34, 0.1); color: #d29922; }
+
+/* Card Enrichment - metrics */
+.mh-card-enrichment { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-size: 0.8rem; }
+.mh-enrichment-item { color: var(--text-muted, #8b949e); }
+.mh-enrichment-item.stars { color: #f0c14b; }
+.mh-enrichment-item.forks { color: #8b949e; }
+.mh-enrichment-item.papers { color: #3b82f6; font-weight: 600; }
+
+/* Card Links */
+.mh-card-links { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border, #30363d); margin-top: auto; }
+.mh-card-link { font-size: 0.75rem; padding: 4px 10px; background: var(--bg-hover, #21262d); border-radius: 4px; color: var(--text-muted, #8b949e); text-decoration: none; }
+.mh-card-link:hover { background: var(--primary, #58a6ff); color: #fff; }
+.mh-card-link.github { color: #a371f7; }
+.mh-card-link.papers { color: var(--primary, #58a6ff); }
+
+/* Pagination */
+.mh-pagination { display: flex; justify-content: center; gap: 8px; margin-top: 30px; flex-wrap: wrap; }
+.mh-pagination button { padding: 8px 14px; background: var(--bg-card, #161b22); border: 1px solid var(--border, #30363d); border-radius: 6px; color: var(--text, #c9d1d9); cursor: pointer; font-size: 0.9rem; }
+.mh-pagination button:hover:not(:disabled) { background: var(--primary, #58a6ff); border-color: var(--primary, #58a6ff); color: #fff; }
+.mh-pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+.mh-pagination button.active { background: var(--primary, #58a6ff); border-color: var(--primary, #58a6ff); color: #fff; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .mh-gh-tools-grid { grid-template-columns: 1fr; }
-    .mh-gh-stats-row { gap: 16px; }
-    .mh-gh-stat-value { font-size: 1.1rem; }
+    .mh-search-bar { flex-direction: column; }
+    .mh-filter-row { flex-direction: column; }
+    .mh-filter-item select { width: 100%; }
+    .mh-papers-grid { grid-template-columns: 1fr; }
+    .mh-protocol-stats-bar { flex-direction: column; gap: 12px; }
+    .mh-results-header { flex-direction: column; align-items: flex-start; }
 }
 </style>
 
-<!-- Page Script -->
 <script>
 (function() {
-    var API_BASE = <?php echo json_encode(esc_url_raw($api_base)); ?>;
-    var allTools = [];
-    var filteredTools = [];
+    const apiBase = <?php echo json_encode(esc_url_raw($api_base)); ?>;
+    const searchInput = document.getElementById('mh-search-input');
+    const searchBtn = document.getElementById('mh-search-btn');
+    const sortSelect = document.getElementById('mh-sort');
+    const toolsGrid = document.getElementById('mh-tools-grid');
+    const paginationEl = document.getElementById('mh-pagination');
+    const showingEl = document.getElementById('mh-showing');
+    const totalEl = document.getElementById('mh-total');
+    const clearBtn = document.getElementById('mh-clear-filters');
 
-    var grid = document.getElementById('mh-gh-tools-grid');
-    var loading = document.getElementById('mh-gh-loading');
-    var empty = document.getElementById('mh-gh-empty');
-    var searchInput = document.getElementById('mh-gh-search');
-    var searchBtn = document.getElementById('mh-gh-search-btn');
-    var sortSelect = document.getElementById('gh-sort');
-    var minPapersSelect = document.getElementById('gh-min-papers');
-    var languageSelect = document.getElementById('gh-language');
-    var healthFilter = document.getElementById('gh-health-filter');
-    var showArchived = document.getElementById('gh-show-archived');
+    // Stats elements
+    const statTotalTools = document.getElementById('stat-total-tools');
+    const statActiveTools = document.getElementById('stat-active-tools');
+    const statTotalStars = document.getElementById('stat-total-stars');
+    const statLanguages = document.getElementById('stat-languages');
 
-    var statTotal = document.getElementById('gh-stat-total');
-    var statShown = document.getElementById('gh-stat-shown');
-    var statActive = document.getElementById('gh-stat-active');
-    var statTotalStars = document.getElementById('gh-stat-total-stars');
+    let currentPage = 1;
+    let perPage = 24;
+    let allTools = [];
+    let filteredTools = [];
+    let activeFilters = {};
 
+    // Initialize
+    fetchTools();
+
+    // Event listeners
+    searchBtn.addEventListener('click', () => { currentPage = 1; applyFilters(); });
+    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { currentPage = 1; applyFilters(); } });
+    sortSelect.addEventListener('change', () => { currentPage = 1; sortTools(); renderTools(); });
+
+    // Filter dropdowns
+    document.querySelectorAll('[data-filter]').forEach(select => {
+        select.addEventListener('change', () => {
+            const filter = select.dataset.filter;
+            activeFilters[filter] = select.value;
+            currentPage = 1;
+            applyFilters();
+        });
+    });
+
+    // Quick filter buttons
+    document.querySelectorAll('.mh-quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.dataset.filter;
+            btn.classList.toggle('active');
+            activeFilters[filter] = btn.classList.contains('active');
+            currentPage = 1;
+            applyFilters();
+        });
+    });
+
+    // Clear filters
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        document.querySelectorAll('[data-filter]').forEach(s => { if (s.tagName === 'SELECT') s.value = ''; });
+        document.querySelectorAll('.mh-quick-btn').forEach(b => b.classList.remove('active'));
+        activeFilters = {};
+        currentPage = 1;
+        applyFilters();
+    });
+
+    // Fetch tools from API
     function fetchTools() {
-        var sort = sortSelect.value;
-        var minPapers = minPapersSelect.value;
-        var archived = showArchived.checked ? '1' : '';
+        toolsGrid.innerHTML = '<div class="mh-loading-indicator"><div class="mh-spinner"></div><p>Loading GitHub tools...</p></div>';
 
-        var url = API_BASE + '/github-tools?sort=' + sort + '&limit=100&min_papers=' + minPapers;
-        if (archived) url += '&show_archived=1';
+        const minPapers = document.getElementById('filter-min-papers')?.value || 2;
 
-        loading.style.display = 'block';
-        grid.style.display = 'none';
-        empty.style.display = 'none';
-
-        fetch(url)
-            .then(function(resp) { return resp.json(); })
-            .then(function(data) {
+        fetch(apiBase + '/github-tools?limit=500&min_papers=' + minPapers + '&show_archived=1')
+            .then(res => res.json())
+            .then(data => {
                 allTools = data.tools || [];
-                statTotal.textContent = data.total || allTools.length;
-                populateLanguageFilter();
+                updateStats();
+                populateFilterOptions();
                 applyFilters();
             })
-            .catch(function(err) {
-                console.error('Failed to load GitHub tools:', err);
-                loading.style.display = 'none';
-                empty.style.display = 'block';
-                empty.querySelector('p').textContent = 'Failed to load GitHub tools. Please try again.';
+            .catch(err => {
+                console.error('Failed to load tools:', err);
+                toolsGrid.innerHTML = '<div class="mh-no-results"><h3>Error loading tools</h3><p>Please try again.</p></div>';
             });
     }
 
-    function populateLanguageFilter() {
-        var languages = {};
-        allTools.forEach(function(t) {
-            if (t.language) languages[t.language] = (languages[t.language] || 0) + 1;
+    // Update stats
+    function updateStats() {
+        statTotalTools.textContent = formatNumber(allTools.length);
+
+        const activeCount = allTools.filter(t => (t.health_score || 0) >= 70 && !t.is_archived).length;
+        statActiveTools.textContent = formatNumber(activeCount);
+
+        const totalStars = allTools.reduce((sum, t) => sum + (t.stars || 0), 0);
+        statTotalStars.textContent = formatNumber(totalStars);
+
+        const languages = new Set(allTools.map(t => t.language).filter(Boolean));
+        statLanguages.textContent = languages.size;
+    }
+
+    // Populate filter dropdowns
+    function populateFilterOptions() {
+        // Languages
+        const langSelect = document.getElementById('filter-language');
+        const languages = {};
+        allTools.forEach(t => { if (t.language) languages[t.language] = (languages[t.language] || 0) + 1; });
+        const sortedLangs = Object.entries(languages).sort((a, b) => b[1] - a[1]);
+        langSelect.innerHTML = '<option value="">All Languages</option>';
+        sortedLangs.forEach(([lang, count]) => {
+            langSelect.innerHTML += `<option value="${escapeHtml(lang)}">${escapeHtml(lang)} (${count})</option>`;
         });
 
-        var sorted = Object.entries(languages).sort(function(a, b) { return b[1] - a[1]; });
-        var current = languageSelect.value;
-
-        languageSelect.innerHTML = '<option value="">All Languages</option>';
-        sorted.forEach(function(item) {
-            var opt = document.createElement('option');
-            opt.value = item[0];
-            opt.textContent = item[0] + ' (' + item[1] + ')';
-            if (item[0] === current) opt.selected = true;
-            languageSelect.appendChild(opt);
+        // Licenses
+        const licenseSelect = document.getElementById('filter-license');
+        const licenses = {};
+        allTools.forEach(t => { if (t.license) licenses[t.license] = (licenses[t.license] || 0) + 1; });
+        const sortedLicenses = Object.entries(licenses).sort((a, b) => b[1] - a[1]);
+        licenseSelect.innerHTML = '<option value="">All Licenses</option>';
+        sortedLicenses.forEach(([lic, count]) => {
+            licenseSelect.innerHTML += `<option value="${escapeHtml(lic)}">${escapeHtml(lic)} (${count})</option>`;
         });
     }
 
+    // Apply filters
     function applyFilters() {
-        var query = searchInput.value.toLowerCase().trim();
-        var lang = languageSelect.value;
-        var health = healthFilter.value;
+        const query = searchInput.value.toLowerCase().trim();
+        const lang = activeFilters.language || '';
+        const health = activeFilters.health || '';
+        const relationship = activeFilters.relationship || '';
+        const license = activeFilters.license || '';
 
-        filteredTools = allTools.filter(function(t) {
+        filteredTools = allTools.filter(tool => {
+            // Search query
             if (query) {
-                var searchable = [
-                    t.full_name || '', t.description || '', t.language || ''
-                ].concat(t.topics || []).concat(t.paper_titles || []).join(' ').toLowerCase();
-                if (searchable.indexOf(query) === -1) return false;
+                const searchable = [
+                    tool.full_name || '',
+                    tool.description || '',
+                    tool.language || '',
+                    ...(tool.topics || []),
+                    ...(tool.paper_titles || [])
+                ].join(' ').toLowerCase();
+                if (!searchable.includes(query)) return false;
             }
-            if (lang && t.language !== lang) return false;
+
+            // Language filter
+            if (lang && tool.language !== lang) return false;
+
+            // License filter
+            if (license && tool.license !== license) return false;
+
+            // Health filter
             if (health) {
-                var score = t.health_score || 0;
-                var arch = t.is_archived;
+                const score = tool.health_score || 0;
+                const arch = tool.is_archived;
                 if (health === 'active' && (score < 70 || arch)) return false;
                 if (health === 'moderate' && (score < 40 || score >= 70 || arch)) return false;
                 if (health === 'low' && (score >= 40 || arch)) return false;
+                if (health === 'archived' && !arch) return false;
             }
+
+            // Relationship filter
+            if (relationship) {
+                if (relationship === 'introduces' && !tool.papers_introducing) return false;
+                if (relationship === 'uses' && !tool.papers_using) return false;
+                if (relationship === 'extends' && !tool.papers_extending) return false;
+                if (relationship === 'benchmarks' && !tool.papers_benchmarking) return false;
+            }
+
+            // Quick filters
+            if (activeFilters.active && ((tool.health_score || 0) < 70 || tool.is_archived)) return false;
+            if (activeFilters.popular && (tool.stars || 0) < 10) return false;
+            if (activeFilters.foundational && (tool.paper_count || 0) < 5) return false;
+            if (activeFilters.python && tool.language !== 'Python') return false;
+            if (activeFilters.imaging) {
+                const topics = (tool.topics || []).join(' ').toLowerCase();
+                const desc = (tool.description || '').toLowerCase();
+                const name = (tool.full_name || '').toLowerCase();
+                if (!topics.includes('imag') && !desc.includes('imag') && !name.includes('imag') &&
+                    !topics.includes('microscop') && !desc.includes('microscop')) return false;
+            }
+
             return true;
         });
 
-        statShown.textContent = filteredTools.length;
-        var activeCount = filteredTools.filter(function(t) { return (t.health_score || 0) >= 70 && !t.is_archived; }).length;
-        statActive.textContent = activeCount;
-        var totalStars = filteredTools.reduce(function(sum, t) { return sum + (t.stars || 0); }, 0);
-        statTotalStars.textContent = totalStars.toLocaleString();
-
+        sortTools();
+        totalEl.textContent = formatNumber(allTools.length);
+        showingEl.textContent = filteredTools.length;
         renderTools();
     }
 
-    function renderTools() {
-        loading.style.display = 'none';
-        if (filteredTools.length === 0) {
-            grid.style.display = 'none';
-            empty.style.display = 'block';
-            return;
-        }
-        empty.style.display = 'none';
-        grid.style.display = 'grid';
-        grid.innerHTML = filteredTools.map(renderToolCard).join('');
+    // Sort tools
+    function sortTools() {
+        const sort = sortSelect.value;
+        filteredTools.sort((a, b) => {
+            if (sort === 'stars') return (b.stars || 0) - (a.stars || 0);
+            if (sort === 'health') return (b.health_score || 0) - (a.health_score || 0);
+            return (b.paper_count || 0) - (a.paper_count || 0); // Default: paper_count
+        });
     }
 
-    function renderToolCard(tool) {
-        var health = tool.health_score || 0;
-        var archived = tool.is_archived;
-        var healthClass, healthLabel;
+    // Render tools
+    function renderTools() {
+        if (filteredTools.length === 0) {
+            toolsGrid.innerHTML = '<div class="mh-no-results"><h3>No tools found</h3><p>Try adjusting your search or filters.</p></div>';
+            paginationEl.innerHTML = '';
+            return;
+        }
+
+        const start = (currentPage - 1) * perPage;
+        const pageTools = filteredTools.slice(start, start + perPage);
+
+        toolsGrid.innerHTML = pageTools.map(createToolCard).join('');
+        renderPagination(filteredTools.length, Math.ceil(filteredTools.length / perPage));
+    }
+
+    // Create tool card - matches paper card layout
+    function createToolCard(tool) {
+        const health = tool.health_score || 0;
+        const archived = tool.is_archived;
+        let healthClass, healthLabel;
 
         if (archived) { healthClass = 'archived'; healthLabel = 'Archived'; }
         else if (health >= 70) { healthClass = 'active'; healthLabel = 'Active'; }
@@ -508,72 +523,124 @@ $api_base = rest_url('microhub/v1');
         else if (health > 0) { healthClass = 'low'; healthLabel = 'Low Activity'; }
         else { healthClass = 'unknown'; healthLabel = 'Unknown'; }
 
-        var stars = tool.stars || 0;
-        var forks = tool.forks || 0;
-        var paperCount = tool.paper_count || 0;
-        var desc = tool.description ? escapeHtml(truncate(tool.description, 120)) : '';
-        var language = tool.language || '';
-        var topics = (tool.topics || []).slice(0, 5);
-        var license = tool.license || '';
-        var lastCommit = tool.last_commit_date ? formatDate(tool.last_commit_date) : '';
+        const stars = tool.stars || 0;
+        const forks = tool.forks || 0;
+        const paperCount = tool.paper_count || 0;
 
+        // Tags
+        let tagsHtml = '';
+        if (tool.language) {
+            tagsHtml += `<span class="mh-card-tag language">${escapeHtml(tool.language)}</span>`;
+        }
+        if (tool.license) {
+            tagsHtml += `<span class="mh-card-tag license">${escapeHtml(tool.license)}</span>`;
+        }
         // Relationship badges
-        var relBadges = '';
-        if (tool.papers_introducing > 0) relBadges += '<span class="mh-gh-rel-badge introduces">Introduced in ' + tool.papers_introducing + ' paper' + (tool.papers_introducing > 1 ? 's' : '') + '</span>';
-        if (tool.papers_using > 0) relBadges += '<span class="mh-gh-rel-badge uses">Used in ' + tool.papers_using + ' paper' + (tool.papers_using > 1 ? 's' : '') + '</span>';
-        if (tool.papers_extending > 0) relBadges += '<span class="mh-gh-rel-badge extends">Extended in ' + tool.papers_extending + ' paper' + (tool.papers_extending > 1 ? 's' : '') + '</span>';
-        if (tool.papers_benchmarking > 0) relBadges += '<span class="mh-gh-rel-badge benchmarks">Benchmarked in ' + tool.papers_benchmarking + ' paper' + (tool.papers_benchmarking > 1 ? 's' : '') + '</span>';
-
-        // Paper links
-        var paperLinks = '';
-        if (tool.paper_titles && tool.paper_ids && paperCount > 0) {
-            var links = '';
-            for (var i = 0; i < Math.min(3, tool.paper_titles.length); i++) {
-                var title = tool.paper_titles[i];
-                var pid = tool.paper_ids[i];
-                links += '<a href="/?p=' + pid + '" class="mh-gh-paper-link" title="' + escapeAttr(title) + '">' + escapeHtml(truncate(title, 80)) + '</a>';
-            }
-            var extra = paperCount > 3 ? '<span class="mh-gh-paper-link" style="color: var(--text-muted); font-style: italic;">+' + (paperCount - 3) + ' more</span>' : '';
-            paperLinks = '<div class="mh-gh-papers"><div class="mh-gh-papers-label">Referenced in ' + paperCount + ' paper' + (paperCount > 1 ? 's' : '') + '</div><div class="mh-gh-paper-list">' + links + extra + '</div></div>';
+        if (tool.papers_introducing > 0) {
+            tagsHtml += `<span class="mh-card-tag relationship introduces">🆕 Introduced</span>`;
+        }
+        if (tool.papers_extending > 0) {
+            tagsHtml += `<span class="mh-card-tag relationship extends">🔀 Extended</span>`;
+        }
+        // Topics (limit to 3)
+        if (tool.topics?.length) {
+            tool.topics.slice(0, 3).forEach(t => {
+                tagsHtml += `<span class="mh-card-tag topic">${escapeHtml(t)}</span>`;
+            });
         }
 
-        // Topics
-        var topicsHtml = '';
-        if (topics.length > 0) {
-            topicsHtml = '<div class="mh-gh-topics">';
-            topics.forEach(function(t) { topicsHtml += '<span class="mh-gh-topic">' + escapeHtml(t) + '</span>'; });
-            topicsHtml += '</div>';
+        // Enrichment/metrics
+        let enrichmentHtml = `<div class="mh-card-enrichment">`;
+        enrichmentHtml += `<span class="mh-enrichment-item stars">⭐ ${formatNumber(stars)}</span>`;
+        if (forks > 0) enrichmentHtml += `<span class="mh-enrichment-item forks">🍴 ${formatNumber(forks)}</span>`;
+        enrichmentHtml += `<span class="mh-enrichment-item papers">📄 ${paperCount} paper${paperCount !== 1 ? 's' : ''}</span>`;
+        if (tool.last_commit_date) enrichmentHtml += `<span class="mh-enrichment-item">🕐 ${formatDate(tool.last_commit_date)}</span>`;
+        enrichmentHtml += `</div>`;
+
+        // Links
+        let linksHtml = '';
+        const repoUrl = tool.url || `https://github.com/${tool.full_name}`;
+        linksHtml += `<a href="${escapeHtml(repoUrl)}" class="mh-card-link github" target="_blank" rel="noopener">GitHub</a>`;
+        if (paperCount > 0 && tool.paper_ids?.length) {
+            linksHtml += `<a href="/?p=${tool.paper_ids[0]}" class="mh-card-link papers">View Paper</a>`;
         }
 
-        // Metrics
-        var metrics = '<span class="mh-gh-metric"><span class="icon">&#11088;</span> <span class="mh-gh-metric-highlight">' + stars.toLocaleString() + '</span></span>';
-        if (forks) metrics += '<span class="mh-gh-metric"><span class="icon">&#127860;</span> ' + forks.toLocaleString() + '</span>';
-        if (language) metrics += '<span class="mh-gh-metric"><span class="icon">&#128221;</span> ' + escapeHtml(language) + '</span>';
-        if (license) metrics += '<span class="mh-gh-metric"><span class="icon">&#128196;</span> ' + escapeHtml(license) + '</span>';
-        if (lastCommit) metrics += '<span class="mh-gh-metric"><span class="icon">&#128336;</span> ' + lastCommit + '</span>';
-        metrics += '<span class="mh-gh-metric mh-gh-metric-highlight"><span class="icon">&#128202;</span> ' + paperCount + ' paper' + (paperCount > 1 ? 's' : '') + '</span>';
+        // Description
+        const desc = tool.description ? truncate(tool.description, 150) : 'No description available.';
 
-        return '<div class="mh-gh-tool-card health-' + healthClass + '">' +
-            '<div class="mh-gh-card-header">' +
-                '<a href="' + escapeAttr(tool.url || ('https://github.com/' + tool.full_name)) + '" class="mh-gh-card-name" target="_blank" rel="noopener">' + escapeHtml(tool.full_name) + '</a>' +
-                '<span class="mh-gh-health-badge ' + healthClass + '">' + healthLabel + '</span>' +
-            '</div>' +
-            (desc ? '<p class="mh-gh-card-desc">' + desc + '</p>' : '') +
-            topicsHtml +
-            '<div class="mh-gh-metrics">' + metrics + '</div>' +
-            (relBadges ? '<div class="mh-gh-relationships">' + relBadges + '</div>' : '') +
-            paperLinks +
-        '</div>';
+        return `
+            <article class="mh-paper-card health-${healthClass}">
+                <div class="mh-card-header-row">
+                    <span class="mh-card-badge ${healthClass}">${healthLabel}</span>
+                </div>
+                <h3 class="mh-card-title"><a href="${escapeHtml(repoUrl)}" target="_blank" rel="noopener">${escapeHtml(tool.full_name)}</a></h3>
+                <div class="mh-card-meta">
+                    ${tool.language ? `<span>📝 ${escapeHtml(tool.language)}</span>` : ''}
+                    <span>⭐ ${formatNumber(stars)} stars</span>
+                    <span>📄 ${paperCount} papers</span>
+                </div>
+                <p class="mh-card-abstract">${escapeHtml(desc)}</p>
+                ${tagsHtml ? `<div class="mh-card-tags">${tagsHtml}</div>` : ''}
+                ${enrichmentHtml}
+                <div class="mh-card-footer">
+                    <div class="mh-card-links">${linksHtml}</div>
+                </div>
+            </article>
+        `;
     }
 
+    // Render pagination
+    function renderPagination(total, totalPages) {
+        if (totalPages <= 1) {
+            paginationEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        html += `<button ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">← Prev</button>`;
+
+        const maxVisible = 5;
+        let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+        if (start > 1) {
+            html += `<button data-page="1">1</button>`;
+            if (start > 2) html += `<button disabled>...</button>`;
+        }
+
+        for (let i = start; i <= end; i++) {
+            html += `<button ${i === currentPage ? 'class="active"' : ''} data-page="${i}">${i}</button>`;
+        }
+
+        if (end < totalPages) {
+            if (end < totalPages - 1) html += `<button disabled>...</button>`;
+            html += `<button data-page="${totalPages}">${totalPages}</button>`;
+        }
+
+        html += `<button ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">Next →</button>`;
+
+        paginationEl.innerHTML = html;
+
+        paginationEl.querySelectorAll('button[data-page]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentPage = parseInt(btn.dataset.page);
+                renderTools();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    }
+
+    // Utilities
     function escapeHtml(str) {
-        var d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
-    function escapeAttr(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    function formatNumber(num) {
+        return new Intl.NumberFormat().format(num);
     }
 
     function truncate(str, len) {
@@ -583,25 +650,15 @@ $api_base = rest_url('microhub/v1');
 
     function formatDate(dateStr) {
         if (!dateStr) return '';
-        var d = new Date(dateStr);
+        const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        var now = new Date();
-        var diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+        const now = new Date();
+        const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
         if (diff < 1) return 'today';
         if (diff < 30) return diff + 'd ago';
         if (diff < 365) return Math.floor(diff / 30) + 'mo ago';
         return Math.floor(diff / 365) + 'y ago';
     }
-
-    searchBtn.addEventListener('click', applyFilters);
-    searchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') applyFilters(); });
-    sortSelect.addEventListener('change', fetchTools);
-    minPapersSelect.addEventListener('change', fetchTools);
-    languageSelect.addEventListener('change', applyFilters);
-    healthFilter.addEventListener('change', applyFilters);
-    showArchived.addEventListener('change', fetchTools);
-
-    fetchTools();
 })();
 </script>
 

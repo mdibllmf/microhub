@@ -152,10 +152,10 @@ class ComprehensiveJsonExporter:
                         'citing_paper_count': tr['citing_paper_count'],
                         'relationship': tr['relationship'],
                     })
-                
+
                 # Also get top tools summary for metadata
                 summary_rows = conn.execute("""
-                    SELECT full_name, repo_url, description, stars, forks, health_score,
+                    SELECT full_name, repo_url, description, stars, forks, open_issues, health_score,
                            paper_count, citing_paper_count, is_archived, language, license,
                            last_commit_date, last_release_tag, tool_type, topics
                     FROM github_tools
@@ -170,6 +170,7 @@ class ComprehensiveJsonExporter:
                         'description': sr['description'],
                         'stars': sr['stars'],
                         'forks': sr['forks'],
+                        'open_issues': sr['open_issues'] or 0,
                         'health_score': sr['health_score'],
                         'paper_count': sr['paper_count'],
                         'citing_paper_count': sr['citing_paper_count'],
@@ -180,6 +181,7 @@ class ComprehensiveJsonExporter:
                         'last_release': sr['last_release_tag'],
                         'tool_type': sr['tool_type'],
                         'topics': self.safe_json_parse(sr['topics']),
+                        'relationship': 'uses',  # Default relationship for aggregated view
                     })
                 logger.info(f"Loaded GitHub tool data for {len(github_tools_map)} papers, {len(github_tools_summary)} unique tools")
             except sqlite3.OperationalError as e:
