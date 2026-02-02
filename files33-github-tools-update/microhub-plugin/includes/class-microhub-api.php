@@ -515,9 +515,10 @@ class MicroHub_API {
         $min_papers = max(1, intval($request->get_param('min_papers') ?: 2));
         $show_archived = $request->get_param('show_archived') ? true : false;
         
-        // Gather all github_tools meta from papers
+        // Gather all github_tools meta from papers (also get citation_count)
         $rows = $wpdb->get_results("
-            SELECT p.ID as paper_id, p.post_title, pm.meta_value as tools_json
+            SELECT p.ID as paper_id, p.post_title, pm.meta_value as tools_json,
+                   COALESCE((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_mh_citation_count' LIMIT 1), 0) as citation_count
             FROM {$wpdb->postmeta} pm
             JOIN {$wpdb->posts} p ON p.ID = pm.post_id
             WHERE pm.meta_key = '_mh_github_tools'
@@ -553,6 +554,7 @@ class MicroHub_API {
                         'license' => $tool['license'] ?? '',
                         'topics' => $tool['topics'] ?? array(),
                         'paper_count' => 0,
+                        'total_citations' => 0,
                         'papers_introducing' => 0,
                         'papers_using' => 0,
                         'papers_extending' => 0,
@@ -563,6 +565,7 @@ class MicroHub_API {
                 }
                 
                 $tools_aggregate[$full_name]['paper_count']++;
+                $tools_aggregate[$full_name]['total_citations'] += intval($row->citation_count);
                 $tools_aggregate[$full_name]['paper_titles'][] = $row->post_title;
                 $tools_aggregate[$full_name]['paper_ids'][] = intval($row->paper_id);
                 
@@ -602,6 +605,7 @@ class MicroHub_API {
         // Sort
         $tools_list = array_values($tools_aggregate);
         usort($tools_list, function($a, $b) use ($sort) {
+            if ($sort === 'citations') return $b['total_citations'] - $a['total_citations'];
             if ($sort === 'stars') return $b['stars'] - $a['stars'];
             if ($sort === 'health') return $b['health_score'] - $a['health_score'];
             return $b['paper_count'] - $a['paper_count'];

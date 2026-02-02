@@ -24,9 +24,6 @@ if (!function_exists('mh_plugin_active') || !mh_plugin_active()) {
 $api_base = rest_url('microhub/v1');
 ?>
 
-<div class="microhub-wrapper">
-    <?php echo mh_render_nav(); ?>
-
 <!-- Compact Hero -->
 <section class="mh-hero-compact">
     <div class="mh-container">
@@ -53,11 +50,10 @@ $api_base = rest_url('microhub/v1');
         <div class="mh-filter-row">
             <div class="mh-filter-item">
                 <select id="filter-sort" data-filter="sort">
-                    <option value="paper_count">Most Referenced</option>
+                    <option value="citations">Most Cited Papers</option>
+                    <option value="paper_count">Most Papers</option>
                     <option value="stars">Most Stars</option>
                     <option value="health">Healthiest</option>
-                    <option value="forks">Most Forks</option>
-                    <option value="recent">Recent Activity</option>
                 </select>
             </div>
             <div class="mh-filter-item">
@@ -80,7 +76,6 @@ $api_base = rest_url('microhub/v1');
                     <option value="2" selected>Min 2 Papers</option>
                     <option value="3">Min 3 Papers</option>
                     <option value="5">Min 5 Papers</option>
-                    <option value="10">Min 10 Papers</option>
                 </select>
             </div>
             <div class="mh-filter-item">
@@ -121,7 +116,8 @@ $api_base = rest_url('microhub/v1');
             </div>
             <div class="mh-results-sort">
                 <select id="mh-sort">
-                    <option value="paper_count">Most Referenced</option>
+                    <option value="citations">Most Cited Papers</option>
+                    <option value="paper_count">Most Papers</option>
                     <option value="stars">Most Stars</option>
                     <option value="health">Healthiest</option>
                 </select>
@@ -141,14 +137,14 @@ $api_base = rest_url('microhub/v1');
                 <span class="stat-label">Active</span>
             </div>
             <div class="mh-stat-item">
-                <span class="stat-icon">⭐</span>
-                <span class="stat-num" id="stat-total-stars">0</span>
-                <span class="stat-label">Total Stars</span>
+                <span class="stat-icon">📄</span>
+                <span class="stat-num" id="stat-total-papers">0</span>
+                <span class="stat-label">Papers Using Tools</span>
             </div>
             <div class="mh-stat-item">
-                <span class="stat-icon">📝</span>
-                <span class="stat-num" id="stat-languages">0</span>
-                <span class="stat-label">Languages</span>
+                <span class="stat-icon">📊</span>
+                <span class="stat-num" id="stat-total-citations">0</span>
+                <span class="stat-label">Total Citations</span>
             </div>
         </div>
 
@@ -164,8 +160,6 @@ $api_base = rest_url('microhub/v1');
         <div id="mh-pagination" class="mh-pagination"></div>
     </div>
 </section>
-
-</div><!-- .microhub-wrapper -->
 
 <style>
 /* Core Layout - matches protocols page */
@@ -273,6 +267,7 @@ $api_base = rest_url('microhub/v1');
 .mh-enrichment-item.stars { color: #f0c14b; }
 .mh-enrichment-item.forks { color: #8b949e; }
 .mh-enrichment-item.papers { color: #3b82f6; font-weight: 600; }
+.mh-enrichment-item.citations { color: #22c55e; font-weight: 600; }
 
 /* Card Links */
 .mh-card-links { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border, #30363d); margin-top: auto; }
@@ -314,8 +309,8 @@ $api_base = rest_url('microhub/v1');
     // Stats elements
     const statTotalTools = document.getElementById('stat-total-tools');
     const statActiveTools = document.getElementById('stat-active-tools');
-    const statTotalStars = document.getElementById('stat-total-stars');
-    const statLanguages = document.getElementById('stat-languages');
+    const statTotalPapers = document.getElementById('stat-total-papers');
+    const statTotalCitations = document.getElementById('stat-total-citations');
 
     let currentPage = 1;
     let perPage = 24;
@@ -337,6 +332,9 @@ $api_base = rest_url('microhub/v1');
             const filter = select.dataset.filter;
             activeFilters[filter] = select.value;
             currentPage = 1;
+            if (filter === 'sort') {
+                sortSelect.value = select.value;
+            }
             applyFilters();
         });
     });
@@ -355,7 +353,14 @@ $api_base = rest_url('microhub/v1');
     // Clear filters
     clearBtn.addEventListener('click', () => {
         searchInput.value = '';
-        document.querySelectorAll('[data-filter]').forEach(s => { if (s.tagName === 'SELECT') s.value = ''; });
+        document.querySelectorAll('[data-filter]').forEach(s => {
+            if (s.tagName === 'SELECT') {
+                if (s.id === 'filter-sort') s.value = 'citations';
+                else if (s.id === 'filter-min-papers') s.value = '2';
+                else s.value = '';
+            }
+        });
+        sortSelect.value = 'citations';
         document.querySelectorAll('.mh-quick-btn').forEach(b => b.classList.remove('active'));
         activeFilters = {};
         currentPage = 1;
@@ -378,7 +383,7 @@ $api_base = rest_url('microhub/v1');
             })
             .catch(err => {
                 console.error('Failed to load tools:', err);
-                toolsGrid.innerHTML = '<div class="mh-no-results"><h3>Error loading tools</h3><p>Please try again.</p></div>';
+                toolsGrid.innerHTML = '<div class="mh-no-results"><h3>Error loading tools</h3><p>Please try again. Error: ' + err.message + '</p></div>';
             });
     }
 
@@ -389,11 +394,14 @@ $api_base = rest_url('microhub/v1');
         const activeCount = allTools.filter(t => (t.health_score || 0) >= 70 && !t.is_archived).length;
         statActiveTools.textContent = formatNumber(activeCount);
 
-        const totalStars = allTools.reduce((sum, t) => sum + (t.stars || 0), 0);
-        statTotalStars.textContent = formatNumber(totalStars);
+        // Count unique papers
+        const paperIds = new Set();
+        allTools.forEach(t => (t.paper_ids || []).forEach(id => paperIds.add(id)));
+        statTotalPapers.textContent = formatNumber(paperIds.size);
 
-        const languages = new Set(allTools.map(t => t.language).filter(Boolean));
-        statLanguages.textContent = languages.size;
+        // Sum citations
+        const totalCitations = allTools.reduce((sum, t) => sum + (t.total_citations || 0), 0);
+        statTotalCitations.textContent = formatNumber(totalCitations);
     }
 
     // Populate filter dropdowns
@@ -490,6 +498,7 @@ $api_base = rest_url('microhub/v1');
     function sortTools() {
         const sort = sortSelect.value;
         filteredTools.sort((a, b) => {
+            if (sort === 'citations') return (b.total_citations || 0) - (a.total_citations || 0);
             if (sort === 'stars') return (b.stars || 0) - (a.stars || 0);
             if (sort === 'health') return (b.health_score || 0) - (a.health_score || 0);
             return (b.paper_count || 0) - (a.paper_count || 0); // Default: paper_count
@@ -526,6 +535,7 @@ $api_base = rest_url('microhub/v1');
         const stars = tool.stars || 0;
         const forks = tool.forks || 0;
         const paperCount = tool.paper_count || 0;
+        const totalCitations = tool.total_citations || 0;
 
         // Tags
         let tagsHtml = '';
@@ -537,10 +547,10 @@ $api_base = rest_url('microhub/v1');
         }
         // Relationship badges
         if (tool.papers_introducing > 0) {
-            tagsHtml += `<span class="mh-card-tag relationship introduces">🆕 Introduced</span>`;
+            tagsHtml += `<span class="mh-card-tag relationship introduces">🆕 Introduced in ${tool.papers_introducing}</span>`;
         }
         if (tool.papers_extending > 0) {
-            tagsHtml += `<span class="mh-card-tag relationship extends">🔀 Extended</span>`;
+            tagsHtml += `<span class="mh-card-tag relationship extends">🔀 Extended in ${tool.papers_extending}</span>`;
         }
         // Topics (limit to 3)
         if (tool.topics?.length) {
@@ -551,9 +561,10 @@ $api_base = rest_url('microhub/v1');
 
         // Enrichment/metrics
         let enrichmentHtml = `<div class="mh-card-enrichment">`;
+        enrichmentHtml += `<span class="mh-enrichment-item citations">📊 ${formatNumber(totalCitations)} citations</span>`;
+        enrichmentHtml += `<span class="mh-enrichment-item papers">📄 ${paperCount} paper${paperCount !== 1 ? 's' : ''}</span>`;
         enrichmentHtml += `<span class="mh-enrichment-item stars">⭐ ${formatNumber(stars)}</span>`;
         if (forks > 0) enrichmentHtml += `<span class="mh-enrichment-item forks">🍴 ${formatNumber(forks)}</span>`;
-        enrichmentHtml += `<span class="mh-enrichment-item papers">📄 ${paperCount} paper${paperCount !== 1 ? 's' : ''}</span>`;
         if (tool.last_commit_date) enrichmentHtml += `<span class="mh-enrichment-item">🕐 ${formatDate(tool.last_commit_date)}</span>`;
         enrichmentHtml += `</div>`;
 
@@ -576,7 +587,7 @@ $api_base = rest_url('microhub/v1');
                 <h3 class="mh-card-title"><a href="${escapeHtml(repoUrl)}" target="_blank" rel="noopener">${escapeHtml(tool.full_name)}</a></h3>
                 <div class="mh-card-meta">
                     ${tool.language ? `<span>📝 ${escapeHtml(tool.language)}</span>` : ''}
-                    <span>⭐ ${formatNumber(stars)} stars</span>
+                    <span>📊 ${formatNumber(totalCitations)} citations</span>
                     <span>📄 ${paperCount} papers</span>
                 </div>
                 <p class="mh-card-abstract">${escapeHtml(desc)}</p>
