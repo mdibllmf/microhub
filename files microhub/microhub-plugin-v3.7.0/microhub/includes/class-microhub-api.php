@@ -60,7 +60,7 @@ class MicroHub_API {
             'permission_callback' => '__return_true',
         ));
 
-        // NEW: GitHub tools (aggregated usage + health metrics)
+        // NEW: GitHub tools (aggregated with health metrics for tools page)
         register_rest_route($namespace, '/github-tools', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_github_tools'),
@@ -224,6 +224,15 @@ class MicroHub_API {
             );
         }
 
+        // Facility filter
+        if ($request->get_param('facility')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_facility',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('facility')),
+            );
+        }
+
         if (count($tax_query) > 1) {
             $args['tax_query'] = $tax_query;
         }
@@ -259,6 +268,7 @@ class MicroHub_API {
         $rrids_json = get_post_meta($id, '_mh_rrids', true);
         $figure_urls_json = get_post_meta($id, '_mh_figure_urls', true);
         $thumbnail_url = get_post_meta($id, '_mh_thumbnail_url', true);
+        $github_tools_json = get_post_meta($id, '_mh_github_tools', true);
 
         return array(
             'id' => $id,
@@ -273,8 +283,9 @@ class MicroHub_API {
             'abstract' => get_post_meta($id, '_mh_abstract', true),
             'pdf_url' => get_post_meta($id, '_mh_pdf_url', true),
             'github_url' => get_post_meta($id, '_mh_github_url', true),
-            'github_tools' => json_decode(get_post_meta($id, '_mh_github_tools', true) ?: '[]', true),
             'facility' => get_post_meta($id, '_mh_facility', true),
+            'facility_url' => get_post_meta($id, '_mh_facility_url', true),
+            'facilities' => wp_get_post_terms($id, 'mh_facility', array('fields' => 'names')),
             'thumbnail_url' => $thumbnail_url,
             'figure_urls' => $figure_urls_json ? json_decode($figure_urls_json, true) : array(),
             'techniques' => wp_get_post_terms($id, 'mh_technique', array('fields' => 'names')),
@@ -284,6 +295,7 @@ class MicroHub_API {
             'protocols' => $protocols_json ? json_decode($protocols_json, true) : array(),
             'repositories' => $repos_json ? json_decode($repos_json, true) : array(),
             'rrids' => $rrids_json ? json_decode($rrids_json, true) : array(),
+            'github_tools' => $github_tools_json ? json_decode($github_tools_json, true) : array(),
             'comments_count' => get_comments_number($id),
         );
     }
@@ -355,6 +367,7 @@ class MicroHub_API {
         $repos = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_repositories' AND meta_value != '' AND meta_value != '[]'");
         $rrids = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_rrids' AND meta_value != '' AND meta_value != '[]'");
         $github = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_github_url' AND meta_value != ''");
+        $github_tools = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_github_tools' AND meta_value != '' AND meta_value != '[]'");
         $facilities = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_facility' AND meta_value != ''");
         $microscopes = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_microscope_name' AND meta_value != ''");
         
@@ -371,6 +384,7 @@ class MicroHub_API {
             'papers_with_repositories' => intval($repos),
             'papers_with_rrids' => intval($rrids),
             'papers_with_github' => intval($github),
+            'papers_with_github_tools' => intval($github_tools),
             'papers_with_facilities' => intval($facilities),
             'papers_with_microscopes' => intval($microscopes),
             'papers_with_software' => intval($software),
@@ -491,7 +505,7 @@ class MicroHub_API {
 
     /**
      * Get GitHub tools ranked by usage across papers with health metrics.
-     * Aggregates _mh_github_tools meta across all papers.
+     * Aggregates _mh_github_tools meta across all papers for the GitHub Tools page.
      */
     public function get_github_tools($request) {
         global $wpdb;
@@ -686,6 +700,785 @@ class MicroHub_API {
             return new WP_Error('invalid_message', 'Message is required', array('status' => 400));
         }
 
+        // Check if Anthropic API key is configured
+        $api_key = get_option('microhub_anthropic_api_key', '');
+        
+        if (!empty($api_key)) {
+            // Use Anthropic API
+            return $this->ai_chat_anthropic($message, $api_key);
+        }
+        
+        // Fall back to rules-based system if no API key
+        return $this->ai_chat_fallback($message, $context);
+    }
+    
+    /**
+     * AI Chat using Anthropic API with rich paper context
+     */
+    private function ai_chat_anthropic($message, $api_key) {
+        $response = array(
+            'reply' => '',
+            'papers' => array(),
+            'type' => 'ai'
+        );
+        
+        // ============================================
+        // GATHER ALL AVAILABLE CONTEXT
+        // ============================================
+        
+        // 1. Search for relevant papers with FULL details
+        $papers = $this->search_papers_for_ai($message);
+        $paper_context = $this->build_paper_context_for_ai($papers);
+        
+        // 2. Get knowledge base entries (uploaded documents)
+        $kb_results = $this->search_knowledge_base(strtolower($message), 5);
+        $kb_context = '';
+        if (!empty($kb_results)) {
+            $kb_context = "\n\n" . str_repeat("=", 60) . "\n";
+            $kb_context .= "## KNOWLEDGE BASE DOCUMENTS\n";
+            $kb_context .= "These are custom documents uploaded by the site administrator:\n";
+            $kb_context .= str_repeat("=", 60) . "\n\n";
+            foreach ($kb_results as $kb) {
+                $kb_context .= "### " . $kb['title'] . "\n";
+                $kb_context .= $kb['content'] . "\n\n";  // Include full content, not just excerpt
+            }
+        }
+        
+        // 3. Get custom training data (Q&A pairs, techniques, software)
+        $training_context = $this->get_custom_training_context($message);
+        
+        // 4. Get site statistics for context
+        $stats_context = $this->get_site_stats_context();
+        
+        // ============================================
+        // BUILD SYSTEM PROMPT
+        // ============================================
+        $system_prompt = "You are the MicroHub Assistant, an expert microscopy research consultant with FULL ACCESS to the MicroHub database.
+
+## SITE OVERVIEW
+{$stats_context}
+
+## YOUR CAPABILITIES
+You have access to:
+1. **Paper Database** - Thousands of microscopy research papers with full metadata
+2. **Knowledge Base** - Custom documents uploaded by the administrator
+3. **Custom Training** - Specific Q&A pairs, technique descriptions, and software info
+
+## PRIORITY ORDER FOR ANSWERING
+1. FIRST: Check if there's a custom Q&A or training response that matches
+2. SECOND: Use papers from the database - cite them specifically
+3. THIRD: Use knowledge base documents
+4. FOURTH: Use your general microscopy expertise
+
+## CITATION REQUIREMENTS - ALWAYS FOLLOW
+When using information from papers:
+- Cite by exact title: \"Based on '[Paper Title]' (Author et al., Year, Journal)\"
+- Include DOI when available
+- Reference specific details (microscopes, techniques, organisms)
+- Mention linked protocols if available
+
+## RESPONSE FORMAT FOR PROTOCOLS
+
+### Recommended Protocol
+**Based on:** \"[Paper Title]\" ([Author] et al., [Year], [Journal])
+**DOI:** [doi]
+
+**Technique:** [from paper]
+**Microscope:** [brand/model from paper]
+**Organisms/Samples:** [from paper]
+**Fluorophores:** [from paper]
+
+**Sample Preparation:**
+[Specific steps with concentrations, times, temperatures]
+
+**Imaging Parameters:**
+[Settings from paper or general recommendations]
+
+**Analysis:**
+[Software and workflow]
+
+## WHEN DATA IS LIMITED
+If papers don't have complete protocols:
+1. State what IS available from the database
+2. Provide general guidance based on your expertise
+3. Suggest the user check the full paper or search MicroHub
+
+## INTERACTION STYLE
+- Be helpful and specific
+- Ask clarifying questions if needed (microscope model, organism, etc.)
+- Always cite your sources
+- Be honest about limitations" . $training_context . $paper_context . $kb_context;
+
+        // ============================================
+        // CALL ANTHROPIC API
+        // ============================================
+        $api_response = wp_remote_post('https://api.anthropic.com/v1/messages', array(
+            'timeout' => 60,
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'x-api-key' => $api_key,
+                'anthropic-version' => '2023-06-01',
+            ),
+            'body' => json_encode(array(
+                'model' => 'claude-sonnet-4-20250514',
+                'max_tokens' => 4000,
+                'system' => $system_prompt,
+                'messages' => array(
+                    array('role' => 'user', 'content' => $message)
+                )
+            ))
+        ));
+        
+        if (is_wp_error($api_response)) {
+            error_log('MicroHub AI Chat Error: ' . $api_response->get_error_message());
+            $response['reply'] = "I'm having trouble connecting right now. Please try again.";
+            $response['papers'] = $this->simplify_papers_for_response($papers);
+            return $response;
+        }
+        
+        $body = json_decode(wp_remote_retrieve_body($api_response), true);
+        
+        if (isset($body['content'][0]['text'])) {
+            $response['reply'] = $body['content'][0]['text'];
+            $response['papers'] = $this->simplify_papers_for_response($papers);
+        } else {
+            if (isset($body['error']['message'])) {
+                error_log('MicroHub AI Chat API Error: ' . $body['error']['message']);
+            }
+            $response['reply'] = "I couldn't process that request. Please try rephrasing your question.";
+            $response['papers'] = $this->simplify_papers_for_response($papers);
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Get custom training data context for AI
+     */
+    private function get_custom_training_context($message) {
+        $context = '';
+        $msg_lower = strtolower($message);
+        
+        // Get Q&A pairs
+        $qa_pairs = get_option('microhub_ai_qa_pairs', array());
+        $matching_qa = array();
+        
+        if (!empty($qa_pairs)) {
+            foreach ($qa_pairs as $pair) {
+                if (empty($pair['keywords'])) continue;
+                
+                $keywords = array_map('trim', explode(',', strtolower($pair['keywords'])));
+                foreach ($keywords as $keyword) {
+                    if (strlen($keyword) >= 3 && strpos($msg_lower, $keyword) !== false) {
+                        $matching_qa[] = $pair;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Get technique descriptions
+        $techniques = get_option('microhub_ai_techniques', array());
+        $matching_techniques = array();
+        
+        if (!empty($techniques)) {
+            foreach ($techniques as $tech) {
+                $name_lower = strtolower($tech['name'] ?? '');
+                $keywords = array_map('trim', explode(',', strtolower($tech['keywords'] ?? '')));
+                
+                if ($name_lower && strpos($msg_lower, $name_lower) !== false) {
+                    $matching_techniques[] = $tech;
+                } else {
+                    foreach ($keywords as $keyword) {
+                        if (strlen($keyword) >= 3 && strpos($msg_lower, $keyword) !== false) {
+                            $matching_techniques[] = $tech;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Get software descriptions
+        $software = get_option('microhub_ai_software', array());
+        $matching_software = array();
+        
+        if (!empty($software)) {
+            foreach ($software as $sw) {
+                $name_lower = strtolower($sw['name'] ?? '');
+                $keywords = array_map('trim', explode(',', strtolower($sw['keywords'] ?? '')));
+                
+                if ($name_lower && strpos($msg_lower, $name_lower) !== false) {
+                    $matching_software[] = $sw;
+                } else {
+                    foreach ($keywords as $keyword) {
+                        if (strlen($keyword) >= 3 && strpos($msg_lower, $keyword) !== false) {
+                            $matching_software[] = $sw;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Build context from matching training data
+        if (!empty($matching_qa) || !empty($matching_techniques) || !empty($matching_software)) {
+            $context .= "\n\n" . str_repeat("=", 60) . "\n";
+            $context .= "## CUSTOM TRAINING DATA (HIGH PRIORITY)\n";
+            $context .= "The administrator has provided these specific responses:\n";
+            $context .= str_repeat("=", 60) . "\n\n";
+            
+            if (!empty($matching_qa)) {
+                $context .= "### Predefined Q&A Responses:\n";
+                foreach ($matching_qa as $qa) {
+                    $context .= "**Keywords:** {$qa['keywords']}\n";
+                    if (!empty($qa['question'])) {
+                        $context .= "**Question Pattern:** {$qa['question']}\n";
+                    }
+                    $context .= "**RECOMMENDED RESPONSE:**\n{$qa['answer']}\n\n";
+                }
+            }
+            
+            if (!empty($matching_techniques)) {
+                $context .= "### Technique Descriptions:\n";
+                foreach ($matching_techniques as $tech) {
+                    $context .= "**{$tech['name']}**\n";
+                    $context .= "{$tech['description']}\n\n";
+                }
+            }
+            
+            if (!empty($matching_software)) {
+                $context .= "### Software Descriptions:\n";
+                foreach ($matching_software as $sw) {
+                    $context .= "**{$sw['name']}**\n";
+                    $context .= "{$sw['description']}\n\n";
+                }
+            }
+        }
+        
+        return $context;
+    }
+    
+    /**
+     * Get site statistics for AI context
+     */
+    private function get_site_stats_context() {
+        $paper_count = wp_count_posts('mh_paper');
+        $total_papers = isset($paper_count->publish) ? $paper_count->publish : 0;
+        
+        $protocol_count = wp_count_posts('mh_protocol');
+        $total_protocols = isset($protocol_count->publish) ? $protocol_count->publish : 0;
+        
+        // Get taxonomy counts
+        $techniques = wp_count_terms('mh_technique');
+        $organisms = wp_count_terms('mh_organism');
+        $software = wp_count_terms('mh_software');
+        
+        // Get knowledge base count
+        global $wpdb;
+        $kb_table = $wpdb->prefix . 'mh_knowledge';
+        $kb_count = 0;
+        if ($wpdb->get_var("SHOW TABLES LIKE '$kb_table'") === $kb_table) {
+            $kb_count = $wpdb->get_var("SELECT COUNT(*) FROM $kb_table");
+        }
+        
+        // Get GitHub tools count
+        $github_tools_papers = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_github_tools' AND meta_value != '' AND meta_value != '[]'");
+        
+        $stats = "MicroHub Database contains:
+- {$total_papers} research papers
+- {$total_protocols} protocols
+- " . (is_wp_error($techniques) ? 0 : $techniques) . " microscopy techniques
+- " . (is_wp_error($organisms) ? 0 : $organisms) . " organisms/model systems
+- " . (is_wp_error($software) ? 0 : $software) . " software tools
+- Papers with enriched GitHub tool data: " . intval($github_tools_papers) . "
+- {$kb_count} knowledge base documents";
+        
+        return $stats;
+    }
+    
+    /**
+     * Search papers comprehensively for AI context
+     * Searches across titles, abstracts, and all taxonomies
+     */
+    private function search_papers_for_ai($query) {
+        global $wpdb;
+        
+        // Extract meaningful search terms
+        $search = preg_replace('/\b(find|search|papers?|about|show|me|the|for|on|using|with|how|do|i|can|you|help|protocol|method|what|is|are|best|good|recommend)\b/i', '', $query);
+        $search = trim(preg_replace('/\s+/', ' ', $search));
+        
+        if (strlen($search) < 2) {
+            $search = $query; // Fall back to original query
+        }
+        
+        $papers = array();
+        $found_ids = array();
+        
+        // Extract individual keywords for taxonomy matching
+        $keywords = array_filter(explode(' ', strtolower($search)), function($w) {
+            return strlen($w) >= 3;
+        });
+        
+        // ============================================
+        // STRATEGY 1: Search by taxonomy terms (most reliable)
+        // ============================================
+        $taxonomies_to_search = array(
+            'mh_technique' => 3,    // weight: 3 (most important)
+            'mh_organism' => 2,
+            'mh_software' => 2,
+            'mh_fluorophore' => 2,
+            'mh_sample_prep' => 2,
+            'mh_microscope' => 2,
+            'mh_cell_line' => 1,
+        );
+        
+        $taxonomy_post_ids = array();
+        
+        foreach ($taxonomies_to_search as $taxonomy => $weight) {
+            if (!taxonomy_exists($taxonomy)) continue;
+            
+            // Search for matching terms
+            $terms = get_terms(array(
+                'taxonomy' => $taxonomy,
+                'search' => $search,
+                'hide_empty' => true,
+                'number' => 10
+            ));
+            
+            // Also try individual keywords
+            if (empty($terms) || is_wp_error($terms)) {
+                foreach ($keywords as $keyword) {
+                    $keyword_terms = get_terms(array(
+                        'taxonomy' => $taxonomy,
+                        'search' => $keyword,
+                        'hide_empty' => true,
+                        'number' => 5
+                    ));
+                    if (!is_wp_error($keyword_terms) && !empty($keyword_terms)) {
+                        $terms = array_merge($terms ?: array(), $keyword_terms);
+                    }
+                }
+            }
+            
+            if (!is_wp_error($terms) && !empty($terms)) {
+                $term_ids = wp_list_pluck($terms, 'term_id');
+                
+                // Get posts with these terms
+                $term_posts = get_posts(array(
+                    'post_type' => 'mh_paper',
+                    'posts_per_page' => 20,
+                    'fields' => 'ids',
+                    'tax_query' => array(
+                        array(
+                            'taxonomy' => $taxonomy,
+                            'field' => 'term_id',
+                            'terms' => $term_ids
+                        )
+                    )
+                ));
+                
+                foreach ($term_posts as $pid) {
+                    if (!isset($taxonomy_post_ids[$pid])) {
+                        $taxonomy_post_ids[$pid] = 0;
+                    }
+                    $taxonomy_post_ids[$pid] += $weight;
+                }
+            }
+        }
+        
+        // ============================================
+        // STRATEGY 2: Search in title and abstract (text search)
+        // ============================================
+        $text_search_ids = array();
+        
+        // WordPress default search (title + content)
+        $text_query = new WP_Query(array(
+            'post_type' => 'mh_paper',
+            'posts_per_page' => 15,
+            's' => $search,
+            'post_status' => 'publish',
+            'fields' => 'ids'
+        ));
+        
+        if ($text_query->have_posts()) {
+            foreach ($text_query->posts as $pid) {
+                $text_search_ids[$pid] = 2; // weight: 2
+            }
+        }
+        
+        // Also search in abstract meta field directly
+        $abstract_results = $wpdb->get_col($wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->postmeta} 
+             WHERE meta_key = '_mh_abstract' 
+             AND meta_value LIKE %s 
+             LIMIT 15",
+            '%' . $wpdb->esc_like($search) . '%'
+        ));
+        
+        foreach ($abstract_results as $pid) {
+            if (!isset($text_search_ids[$pid])) {
+                $text_search_ids[$pid] = 0;
+            }
+            $text_search_ids[$pid] += 2;
+        }
+        
+        // ============================================
+        // STRATEGY 3: Search microscope brand/model
+        // ============================================
+        $microscope_keywords = array('zeiss', 'leica', 'nikon', 'olympus', 'evident', 'confocal', 'lsm', 'sp8', 'a1r', 'sted', 'spinning disk', 'light sheet', 'lightsheet');
+        $search_lower = strtolower($search);
+        
+        foreach ($microscope_keywords as $mk) {
+            if (strpos($search_lower, $mk) !== false) {
+                $brand_results = $wpdb->get_col($wpdb->prepare(
+                    "SELECT post_id FROM {$wpdb->postmeta} 
+                     WHERE (meta_key = '_mh_microscope_brand' OR meta_key = '_mh_microscope_model' OR meta_key = '_mh_microscope')
+                     AND LOWER(meta_value) LIKE %s 
+                     LIMIT 10",
+                    '%' . $wpdb->esc_like($mk) . '%'
+                ));
+                
+                foreach ($brand_results as $pid) {
+                    if (!isset($taxonomy_post_ids[$pid])) {
+                        $taxonomy_post_ids[$pid] = 0;
+                    }
+                    $taxonomy_post_ids[$pid] += 3; // high weight for microscope match
+                }
+            }
+        }
+        
+        // ============================================
+        // COMBINE AND RANK RESULTS
+        // ============================================
+        $all_scores = array();
+        
+        foreach ($taxonomy_post_ids as $pid => $score) {
+            $all_scores[$pid] = ($all_scores[$pid] ?? 0) + $score;
+        }
+        
+        foreach ($text_search_ids as $pid => $score) {
+            $all_scores[$pid] = ($all_scores[$pid] ?? 0) + $score;
+        }
+        
+        // Add citation count as a factor
+        foreach ($all_scores as $pid => $score) {
+            $citations = (int) get_post_meta($pid, '_mh_citation_count', true);
+            if ($citations > 100) $all_scores[$pid] += 2;
+            elseif ($citations > 50) $all_scores[$pid] += 1;
+        }
+        
+        // Sort by score (highest first)
+        arsort($all_scores);
+        
+        // Take top 10 results
+        $top_ids = array_slice(array_keys($all_scores), 0, 10);
+        
+        // ============================================
+        // FETCH FULL PAPER DATA
+        // ============================================
+        foreach ($top_ids as $post_id) {
+            $post = get_post($post_id);
+            if (!$post || $post->post_status !== 'publish') continue;
+            
+            $paper = array(
+                'id' => $post_id,
+                'title' => $post->post_title,
+                'url' => get_permalink($post_id),
+                'doi' => get_post_meta($post_id, '_mh_doi', true),
+                'pmid' => get_post_meta($post_id, '_mh_pubmed_id', true),
+                'authors' => get_post_meta($post_id, '_mh_authors', true),
+                'journal' => get_post_meta($post_id, '_mh_journal', true),
+                'year' => get_post_meta($post_id, '_mh_publication_year', true),
+                'citation_count' => get_post_meta($post_id, '_mh_citation_count', true),
+                'abstract' => get_post_meta($post_id, '_mh_abstract', true),
+                'methods' => get_post_meta($post_id, '_mh_methods', true),
+                'microscope_brand' => get_post_meta($post_id, '_mh_microscope_brand', true),
+                'microscope_model' => get_post_meta($post_id, '_mh_microscope_model', true),
+                'search_score' => $all_scores[$post_id] ?? 0,
+            );
+            
+            // Get taxonomies
+            $techniques = wp_get_object_terms($post_id, 'mh_technique', array('fields' => 'names'));
+            $paper['techniques'] = is_array($techniques) && !is_wp_error($techniques) ? $techniques : array();
+            
+            $organisms = wp_get_object_terms($post_id, 'mh_organism', array('fields' => 'names'));
+            $paper['organisms'] = is_array($organisms) && !is_wp_error($organisms) ? $organisms : array();
+            
+            $software = wp_get_object_terms($post_id, 'mh_software', array('fields' => 'names'));
+            $paper['software'] = is_array($software) && !is_wp_error($software) ? $software : array();
+            
+            $fluorophores = wp_get_object_terms($post_id, 'mh_fluorophore', array('fields' => 'names'));
+            $paper['fluorophores'] = is_array($fluorophores) && !is_wp_error($fluorophores) ? $fluorophores : array();
+            
+            $sample_prep = wp_get_object_terms($post_id, 'mh_sample_prep', array('fields' => 'names'));
+            $paper['sample_preparation'] = is_array($sample_prep) && !is_wp_error($sample_prep) ? $sample_prep : array();
+            
+            $cell_lines = wp_get_object_terms($post_id, 'mh_cell_line', array('fields' => 'names'));
+            $paper['cell_lines'] = is_array($cell_lines) && !is_wp_error($cell_lines) ? $cell_lines : array();
+            
+            // Get JSON meta fields
+            $protocols_json = get_post_meta($post_id, '_mh_protocols', true);
+            $paper['protocols'] = $protocols_json ? json_decode($protocols_json, true) : array();
+            
+            $repos_json = get_post_meta($post_id, '_mh_repositories', true);
+            $paper['repositories'] = $repos_json ? json_decode($repos_json, true) : array();
+            
+            // GitHub tools (enriched repo data from scraper v5.1+)
+            $github_tools_json = get_post_meta($post_id, '_mh_github_tools', true);
+            $paper['github_tools'] = $github_tools_json ? json_decode($github_tools_json, true) : array();
+            $paper['github_url'] = get_post_meta($post_id, '_mh_github_url', true);
+            
+            $papers[] = $paper;
+        }
+        
+        // If no results, try a broader search
+        if (empty($papers) && !empty($keywords)) {
+            // Try just the first keyword
+            $fallback_query = new WP_Query(array(
+                'post_type' => 'mh_paper',
+                'posts_per_page' => 5,
+                's' => $keywords[0],
+                'post_status' => 'publish',
+                'orderby' => 'meta_value_num',
+                'meta_key' => '_mh_citation_count',
+                'order' => 'DESC'
+            ));
+            
+            if ($fallback_query->have_posts()) {
+                while ($fallback_query->have_posts()) {
+                    $fallback_query->the_post();
+                    $post_id = get_the_ID();
+                    
+                    $paper = array(
+                        'id' => $post_id,
+                        'title' => get_the_title(),
+                        'url' => get_permalink(),
+                        'doi' => get_post_meta($post_id, '_mh_doi', true),
+                        'pmid' => get_post_meta($post_id, '_mh_pubmed_id', true),
+                        'authors' => get_post_meta($post_id, '_mh_authors', true),
+                        'journal' => get_post_meta($post_id, '_mh_journal', true),
+                        'year' => get_post_meta($post_id, '_mh_publication_year', true),
+                        'citation_count' => get_post_meta($post_id, '_mh_citation_count', true),
+                        'abstract' => get_post_meta($post_id, '_mh_abstract', true),
+                        'methods' => get_post_meta($post_id, '_mh_methods', true),
+                        'microscope_brand' => get_post_meta($post_id, '_mh_microscope_brand', true),
+                        'microscope_model' => get_post_meta($post_id, '_mh_microscope_model', true),
+                        'search_score' => 1,
+                    );
+                    
+                    $techniques = wp_get_object_terms($post_id, 'mh_technique', array('fields' => 'names'));
+                    $paper['techniques'] = is_array($techniques) && !is_wp_error($techniques) ? $techniques : array();
+                    
+                    $organisms = wp_get_object_terms($post_id, 'mh_organism', array('fields' => 'names'));
+                    $paper['organisms'] = is_array($organisms) && !is_wp_error($organisms) ? $organisms : array();
+                    
+                    $software = wp_get_object_terms($post_id, 'mh_software', array('fields' => 'names'));
+                    $paper['software'] = is_array($software) && !is_wp_error($software) ? $software : array();
+                    
+                    $fluorophores = wp_get_object_terms($post_id, 'mh_fluorophore', array('fields' => 'names'));
+                    $paper['fluorophores'] = is_array($fluorophores) && !is_wp_error($fluorophores) ? $fluorophores : array();
+                    
+                    $sample_prep = wp_get_object_terms($post_id, 'mh_sample_prep', array('fields' => 'names'));
+                    $paper['sample_preparation'] = is_array($sample_prep) && !is_wp_error($sample_prep) ? $sample_prep : array();
+                    
+                    $cell_lines = wp_get_object_terms($post_id, 'mh_cell_line', array('fields' => 'names'));
+                    $paper['cell_lines'] = is_array($cell_lines) && !is_wp_error($cell_lines) ? $cell_lines : array();
+                    
+                    $protocols_json = get_post_meta($post_id, '_mh_protocols', true);
+                    $paper['protocols'] = $protocols_json ? json_decode($protocols_json, true) : array();
+                    
+                    $repos_json = get_post_meta($post_id, '_mh_repositories', true);
+                    $paper['repositories'] = $repos_json ? json_decode($repos_json, true) : array();
+                    
+                    // GitHub tools (enriched repo data from scraper v5.1+)
+                    $github_tools_json = get_post_meta($post_id, '_mh_github_tools', true);
+                    $paper['github_tools'] = $github_tools_json ? json_decode($github_tools_json, true) : array();
+                    $paper['github_url'] = get_post_meta($post_id, '_mh_github_url', true);
+                    
+                    $papers[] = $paper;
+                }
+                wp_reset_postdata();
+            }
+        }
+        
+        return $papers;
+    }
+    
+    /**
+     * Build detailed paper context for AI prompt
+     */
+    private function build_paper_context_for_ai($papers) {
+        if (empty($papers)) {
+            return "\n\n## PAPERS FOUND: NONE
+No papers matched your search query. This could mean:
+1. Try different search terms (e.g., 'confocal HeLa cells' instead of 'cell imaging')
+2. The technique/organism combination may not be in the database yet
+3. Ask the user to try the MicroHub search page for more options
+
+You can still provide general guidance based on your microscopy knowledge, but make it clear you don't have specific paper citations for this query.";
+        }
+        
+        $context = "\n\n" . str_repeat("=", 60) . "\n";
+        $context .= "## PAPERS FROM MICROHUB DATABASE (" . count($papers) . " results)\n";
+        $context .= "IMPORTANT: Use these papers to provide cited, specific guidance.\n";
+        $context .= str_repeat("=", 60) . "\n\n";
+        
+        foreach ($papers as $i => $paper) {
+            $num = $i + 1;
+            $context .= str_repeat("-", 50) . "\n";
+            $context .= "### PAPER {$num}: {$paper['title']}\n";
+            $context .= str_repeat("-", 50) . "\n";
+            
+            // Citation info - formatted for easy citing
+            $first_author = 'Unknown';
+            if ($paper['authors']) {
+                $authors_parts = preg_split('/[,;]/', $paper['authors']);
+                $first_author = trim($authors_parts[0]);
+                if (count($authors_parts) > 1) $first_author .= ' et al.';
+            }
+            
+            $context .= "**For citing:** \"{$paper['title']}\" ({$first_author}";
+            if ($paper['year']) $context .= ", {$paper['year']}";
+            if ($paper['journal']) $context .= ", {$paper['journal']}";
+            $context .= ")\n";
+            
+            if ($paper['doi']) $context .= "**DOI:** {$paper['doi']}\n";
+            if ($paper['url']) $context .= "**MicroHub URL:** {$paper['url']}\n";
+            if ($paper['citation_count']) $context .= "**Times Cited:** {$paper['citation_count']}\n";
+            
+            $context .= "\n**METADATA FROM PAPER:**\n";
+            
+            // Techniques and methods
+            if (!empty($paper['techniques'])) {
+                $context .= "• Techniques: " . implode(', ', $paper['techniques']) . "\n";
+            }
+            
+            // Equipment
+            if (!empty($paper['microscope_brand']) || !empty($paper['microscope_model'])) {
+                $microscope = trim(($paper['microscope_brand'] ?? '') . ' ' . ($paper['microscope_model'] ?? ''));
+                $context .= "• Microscope: {$microscope}\n";
+            }
+            
+            // Organisms
+            if (!empty($paper['organisms'])) {
+                $context .= "• Organisms: " . implode(', ', $paper['organisms']) . "\n";
+            }
+            
+            // Cell lines
+            if (!empty($paper['cell_lines'])) {
+                $context .= "• Cell Lines: " . implode(', ', $paper['cell_lines']) . "\n";
+            }
+            
+            // Fluorophores
+            if (!empty($paper['fluorophores'])) {
+                $context .= "• Fluorophores: " . implode(', ', $paper['fluorophores']) . "\n";
+            }
+            
+            // Sample prep
+            if (!empty($paper['sample_preparation'])) {
+                $context .= "• Sample Prep: " . implode(', ', $paper['sample_preparation']) . "\n";
+            }
+            
+            // Software
+            if (!empty($paper['software'])) {
+                $context .= "• Software: " . implode(', ', $paper['software']) . "\n";
+            }
+            
+            // Abstract (this is key for method details)
+            if (!empty($paper['abstract'])) {
+                $abstract = trim($paper['abstract']);
+                // Include more of the abstract since it often contains method details
+                $abstract = substr($abstract, 0, 1200);
+                $context .= "\n**ABSTRACT (contains method details):**\n{$abstract}";
+                if (strlen($paper['abstract']) > 1200) $context .= "...";
+                $context .= "\n";
+            }
+            
+            // Methods section if available - VERY valuable
+            if (!empty($paper['methods'])) {
+                $methods = trim($paper['methods']);
+                $methods = substr($methods, 0, 1000);
+                $context .= "\n**METHODS SECTION EXCERPT:**\n{$methods}";
+                if (strlen($paper['methods']) > 1000) $context .= "...";
+                $context .= "\n";
+            }
+            
+            // Linked protocols - HIGHLY valuable for users
+            if (!empty($paper['protocols']) && is_array($paper['protocols'])) {
+                $context .= "\n**LINKED PROTOCOLS (direct links for user):**\n";
+                foreach (array_slice($paper['protocols'], 0, 3) as $protocol) {
+                    $name = isset($protocol['name']) ? $protocol['name'] : 'Protocol';
+                    $url = isset($protocol['url']) ? $protocol['url'] : '';
+                    if ($url) $context .= "  → {$name}: {$url}\n";
+                }
+            }
+            
+            // Data repositories
+            if (!empty($paper['repositories']) && is_array($paper['repositories'])) {
+                $context .= "\n**DATA/CODE REPOSITORIES:**\n";
+                foreach (array_slice($paper['repositories'], 0, 3) as $repo) {
+                    $name = isset($repo['name']) ? $repo['name'] : 'Repository';
+                    $url = isset($repo['url']) ? $repo['url'] : '';
+                    if ($url) $context .= "  → {$name}: {$url}\n";
+                }
+            }
+            
+            // GitHub Tools (enriched repo data)
+            if (!empty($paper['github_tools']) && is_array($paper['github_tools'])) {
+                $context .= "\n**GITHUB TOOLS (enriched metadata):**\n";
+                foreach (array_slice($paper['github_tools'], 0, 5) as $tool) {
+                    $name = isset($tool['full_name']) ? $tool['full_name'] : 'Unknown';
+                    $url = isset($tool['url']) ? $tool['url'] : '';
+                    $stars = isset($tool['stars']) ? number_format(intval($tool['stars'])) : '0';
+                    $lang = isset($tool['language']) ? $tool['language'] : '';
+                    $rel = isset($tool['relationship']) ? $tool['relationship'] : 'uses';
+                    $health = intval($tool['health_score'] ?? 0);
+                    $health_label = $health >= 70 ? 'Active' : ($health >= 40 ? 'Moderate' : 'Low');
+                    if (!empty($tool['is_archived'])) $health_label = 'Archived';
+                    $context .= "  → {$name} ({$rel}) - ⭐{$stars}";
+                    if ($lang) $context .= ", {$lang}";
+                    $context .= ", Health: {$health_label}";
+                    if ($url) $context .= " - {$url}";
+                    $context .= "\n";
+                }
+            } elseif (!empty($paper['github_url'])) {
+                $context .= "\n**GITHUB:** {$paper['github_url']}\n";
+            }
+            
+            $context .= "\n";
+        }
+        
+        $context .= str_repeat("=", 60) . "\n";
+        $context .= "END OF PAPER DATA - Now provide your response using these sources.\n";
+        $context .= str_repeat("=", 60) . "\n";
+        
+        return $context;
+    }
+    
+    /**
+     * Simplify papers for response (don't need full data for frontend)
+     */
+    private function simplify_papers_for_response($papers) {
+        $simple = array();
+        foreach ($papers as $paper) {
+            $simple[] = array(
+                'id' => $paper['id'],
+                'title' => $paper['title'],
+                'url' => $paper['url'],
+                'authors' => $paper['authors'],
+                'year' => $paper['year'],
+                'journal' => $paper['journal'],
+                'doi' => $paper['doi']
+            );
+        }
+        return $simple;
+    }
+    
+    /**
+     * Fallback rules-based AI chat (when no API key)
+     */
+    private function ai_chat_fallback($message, $context) {
         $msg_lower = strtolower(trim($message));
         $response = array(
             'reply' => '',
@@ -1102,7 +1895,7 @@ class MicroHub_API {
                 'name' => 'Confocal Microscopy',
                 'description' => "**Confocal microscopy** uses point illumination and a pinhole aperture to eliminate out-of-focus light, creating sharp optical sections.\n\n" .
                     "**Key advantages:**\n" .
-                    "- Excellent for 3D imaging of thick samples (up to ~100Âµm)\n" .
+                    "- Excellent for 3D imaging of thick samples (up to ~100µm)\n" .
                     "- Great for colocalization studies with multiple fluorophores\n" .
                     "- Can perform z-stacks for 3D reconstruction\n" .
                     "- Widely available and well-established\n\n" .
@@ -1128,7 +1921,7 @@ class MicroHub_API {
                 'name' => 'Two-Photon Microscopy',
                 'description' => "**Two-photon microscopy** uses infrared light and nonlinear excitation for deep tissue imaging.\n\n" .
                     "**Key advantages:**\n" .
-                    "- Deep tissue penetration (500Âµm - 1mm)\n" .
+                    "- Deep tissue penetration (500µm - 1mm)\n" .
                     "- Reduced photodamage and photobleaching\n" .
                     "- Intrinsic optical sectioning\n\n" .
                     "**Best for:** In vivo brain imaging, deep tissue imaging, live animal studies"
@@ -1137,7 +1930,7 @@ class MicroHub_API {
                 'name' => 'Two-Photon Microscopy',
                 'description' => "**Two-photon microscopy** uses infrared light and nonlinear excitation for deep tissue imaging.\n\n" .
                     "**Key advantages:**\n" .
-                    "- Deep tissue penetration (500Âµm - 1mm)\n" .
+                    "- Deep tissue penetration (500µm - 1mm)\n" .
                     "- Reduced photodamage and photobleaching\n" .
                     "- Intrinsic optical sectioning\n\n" .
                     "**Best for:** In vivo brain imaging, deep tissue imaging, live animal studies"
@@ -1157,7 +1950,7 @@ class MicroHub_API {
                     "**Best for:** Multicolor super-resolution, cytoskeleton imaging, chromatin structure"
             ),
             'fret' => array(
-                'name' => 'FRET (FÃ¶rster Resonance Energy Transfer)',
+                'name' => 'FRET (Förster Resonance Energy Transfer)',
                 'description' => "**FRET** measures molecular interactions at nanometer distances by detecting energy transfer between fluorophores.\n\n" .
                     "**How it works:** When donor and acceptor fluorophores are within ~10nm, excited donor transfers energy to acceptor.\n\n" .
                     "**Best for:** Protein-protein interactions, conformational changes, biosensor imaging"
@@ -1346,7 +2139,7 @@ class MicroHub_API {
         if (strpos($msg, 'live cell') !== false || strpos($msg, 'live imaging') !== false) {
             return "**Live Cell Imaging Tips:**\n\n" .
                 "**Environmental control:**\n" .
-                "- Temperature: 37Â°C for mammalian cells\n" .
+                "- Temperature: 37°C for mammalian cells\n" .
                 "- CO2: 5% for buffered media\n" .
                 "- Humidity: Prevent evaporation\n\n" .
                 "**Minimize phototoxicity:**\n" .
@@ -1444,9 +2237,9 @@ class MicroHub_API {
                 "- **SIM:** Good balance of speed and resolution improvement\n" .
                 "- **Expansion microscopy:** Super-resolution on regular microscopes\n\n" .
                 "**Consider:**\n" .
-                "- Do you need live imaging? â†’ STED or fast SIM\n" .
-                "- Maximum resolution needed? â†’ PALM/STORM\n" .
-                "- Limited budget? â†’ Expansion microscopy";
+                "- Do you need live imaging? → STED or fast SIM\n" .
+                "- Maximum resolution needed? → PALM/STORM\n" .
+                "- Limited budget? → Expansion microscopy";
         }
 
         return "I can recommend techniques for:\n\n" .
@@ -1472,12 +2265,16 @@ class MicroHub_API {
         // Get papers with GitHub
         $with_github = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_github_url' AND meta_value != ''");
         
+        // Get papers with GitHub tools (enriched)
+        $with_github_tools = $wpdb->get_var("SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = '_mh_github_tools' AND meta_value != '' AND meta_value != '[]'");
+        
         return "**MicroHub Database Statistics:**\n\n" .
             "- **Total papers:** " . number_format($total_papers) . "\n" .
             "- **Techniques covered:** " . number_format($techniques) . "\n" .
             "- **Papers with protocols:** " . number_format($with_protocols) . "\n" .
-            "- **Papers with GitHub code:** " . number_format($with_github) . "\n\n" .
-            "You can search all papers using the search page, or ask me to find papers on specific topics!";
+            "- **Papers with GitHub code:** " . number_format($with_github) . "\n" .
+            "- **Papers with GitHub tools (enriched):** " . number_format($with_github_tools) . "\n\n" .
+            "You can search all papers using the search page, or visit the GitHub Tools page for an overview of open-source tools used across the database!";
     }
 
     /**

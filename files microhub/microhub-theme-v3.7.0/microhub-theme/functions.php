@@ -25,7 +25,8 @@ function mh_enqueue_assets() {
     wp_localize_script('mh-main', 'microhubAjax', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('microhub_nonce'),
-        'restUrl' => rest_url('microhub-theme/v1')  // Use theme's own API
+        'restUrl' => rest_url('microhub-theme/v1'),  // Theme's own API
+        'aiChatUrl' => rest_url('microhub/v1/ai-chat')  // Plugin's AI chat endpoint
     ));
 }
 add_action('wp_enqueue_scripts', 'mh_enqueue_assets');
@@ -1192,6 +1193,9 @@ function mh_get_paper_meta($post_id = null) {
         'rors' => json_decode(get_post_meta($post_id, '_mh_rors', true), true) ?: array(),
         'supplementary_materials' => json_decode(get_post_meta($post_id, '_mh_supplementary_materials', true), true) ?: array(),
         
+        // GitHub Tools (enriched repo data from scraper v5.1+)
+        'github_tools' => json_decode(get_post_meta($post_id, '_mh_github_tools', true), true) ?: array(),
+        
         // Figures
         'figures' => json_decode(get_post_meta($post_id, '_mh_figures', true), true) ?: array(),
         'figure_count' => intval(get_post_meta($post_id, '_mh_figure_count', true)),
@@ -1214,6 +1218,7 @@ function mh_get_paper_meta($post_id = null) {
         'has_figures' => get_post_meta($post_id, '_mh_has_figures', true),
         'has_protocols' => get_post_meta($post_id, '_mh_has_protocols', true),
         'has_github' => get_post_meta($post_id, '_mh_has_github', true),
+        'has_github_tools' => get_post_meta($post_id, '_mh_has_github_tools', true),
         'has_data' => get_post_meta($post_id, '_mh_has_data', true),
         'has_rors' => !empty(json_decode(get_post_meta($post_id, '_mh_rors', true), true)),
     );
@@ -1229,9 +1234,9 @@ function mh_paper_badge($citations = null) {
     $citations = intval($citations);
     
     if ($citations >= 100) {
-        echo '<span class="mh-badge mh-badge-foundational">â­ Foundational</span>';
+        echo '<span class="mh-badge mh-badge-foundational">⭐ Foundational</span>';
     } elseif ($citations >= 50) {
-        echo '<span class="mh-badge mh-badge-high-impact">ðŸ”¥ High Impact</span>';
+        echo '<span class="mh-badge mh-badge-high-impact">🔥 High Impact</span>';
     }
 }
 
@@ -1243,13 +1248,13 @@ function mh_display_paper_meta($meta = null) {
     
     echo '<div class="mh-paper-meta">';
     if ($meta['journal']) {
-        echo '<span class="mh-meta-item">ðŸ“– ' . esc_html($meta['journal']) . '</span>';
+        echo '<span class="mh-meta-item">📖 ' . esc_html($meta['journal']) . '</span>';
     }
     if ($meta['year']) {
-        echo '<span class="mh-meta-item">ðŸ“… ' . esc_html($meta['year']) . '</span>';
+        echo '<span class="mh-meta-item">📅 ' . esc_html($meta['year']) . '</span>';
     }
     if ($meta['citations']) {
-        echo '<span class="mh-meta-item">ðŸ“Š ' . number_format(intval($meta['citations'])) . ' citations</span>';
+        echo '<span class="mh-meta-item">📊 ' . number_format(intval($meta['citations'])) . ' citations</span>';
     }
     echo '</div>';
 }
@@ -1317,7 +1322,7 @@ function mh_display_protocols($protocols = null) {
     if (empty($protocols)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ“‹ Protocols</h2>';
+    echo '<h2>📋 Protocols</h2>';
     echo '<div class="mh-protocol-list">';
     
     foreach ($protocols as $protocol) {
@@ -1326,10 +1331,10 @@ function mh_display_protocols($protocols = null) {
         $source = isset($protocol['source']) ? $protocol['source'] : 'Protocol';
         
         echo '<a href="' . esc_url($url) . '" class="mh-protocol-item" target="_blank">';
-        echo '<span class="mh-protocol-icon">ðŸ“„</span>';
+        echo '<span class="mh-protocol-icon">📄</span>';
         echo '<span class="mh-protocol-name">' . esc_html($name) . '</span>';
         echo '<span class="mh-protocol-source">' . esc_html($source) . '</span>';
-        echo '<span class="mh-protocol-arrow">â†’</span>';
+        echo '<span class="mh-protocol-arrow">→</span>';
         echo '</a>';
     }
     
@@ -1340,27 +1345,84 @@ function mh_display_protocols($protocols = null) {
 /**
  * Display GitHub section
  */
-function mh_display_github($url = null) {
+function mh_display_github($url = null, $github_tools = null) {
     if ($url === null) {
         $url = get_post_meta(get_the_ID(), '_mh_github_url', true);
     }
+    if ($github_tools === null) {
+        $github_tools = json_decode(get_post_meta(get_the_ID(), '_mh_github_tools', true), true) ?: array();
+    }
     
-    if (empty($url)) return;
-    
-    // Extract repo name from URL
-    $repo_name = preg_replace('/^https?:\/\/(www\.)?github\.com\//', '', $url);
-    $repo_name = rtrim($repo_name, '/');
+    if (empty($url) && empty($github_tools)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ’» Code & Data</h2>';
-    echo '<a href="' . esc_url($url) . '" class="mh-github-card" target="_blank">';
-    echo '<span class="mh-github-icon">ðŸ™</span>';
-    echo '<div class="mh-github-info">';
-    echo '<strong>GitHub Repository</strong>';
-    echo '<span>' . esc_html($repo_name) . '</span>';
-    echo '</div>';
-    echo '<span class="mh-github-arrow">â†’</span>';
-    echo '</a>';
+    echo '<h2>💻 Code & Software</h2>';
+    
+    // If we have enriched github_tools data, show rich cards
+    if (!empty($github_tools)) {
+        echo '<div class="mh-github-tools-list">';
+        foreach ($github_tools as $tool) {
+            $tool_url = !empty($tool['url']) ? $tool['url'] : 'https://github.com/' . ($tool['full_name'] ?? '');
+            $health = intval($tool['health_score'] ?? 0);
+            $is_archived = !empty($tool['is_archived']);
+            
+            if ($is_archived) { $health_class = 'archived'; $health_label = 'Archived'; }
+            elseif ($health >= 70) { $health_class = 'active'; $health_label = 'Active'; }
+            elseif ($health >= 40) { $health_class = 'moderate'; $health_label = 'Moderate'; }
+            elseif ($health > 0) { $health_class = 'low'; $health_label = 'Low Activity'; }
+            else { $health_class = 'unknown'; $health_label = ''; }
+            
+            $rel = $tool['relationship'] ?? 'uses';
+            $rel_labels = array('introduces' => '🆕 Introduced here', 'uses' => '🔧 Used', 'extends' => '🔀 Extended', 'benchmarks' => '📊 Benchmarked');
+            $rel_label = $rel_labels[$rel] ?? '🔧 Used';
+            
+            echo '<a href="' . esc_url($tool_url) . '" class="mh-github-tool-card health-' . $health_class . '" target="_blank" rel="noopener">';
+            echo '<div class="mh-ght-header">';
+            echo '<strong class="mh-ght-name">' . esc_html($tool['full_name'] ?? '') . '</strong>';
+            if ($health_label) {
+                echo '<span class="mh-ght-health ' . $health_class . '">' . $health_label . '</span>';
+            }
+            echo '</div>';
+            if (!empty($tool['description'])) {
+                echo '<p class="mh-ght-desc">' . esc_html(wp_trim_words($tool['description'], 20, '...')) . '</p>';
+            }
+            echo '<div class="mh-ght-metrics">';
+            echo '<span class="mh-ght-rel ' . esc_attr($rel) . '">' . $rel_label . '</span>';
+            if (!empty($tool['stars'])) {
+                echo '<span>⭐ ' . number_format(intval($tool['stars'])) . '</span>';
+            }
+            if (!empty($tool['forks'])) {
+                echo '<span>🍴 ' . number_format(intval($tool['forks'])) . '</span>';
+            }
+            if (!empty($tool['language'])) {
+                echo '<span>📝 ' . esc_html($tool['language']) . '</span>';
+            }
+            echo '</div>';
+            if (!empty($tool['topics']) && is_array($tool['topics'])) {
+                echo '<div class="mh-ght-topics">';
+                foreach (array_slice($tool['topics'], 0, 5) as $topic) {
+                    echo '<span class="mh-ght-topic">' . esc_html($topic) . '</span>';
+                }
+                echo '</div>';
+            }
+            echo '</a>';
+        }
+        echo '</div>';
+    } elseif (!empty($url)) {
+        // Fallback: simple link card when no enriched tools available
+        $repo_name = preg_replace('/^https?:\/\/(www\.)?github\.com\//', '', $url);
+        $repo_name = rtrim($repo_name, '/');
+        
+        echo '<a href="' . esc_url($url) . '" class="mh-github-card" target="_blank">';
+        echo '<span class="mh-github-icon">🐙</span>';
+        echo '<div class="mh-github-info">';
+        echo '<strong>GitHub Repository</strong>';
+        echo '<span>' . esc_html($repo_name) . '</span>';
+        echo '</div>';
+        echo '<span class="mh-github-arrow">→</span>';
+        echo '</a>';
+    }
+    
     echo '</div>';
 }
 
@@ -1375,7 +1437,7 @@ function mh_display_repositories($repositories = null) {
     if (empty($repositories)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ—„ï¸ Data Repositories</h2>';
+    echo '<h2>🗄️ Data Repositories</h2>';
     echo '<div class="mh-repo-list">';
     
     foreach ($repositories as $repo) {
@@ -1485,7 +1547,7 @@ function mh_display_rors($rors = null) {
         
         if ($ror_id) {
             echo '<a href="' . esc_url($ror_url) . '" class="mh-ror-tag" target="_blank" rel="noopener">';
-            echo '<span class="ror-icon">ðŸ›ï¸</span>';
+            echo '<span class="ror-icon">🏛️</span>';
             echo '<span class="ror-id">' . esc_html($ror_id) . '</span>';
             echo '</a>';
         }
@@ -1692,7 +1754,7 @@ function mh_display_abstract_with_tags($post_id = null) {
     ?>
     <section class="mh-paper-section mh-abstract-section">
         <div class="mh-abstract-header">
-            <h2>ðŸ“ Abstract</h2>
+            <h2>📝 Abstract</h2>
             <?php if ($has_tags): ?>
             <div class="mh-tag-legend">
                 <span class="mh-legend-item"><span class="mh-text-tag mh-text-tag-technique">Technique</span></span>
@@ -1759,10 +1821,10 @@ function mh_link_references_in_text($text, $references) {
         $text
     );
     
-    // Link superscript citations like Â¹, Â², Â¹â»Â³
-    $superscripts = array('â°'=>0, 'Â¹'=>1, 'Â²'=>2, 'Â³'=>3, 'â´'=>4, 'âµ'=>5, 'â¶'=>6, 'â·'=>7, 'â¸'=>8, 'â¹'=>9);
+    // Link superscript citations like ¹, ², ¹⁻³
+    $superscripts = array('⁰'=>0, '¹'=>1, '²'=>2, '³'=>3, '⁴'=>4, '⁵'=>5, '⁶'=>6, '⁷'=>7, '⁸'=>8, '⁹'=>9);
     $text = preg_replace_callback(
-        '/([â°Â¹Â²Â³â´âµâ¶â·â¸â¹]+)/',
+        '/([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/',
         function($matches) use ($ref_lookup, $superscripts) {
             $super = $matches[1];
             $num = '';
@@ -1814,25 +1876,25 @@ function mh_display_full_text($post_id = null) {
     
     // Section definitions with icons
     $section_defs = array(
-        'Abstract' => array('icon' => 'ðŸ“', 'color' => 'purple'),
-        'Summary' => array('icon' => 'ðŸ“', 'color' => 'purple'),
-        'Introduction' => array('icon' => 'ðŸ“–', 'color' => 'blue'),
-        'Background' => array('icon' => 'ðŸ“–', 'color' => 'blue'),
-        'Methods' => array('icon' => 'ðŸ”¬', 'color' => 'green'),
-        'Materials and Methods' => array('icon' => 'ðŸ”¬', 'color' => 'green'),
-        'Material and methods' => array('icon' => 'ðŸ”¬', 'color' => 'green'),
-        'Experimental' => array('icon' => 'ðŸ”¬', 'color' => 'green'),
-        'Results' => array('icon' => 'ðŸ“Š', 'color' => 'orange'),
-        'Discussion' => array('icon' => 'ðŸ’¬', 'color' => 'yellow'),
-        'Conclusion' => array('icon' => 'âœ…', 'color' => 'teal'),
-        'Conclusions' => array('icon' => 'âœ…', 'color' => 'teal'),
-        'Acknowledgements' => array('icon' => 'ðŸ™', 'color' => 'gray'),
-        'Acknowledgments' => array('icon' => 'ðŸ™', 'color' => 'gray'),
-        'References' => array('icon' => 'ðŸ“š', 'color' => 'gray'),
-        'Data Availability' => array('icon' => 'ðŸ“', 'color' => 'gray'),
-        'Author Contributions' => array('icon' => 'ðŸ‘¥', 'color' => 'gray'),
-        'Funding' => array('icon' => 'ðŸ’°', 'color' => 'gray'),
-        'Supplementary' => array('icon' => 'ðŸ“Ž', 'color' => 'gray'),
+        'Abstract' => array('icon' => '📝', 'color' => 'purple'),
+        'Summary' => array('icon' => '📝', 'color' => 'purple'),
+        'Introduction' => array('icon' => '📖', 'color' => 'blue'),
+        'Background' => array('icon' => '📖', 'color' => 'blue'),
+        'Methods' => array('icon' => '🔬', 'color' => 'green'),
+        'Materials and Methods' => array('icon' => '🔬', 'color' => 'green'),
+        'Material and methods' => array('icon' => '🔬', 'color' => 'green'),
+        'Experimental' => array('icon' => '🔬', 'color' => 'green'),
+        'Results' => array('icon' => '📊', 'color' => 'orange'),
+        'Discussion' => array('icon' => '💬', 'color' => 'yellow'),
+        'Conclusion' => array('icon' => '✅', 'color' => 'teal'),
+        'Conclusions' => array('icon' => '✅', 'color' => 'teal'),
+        'Acknowledgements' => array('icon' => '🙏', 'color' => 'gray'),
+        'Acknowledgments' => array('icon' => '🙏', 'color' => 'gray'),
+        'References' => array('icon' => '📚', 'color' => 'gray'),
+        'Data Availability' => array('icon' => '📁', 'color' => 'gray'),
+        'Author Contributions' => array('icon' => '👥', 'color' => 'gray'),
+        'Funding' => array('icon' => '💰', 'color' => 'gray'),
+        'Supplementary' => array('icon' => '📎', 'color' => 'gray'),
     );
     
     // First, try to add line breaks before section headers if they're inline
@@ -1888,7 +1950,7 @@ function mh_display_full_text($post_id = null) {
                 if (!isset($sections['_intro'])) {
                     $sections = array_merge(array('_intro' => array(
                         'title' => 'Overview',
-                        'icon' => 'ðŸ“„',
+                        'icon' => '📄',
                         'color' => 'blue',
                         'content' => ''
                     )), $sections);
@@ -1902,7 +1964,7 @@ function mh_display_full_text($post_id = null) {
     if (empty($sections)) {
         $sections['_full'] = array(
             'title' => 'Full Text',
-            'icon' => 'ðŸ“„',
+            'icon' => '📄',
             'color' => 'blue',
             'content' => $full_text
         );
@@ -1916,7 +1978,7 @@ function mh_display_full_text($post_id = null) {
     ?>
     <section class="mh-paper-section mh-full-text-section">
         <div class="mh-full-text-header">
-            <h2>ðŸ“„ Full Text</h2>
+            <h2>📄 Full Text</h2>
             <div class="mh-full-text-controls">
                 <button type="button" class="mh-btn mh-btn-sm" id="mh-toggle-highlights">
                     <span class="highlight-on">Hide Highlights</span>
@@ -1987,7 +2049,7 @@ function mh_display_full_text($post_id = null) {
                 <div class="mh-text-section-header" data-toggle="section">
                     <span class="mh-section-icon"><?php echo $section['icon']; ?></span>
                     <h3><?php echo esc_html($section['title']); ?></h3>
-                    <span class="mh-section-arrow">â–¼</span>
+                    <span class="mh-section-arrow">▼</span>
                 </div>
                 <div class="mh-text-section-body">
                     <?php echo $content; ?>
@@ -2010,7 +2072,7 @@ function mh_display_references($post_id = null) {
     
     ?>
     <section class="mh-paper-section mh-references-section">
-        <h2>ðŸ“š References</h2>
+        <h2>📚 References</h2>
         <ol class="mh-reference-list">
             <?php foreach ($references as $idx => $ref) : 
                 $num = isset($ref['num']) ? $ref['num'] : ($idx + 1);
@@ -2038,7 +2100,7 @@ function mh_display_references($post_id = null) {
                             <?php elseif ($pmid) : ?>
                                 <span class="mh-ref-pmid">PubMed</span>
                             <?php else : ?>
-                                <span class="mh-ref-link-icon">ðŸ”—</span>
+                                <span class="mh-ref-link-icon">🔗</span>
                             <?php endif; ?>
                         </a>
                     <?php endif; ?>
@@ -2069,12 +2131,12 @@ function mh_display_facility($facility = null) {
     if (empty($institutions)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ›ï¸ Research Institutions</h2>';
+    echo '<h2>🏛️ Research Institutions</h2>';
     echo '<div class="mh-institutions-list">';
     foreach ($institutions as $institution) {
         if (empty($institution)) continue;
         echo '<div class="mh-institution-card">';
-        echo '<span class="mh-institution-icon">ðŸ›ï¸</span>';
+        echo '<span class="mh-institution-icon">🏛️</span>';
         echo '<span class="mh-institution-name">' . esc_html($institution) . '</span>';
         echo '</div>';
     }
@@ -2093,7 +2155,7 @@ function mh_display_fluorophores($fluorophores = null) {
     if (empty($fluorophores)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ”¬ Fluorophores &amp; Dyes</h2>';
+    echo '<h2>🔬 Fluorophores &amp; Dyes</h2>';
     echo '<div class="mh-tag-cloud mh-fluorophores">';
     foreach ($fluorophores as $fluor) {
         $class = 'mh-fluor-tag';
@@ -2130,7 +2192,7 @@ function mh_display_sample_preparation($sample_prep = null) {
     if (empty($sample_prep)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ§ª Sample Preparation</h2>';
+    echo '<h2>🧪 Sample Preparation</h2>';
     echo '<div class="mh-tag-cloud mh-sample-prep">';
     foreach ($sample_prep as $prep) {
         $class = 'mh-prep-tag';
@@ -2163,7 +2225,7 @@ function mh_display_cell_lines($cell_lines = null) {
     if (empty($cell_lines)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ§« Cell Lines</h2>';
+    echo '<h2>🧫 Cell Lines</h2>';
     echo '<div class="mh-tag-cloud mh-cell-lines">';
     foreach ($cell_lines as $cell) {
         echo '<span class="mh-cell-tag">' . esc_html($cell) . '</span>';
@@ -2183,7 +2245,7 @@ function mh_display_figures($figures = null) {
     if (empty($figures)) return;
     
     echo '<div class="mh-paper-section mh-figures-section">';
-    echo '<h2>ðŸ“Š Figures</h2>';
+    echo '<h2>📊 Figures</h2>';
     echo '<div class="mh-figures-grid">';
     
     foreach ($figures as $index => $fig) {
@@ -2231,7 +2293,7 @@ function mh_display_methods($methods = null) {
     if (empty($methods)) return;
     
     echo '<div class="mh-paper-section mh-methods-section">';
-    echo '<h2>ðŸ“‹ Methods</h2>';
+    echo '<h2>📋 Methods</h2>';
     echo '<div class="mh-methods-content">';
     
     // If methods is very long, show excerpt with expand option
@@ -2267,7 +2329,7 @@ function mh_display_equipment($meta = null) {
     if (empty($brands) && empty($models) && empty($details)) return;
     
     echo '<div class="mh-paper-section">';
-    echo '<h2>ðŸ”¬ Microscope Equipment</h2>';
+    echo '<h2>🔬 Microscope Equipment</h2>';
     
     if (!empty($brands)) {
         echo '<div class="mh-equipment-brands">';
@@ -2343,9 +2405,9 @@ function mh_get_page_urls() {
     return array(
         'papers' => get_post_type_archive_link('mh_paper') ?: home_url('/papers/'),
         'protocols' => home_url('/protocols/'),
+        'github_tools' => get_page_by_path('github-tools') ? get_permalink(get_page_by_path('github-tools')) : home_url('/github-tools/'),
         'discussions' => get_page_by_path('discussions') ? get_permalink(get_page_by_path('discussions')) : home_url('/discussions/'),
         'about' => get_page_by_path('about') ? get_permalink(get_page_by_path('about')) : home_url('/about/'),
-        'github-tools' => get_page_by_path('github-tools') ? get_permalink(get_page_by_path('github-tools')) : home_url('/github-tools/'),
         'contact' => get_page_by_path('contact') ? get_permalink(get_page_by_path('contact')) : home_url('/contact/')
     );
 }
@@ -2672,7 +2734,7 @@ function mh_get_papers_by_author($author_name, $limit = 10) {
 // AI CHAT - USES COPILOT
 // ============================================
 // The theme uses Copilot for AI chat functionality
-// Configure in MicroHub plugin settings (MicroHub â†’ Settings)
+// Configure in MicroHub plugin settings (MicroHub → Settings)
 
 /**
  * Check if Copilot is configured (uses plugin's setting)

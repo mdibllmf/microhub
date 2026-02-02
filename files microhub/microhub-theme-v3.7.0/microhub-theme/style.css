@@ -910,3 +910,108 @@ a.mh-text-tag:hover {
         align-self: flex-start;
     }
 }
+
+/* GitHub Tools Cards (for single paper pages and browse) */
+.mh-github-tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mh-github-tool-card {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s;
+    border-left: 3px solid var(--border);
+}
+
+.mh-github-tool-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mh-github-tool-card.health-active { border-left-color: #3fb950; }
+.mh-github-tool-card.health-moderate { border-left-color: #d29922; }
+.mh-github-tool-card.health-low { border-left-color: #f85149; }
+.mh-github-tool-card.health-archived { border-left-color: #6e7681; opacity: 0.75; }
+.mh-github-tool-card.health-unknown { border-left-color: #8b949e; }
+
+.mh-ght-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+
+.mh-ght-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.mh-github-tool-card:hover .mh-ght-name {
+    color: var(--accent);
+}
+
+.mh-ght-health {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.mh-ght-health.active { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+.mh-ght-health.moderate { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+.mh-ght-health.low { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+.mh-ght-health.archived { background: rgba(110, 118, 129, 0.15); color: #6e7681; }
+.mh-ght-health.unknown { background: rgba(139, 148, 158, 0.1); color: #8b949e; }
+
+.mh-ght-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+    line-height: 1.4;
+}
+
+.mh-ght-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.mh-ght-rel {
+    font-weight: 500;
+}
+
+.mh-ght-rel.introduces { color: var(--accent); }
+.mh-ght-rel.uses { color: var(--text-muted); }
+.mh-ght-rel.extends { color: var(--secondary); }
+.mh-ght-rel.benchmarks { color: var(--warning); }
+
+.mh-ght-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.mh-ght-topic {
+    font-size: 0.68rem;
+    background: rgba(88, 166, 255, 0.08);
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(88, 166, 255, 0.2);
+}
