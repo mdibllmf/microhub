@@ -1952,6 +1952,87 @@ def merge_lists(existing: List, new: List) -> List:
 
 
 # ============================================================================
+# REPOSITORY CLEANUP - Deduplicate data repositories
+# ============================================================================
+
+def clean_repositories(repos: List) -> List[Dict]:
+    """
+    Deduplicate and clean data repository entries by URL.
+
+    Args:
+        repos: List of repository entries (can be strings or dicts)
+
+    Returns:
+        List of unique repository dicts
+    """
+    if not repos:
+        return []
+
+    seen_urls = set()
+    cleaned = []
+
+    for repo in repos:
+        # Handle both dict and string formats
+        if isinstance(repo, str):
+            url = repo.strip()
+            name = ''
+            accession_id = ''
+        elif isinstance(repo, dict):
+            url = str(repo.get('url', '') or '').strip()
+            name = str(repo.get('name', '') or repo.get('type', '') or '').strip()
+            accession_id = str(repo.get('accession_id', '') or repo.get('identifier', '') or '').strip()
+        else:
+            continue
+
+        if not url:
+            continue
+
+        # Normalize URL for deduplication
+        normalized_url = url.lower().rstrip('/')
+        # Remove protocol and www for comparison
+        normalized_url = re.sub(r'^https?://(www\.)?', '', normalized_url)
+
+        if normalized_url in seen_urls:
+            continue
+        seen_urls.add(normalized_url)
+
+        # Auto-detect name from URL if missing
+        if not name or name.lower() in ('unknown', 'repository', 'data repository'):
+            if 'zenodo' in url.lower():
+                name = 'Zenodo'
+            elif 'figshare' in url.lower():
+                name = 'Figshare'
+            elif 'github' in url.lower():
+                name = 'GitHub'
+            elif 'dryad' in url.lower():
+                name = 'Dryad'
+            elif 'osf.io' in url.lower():
+                name = 'OSF'
+            elif 'dataverse' in url.lower():
+                name = 'Dataverse'
+            elif 'mendeley' in url.lower():
+                name = 'Mendeley Data'
+            elif 'synapse' in url.lower():
+                name = 'Synapse'
+            elif 'empiar' in url.lower() or 'ebi.ac.uk' in url.lower():
+                name = 'EMPIAR'
+            elif 'ncbi' in url.lower() or 'geo' in url.lower():
+                name = 'GEO/NCBI'
+            elif 'idr' in url.lower():
+                name = 'IDR'
+            else:
+                name = 'Data Repository'
+
+        cleaned.append({
+            'url': url,
+            'name': name,
+            'accession_id': accession_id,
+        })
+
+    return cleaned
+
+
+# ============================================================================
 # GITHUB API FUNCTIONS - Fetch metadata for tools missing data
 # ============================================================================
 
@@ -2346,10 +2427,10 @@ def clean_paper(paper: Dict) -> Dict:
         extract_urls(combined_text, PROTOCOL_PATTERNS)
     )
     
-    paper['repositories'] = merge_lists(
+    paper['repositories'] = clean_repositories(merge_lists(
         paper.get('repositories', []),
         extract_urls(combined_text, REPOSITORY_PATTERNS)
-    )
+    ))
     
     # ==========================================
     # GITHUB TOOLS - Clean and validate detailed repo data (scraper v5.1+)
