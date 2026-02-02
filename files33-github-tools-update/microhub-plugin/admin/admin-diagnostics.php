@@ -533,14 +533,22 @@ function microhub_diagnostic_page() {
         
         <h2>🔄 Migration Tool: Taxonomy → Meta Fields</h2>
         <p>This will copy data from taxonomies to meta fields so the theme's advanced filters work.</p>
-        
+
         <?php
         // Handle migration
         if (isset($_POST['migrate_taxonomy_to_meta']) && check_admin_referer('microhub_migrate_nonce')) {
-            $migrated = microhub_migrate_taxonomy_to_meta();
-            echo '<div class="notice notice-success"><p>✅ Migration complete! ' . esc_html($migrated) . ' papers updated.</p></div>';
+            $force_update = !empty($_POST['force_update']);
+            $migrated = microhub_migrate_taxonomy_to_meta($force_update);
+
+            // Auto-clear filter cache after migration
+            delete_transient('mh_filter_options');
+            delete_transient('mh_stats');
+            global $wpdb;
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_mh_%' OR option_name LIKE '_transient_timeout_mh_%'");
+
+            echo '<div class="notice notice-success"><p>✅ Migration complete! ' . esc_html($migrated) . ' papers updated. Filter cache automatically cleared.</p></div>';
         }
-        
+
         // Handle cache clear
         if (isset($_POST['clear_theme_cache']) && check_admin_referer('microhub_cache_nonce')) {
             delete_transient('mh_filter_options');
@@ -551,23 +559,27 @@ function microhub_diagnostic_page() {
             echo '<div class="notice notice-success"><p>✅ Theme cache cleared!</p></div>';
         }
         ?>
-        
+
         <form method="post" style="display: inline-block; margin-right: 20px;">
             <?php wp_nonce_field('microhub_migrate_nonce'); ?>
+            <label style="margin-right: 10px;">
+                <input type="checkbox" name="force_update" value="1">
+                Force update (overwrite existing meta)
+            </label>
             <button type="submit" name="migrate_taxonomy_to_meta" class="button button-primary">
                 🔄 Migrate Taxonomy Data to Meta Fields
             </button>
         </form>
-        
+
         <form method="post" style="display: inline-block;">
             <?php wp_nonce_field('microhub_cache_nonce'); ?>
             <button type="submit" name="clear_theme_cache" class="button button-secondary">
                 🗑️ Clear Theme Filter Cache
             </button>
         </form>
-        
+
         <p style="margin-top: 15px; color: #666;">
-            <strong>Note:</strong> After migrating, click "Clear Theme Filter Cache" to see updated filter options.
+            <strong>Note:</strong> Cache is now automatically cleared after migration. Use "Clear Theme Filter Cache" to manually refresh filter options.
         </p>
         
         <hr>
@@ -621,10 +633,11 @@ function microhub_diagnostic_page() {
 
 /**
  * Migrate taxonomy terms to meta fields for theme compatibility
+ * @param bool $force_update If true, overwrites existing meta values
  */
-function microhub_migrate_taxonomy_to_meta() {
+function microhub_migrate_taxonomy_to_meta($force_update = false) {
     global $wpdb;
-    
+
     $taxonomy_meta_map = array(
         'mh_fluorophore' => '_mh_fluorophores',
         'mh_sample_prep' => '_mh_sample_preparation',
@@ -634,14 +647,14 @@ function microhub_migrate_taxonomy_to_meta() {
         'mh_analysis_software' => '_mh_image_analysis_software',
         'mh_acquisition_software' => '_mh_image_acquisition_software',
     );
-    
+
     $migrated = 0;
-    
+
     foreach ($taxonomy_meta_map as $taxonomy => $meta_key) {
         if (!taxonomy_exists($taxonomy)) {
             continue;
         }
-        
+
         // Get all papers with this taxonomy
         $papers = get_posts(array(
             'post_type' => 'mh_paper',
@@ -654,25 +667,29 @@ function microhub_migrate_taxonomy_to_meta() {
                 ),
             ),
         ));
-        
+
         foreach ($papers as $post_id) {
-            // Get current meta value
-            $existing = get_post_meta($post_id, $meta_key, true);
-            
             // Get taxonomy terms
             $terms = wp_get_object_terms($post_id, $taxonomy, array('fields' => 'names'));
-            
+
             if (!empty($terms) && !is_wp_error($terms)) {
-                // If meta is empty or invalid, set it from taxonomy
+                // Get current meta value
+                $existing = get_post_meta($post_id, $meta_key, true);
                 $existing_array = json_decode($existing, true);
-                if (empty($existing_array) || !is_array($existing_array)) {
-                    update_post_meta($post_id, $meta_key, wp_json_encode($terms));
+
+                // Update if force_update is true OR if meta is empty/invalid
+                if ($force_update || empty($existing_array) || !is_array($existing_array)) {
+                    // Merge existing values with taxonomy terms if not forcing
+                    if (!$force_update && is_array($existing_array) && !empty($existing_array)) {
+                        $terms = array_unique(array_merge($existing_array, $terms));
+                    }
+                    update_post_meta($post_id, $meta_key, wp_json_encode(array_values($terms)));
                     $migrated++;
                 }
             }
         }
     }
-    
+
     return $migrated;
 }
 
