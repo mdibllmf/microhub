@@ -851,11 +851,21 @@ $meta_filter_options = mh_get_all_filter_options();
 }
 
 .mh-card-tag {
+    display: inline-block;
     padding: 3px 8px;
     border-radius: 12px;
     font-size: 0.7rem;
     font-weight: 500;
     color: white;
+    text-decoration: none;
+    transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+}
+
+a.mh-card-tag:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    opacity: 0.9;
 }
 
 .mh-card-tag.technique { background: var(--tag-technique); }
@@ -1267,12 +1277,25 @@ function filterByInstitution(institutionSlug) {
         
         let tagsHtml = '';
         if (paper.techniques?.length) {
-            tagsHtml += paper.techniques.slice(0, 2).map(t => 
-                `<span class="mh-card-tag technique">${escapeHtml(t)}</span>`
-            ).join('');
+            tagsHtml += paper.techniques.slice(0, 2).map(t => {
+                // Support both old format (string) and new format (object with name/url)
+                const name = typeof t === 'object' ? t.name : t;
+                const url = typeof t === 'object' && t.url ? t.url : '#';
+                if (url && url !== '#') {
+                    return `<a href="${escapeHtml(url)}" class="mh-card-tag technique">${escapeHtml(name)}</a>`;
+                }
+                return `<span class="mh-card-tag technique">${escapeHtml(name)}</span>`;
+            }).join('');
         }
         if (paper.microscopes?.length) {
-            tagsHtml += `<span class="mh-card-tag microscope">🔬 ${escapeHtml(paper.microscopes[0])}</span>`;
+            const m = paper.microscopes[0];
+            const name = typeof m === 'object' ? m.name : m;
+            const url = typeof m === 'object' && m.url ? m.url : '#';
+            if (url && url !== '#') {
+                tagsHtml += `<a href="${escapeHtml(url)}" class="mh-card-tag microscope">🔬 ${escapeHtml(name)}</a>`;
+            } else {
+                tagsHtml += `<span class="mh-card-tag microscope">🔬 ${escapeHtml(name)}</span>`;
+            }
         }
         
         let enrichmentHtml = '';

@@ -30,9 +30,7 @@ $microscopes = wp_get_post_terms($post_id, 'mh_microscope', array('fields' => 'n
 $organisms = wp_get_post_terms($post_id, 'mh_organism', array('fields' => 'names'));
 ?>
 
-<div class="microhub-wrapper">
-    <?php echo mh_render_nav(); ?>
-    <article class="mh-single-paper">
+<article class="mh-single-paper">
         <!-- Paper Header -->
         <header class="mh-paper-header">
             <div class="mh-paper-header-inner">
@@ -492,7 +490,6 @@ $organisms = wp_get_post_terms($post_id, 'mh_organism', array('fields' => 'names
         </div>
     </div>
     <?php endif; ?>
-</div>
 
 <style>
 /* Single Paper Styles */

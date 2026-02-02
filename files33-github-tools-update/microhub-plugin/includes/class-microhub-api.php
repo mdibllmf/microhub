@@ -288,16 +288,36 @@ class MicroHub_API {
             'facilities' => wp_get_post_terms($id, 'mh_facility', array('fields' => 'names')),
             'thumbnail_url' => $thumbnail_url,
             'figure_urls' => $figure_urls_json ? json_decode($figure_urls_json, true) : array(),
-            'techniques' => wp_get_post_terms($id, 'mh_technique', array('fields' => 'names')),
-            'microscopes' => wp_get_post_terms($id, 'mh_microscope', array('fields' => 'names')),
-            'organisms' => wp_get_post_terms($id, 'mh_organism', array('fields' => 'names')),
-            'software' => wp_get_post_terms($id, 'mh_software', array('fields' => 'names')),
+            'techniques' => $this->format_terms(wp_get_post_terms($id, 'mh_technique')),
+            'microscopes' => $this->format_terms(wp_get_post_terms($id, 'mh_microscope')),
+            'organisms' => $this->format_terms(wp_get_post_terms($id, 'mh_organism')),
+            'software' => $this->format_terms(wp_get_post_terms($id, 'mh_software')),
             'protocols' => $protocols_json ? json_decode($protocols_json, true) : array(),
             'repositories' => $repos_json ? json_decode($repos_json, true) : array(),
             'rrids' => $rrids_json ? json_decode($rrids_json, true) : array(),
             'github_tools' => $github_tools_json ? json_decode($github_tools_json, true) : array(),
             'comments_count' => get_comments_number($id),
         );
+    }
+
+    /**
+     * Format taxonomy terms with URLs for clickable tags
+     */
+    private function format_terms($terms) {
+        if (is_wp_error($terms) || empty($terms)) {
+            return array();
+        }
+
+        $formatted = array();
+        foreach ($terms as $term) {
+            $formatted[] = array(
+                'name' => $term->name,
+                'slug' => $term->slug,
+                'url' => get_term_link($term),
+                'count' => $term->count,
+            );
+        }
+        return $formatted;
     }
 
     /**
