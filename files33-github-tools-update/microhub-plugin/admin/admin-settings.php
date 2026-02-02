@@ -38,7 +38,7 @@ function microhub_settings_page() {
         $confirm = isset($_POST['confirm_delete']) && $_POST['confirm_delete'] === 'DELETE';
         if ($confirm) {
             $deleted = 0;
-            
+
             // Get all paper IDs
             $paper_ids = get_posts(array(
                 'post_type' => 'mh_paper',
@@ -46,12 +46,12 @@ function microhub_settings_page() {
                 'fields' => 'ids',
                 'post_status' => 'any',
             ));
-            
+
             foreach ($paper_ids as $id) {
                 wp_delete_post($id, true); // Force delete, skip trash
                 $deleted++;
             }
-            
+
             // ALSO delete all protocols (mh_protocol post type)
             $protocol_ids = get_posts(array(
                 'post_type' => 'mh_protocol',
@@ -59,16 +59,71 @@ function microhub_settings_page() {
                 'fields' => 'ids',
                 'post_status' => 'any',
             ));
-            
+
             foreach ($protocol_ids as $id) {
                 wp_delete_post($id, true); // Force delete, skip trash
                 $deleted++;
             }
-            
-            // Also clean up orphaned terms
+
+            // Clean up orphaned term_relationships
             $wpdb->query("DELETE FROM {$wpdb->term_relationships} WHERE object_id NOT IN (SELECT ID FROM {$wpdb->posts})");
-            
-            echo '<div class="notice notice-success"><p><strong>' . sprintf(__('%d papers and protocols deleted successfully!', 'microhub'), $deleted) . '</strong></p></div>';
+
+            // Clean up orphaned taxonomy terms (terms with count = 0)
+            $taxonomies_to_clean = array(
+                'mh_technique',
+                'mh_microscope',
+                'mh_organism',
+                'mh_software',
+                'mh_microscope_model',
+                'mh_analysis_software',
+                'mh_acquisition_software',
+                'mh_sample_prep',
+                'mh_fluorophore',
+                'mh_cell_line',
+                'mh_protocol_type',
+                'mh_facility',
+                'mh_institution'
+            );
+
+            $orphaned_terms_deleted = 0;
+            foreach ($taxonomies_to_clean as $tax) {
+                if (taxonomy_exists($tax)) {
+                    // Get terms with 0 count
+                    $terms = get_terms(array(
+                        'taxonomy' => $tax,
+                        'hide_empty' => false,
+                        'fields' => 'ids'
+                    ));
+                    if (!is_wp_error($terms)) {
+                        foreach ($terms as $term_id) {
+                            // Double-check term has no posts
+                            $term = get_term($term_id, $tax);
+                            if ($term && !is_wp_error($term) && $term->count == 0) {
+                                wp_delete_term($term_id, $tax);
+                                $orphaned_terms_deleted++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update term counts for all taxonomies
+            foreach ($taxonomies_to_clean as $tax) {
+                if (taxonomy_exists($tax)) {
+                    $terms = get_terms(array('taxonomy' => $tax, 'hide_empty' => false, 'fields' => 'ids'));
+                    if (!is_wp_error($terms) && !empty($terms)) {
+                        wp_update_term_count_now($terms, $tax);
+                    }
+                }
+            }
+
+            // Clear all MicroHub caches
+            delete_transient('mh_filter_options');
+            delete_transient('mh_stats');
+            delete_transient('mh_enrichment_stats');
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_mh_%' OR option_name LIKE '_transient_timeout_mh_%'");
+
+            echo '<div class="notice notice-success"><p><strong>' . sprintf(__('%d papers and protocols deleted, %d orphaned taxonomy terms cleaned up!', 'microhub'), $deleted, $orphaned_terms_deleted) . '</strong></p></div>';
         } else {
             echo '<div class="notice notice-error"><p>' . __('Please type DELETE to confirm.', 'microhub') . '</p></div>';
         }
@@ -77,9 +132,9 @@ function microhub_settings_page() {
     // Handle delete all taxonomies
     if (isset($_POST['microhub_reset_taxonomies']) && check_admin_referer('microhub_delete_papers_nonce')) {
         $taxonomies = array(
-            'mh_technique', 
-            'mh_microscope', 
-            'mh_organism', 
+            'mh_technique',
+            'mh_microscope',
+            'mh_organism',
             'mh_software',
             'mh_microscope_model',
             'mh_analysis_software',
@@ -88,7 +143,8 @@ function microhub_settings_page() {
             'mh_fluorophore',
             'mh_cell_line',
             'mh_protocol_type',
-            'mh_facility'
+            'mh_facility',
+            'mh_institution'
         );
         $deleted_count = 0;
         foreach ($taxonomies as $tax) {
@@ -102,7 +158,14 @@ function microhub_settings_page() {
                 }
             }
         }
-        echo '<div class="notice notice-success"><p>' . sprintf(__('Deleted %d taxonomy terms!', 'microhub'), $deleted_count) . '</p></div>';
+
+        // Clear all MicroHub caches
+        delete_transient('mh_filter_options');
+        delete_transient('mh_stats');
+        delete_transient('mh_enrichment_stats');
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_mh_%' OR option_name LIKE '_transient_timeout_mh_%'");
+
+        echo '<div class="notice notice-success"><p>' . sprintf(__('Deleted %d taxonomy terms and cleared all caches!', 'microhub'), $deleted_count) . '</p></div>';
     }
     
     // Save settings
