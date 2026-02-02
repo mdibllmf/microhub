@@ -674,7 +674,21 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         $repositories = array_filter($repositories, function($r) {
             return !empty($r['url']);
         });
-        
+
+        // Deduplicate repositories by URL
+        $seen_urls = array();
+        $repositories = array_filter($repositories, function($r) use (&$seen_urls) {
+            $url = strtolower(trim($r['url']));
+            // Normalize URL (remove trailing slashes, www, etc.)
+            $url = rtrim($url, '/');
+            $url = preg_replace('/^https?:\/\/(www\.)?/', '', $url);
+            if (isset($seen_urls[$url])) {
+                return false;
+            }
+            $seen_urls[$url] = true;
+            return true;
+        });
+
         if (!empty($repositories)) {
             update_post_meta($post_id, '_mh_repositories', wp_json_encode(array_values($repositories)));
             update_post_meta($post_id, '_mh_has_data', '1');
