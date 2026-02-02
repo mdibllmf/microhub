@@ -511,8 +511,8 @@ class MicroHub_API {
         global $wpdb;
         
         $sort = sanitize_text_field($request->get_param('sort') ?: 'paper_count');
-        $limit = min(100, max(1, intval($request->get_param('limit') ?: 50)));
-        $min_papers = max(1, intval($request->get_param('min_papers') ?: 2));
+        $limit = min(2000, max(1, intval($request->get_param('limit') ?: 100)));
+        $min_papers = max(1, intval($request->get_param('min_papers') ?: 1));
         $show_archived = $request->get_param('show_archived') ? true : false;
         
         // Gather all github_tools meta from papers (also get citation_count)
@@ -576,10 +576,25 @@ class MicroHub_API {
                 elseif ($rel === 'benchmarks') $tools_aggregate[$full_name]['papers_benchmarking']++;
                 else $tools_aggregate[$full_name]['papers_using']++;
                 
+                // Keep best metadata - prefer non-empty values
+                if (empty($tools_aggregate[$full_name]['description']) && !empty($tool['description'])) {
+                    $tools_aggregate[$full_name]['description'] = $tool['description'];
+                }
+                if (empty($tools_aggregate[$full_name]['language']) && !empty($tool['language'])) {
+                    $tools_aggregate[$full_name]['language'] = $tool['language'];
+                }
+                if (empty($tools_aggregate[$full_name]['license']) && !empty($tool['license'])) {
+                    $tools_aggregate[$full_name]['license'] = $tool['license'];
+                }
+                if (empty($tools_aggregate[$full_name]['topics']) && !empty($tool['topics'])) {
+                    $tools_aggregate[$full_name]['topics'] = $tool['topics'];
+                }
+
                 // Keep latest metrics (higher values likely more current)
                 if (intval($tool['stars'] ?? 0) > $tools_aggregate[$full_name]['stars']) {
                     $tools_aggregate[$full_name]['stars'] = intval($tool['stars']);
                     $tools_aggregate[$full_name]['forks'] = intval($tool['forks'] ?? 0);
+                    $tools_aggregate[$full_name]['open_issues'] = intval($tool['open_issues'] ?? 0);
                     $tools_aggregate[$full_name]['health_score'] = intval($tool['health_score'] ?? 0);
                     $tools_aggregate[$full_name]['last_commit_date'] = $tool['last_commit_date'] ?? '';
                     $tools_aggregate[$full_name]['last_release'] = $tool['last_release'] ?? '';

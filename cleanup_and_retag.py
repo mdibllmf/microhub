@@ -42,7 +42,20 @@ the 'affiliations' or 'author_affiliations' field with author affiliation data.
 import json
 import re
 import sys
+import time
+import os
 from typing import List, Dict, Set, Optional
+
+# Try to import requests for GitHub API calls
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+    print("Warning: 'requests' not installed. GitHub API fetching disabled. Install with: pip install requests")
+
+# GitHub API token (set via environment variable for higher rate limits)
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
 # ============================================================================
 # CANONICAL MAPPINGS - Normalize variants to standard forms
@@ -1938,10 +1951,182 @@ def merge_lists(existing: List, new: List) -> List:
     return existing
 
 
-def clean_github_tools(paper: Dict) -> List[Dict]:
+# ============================================================================
+# GITHUB API FUNCTIONS - Fetch metadata for tools missing data
+# ============================================================================
+
+def fetch_github_metadata(full_name: str, token: str = None) -> Optional[Dict]:
+    """
+    Fetch repository metadata from GitHub API.
+
+    Args:
+        full_name: Repository full name (e.g., "owner/repo")
+        token: GitHub API token (optional, for higher rate limits)
+
+    Returns:
+        Dict with metadata or None if failed
+    """
+    if not HAS_REQUESTS:
+        return None
+
+    if not full_name or '/' not in full_name:
+        return None
+
+    # Clean the full_name
+    full_name = full_name.strip().rstrip('.git')
+
+    headers = {'Accept': 'application/vnd.github.v3+json'}
+    if token:
+        headers['Authorization'] = f'token {token}'
+
+    try:
+        # Main repo info
+        resp = requests.get(
+            f'https://api.github.com/repos/{full_name}',
+            headers=headers,
+            timeout=15
+        )
+
+        if resp.status_code == 404:
+            return {'exists': False, 'full_name': full_name}
+
+        if resp.status_code == 403:
+            # Rate limited
+            print(f"  ⚠ GitHub API rate limited for {full_name}")
+            return None
+
+        if resp.status_code != 200:
+            return None
+
+        data = resp.json()
+
+        metrics = {
+            'exists': True,
+            'full_name': data.get('full_name', full_name),
+            'description': (data.get('description') or '')[:500],
+            'stars': data.get('stargazers_count', 0),
+            'forks': data.get('forks_count', 0),
+            'open_issues': data.get('open_issues_count', 0),
+            'language': data.get('language') or '',
+            'license': data.get('license', {}).get('spdx_id') if data.get('license') else '',
+            'topics': data.get('topics', []),
+            'is_archived': data.get('archived', False),
+            'created_at': data.get('created_at', ''),
+            'updated_at': data.get('updated_at', ''),
+            'pushed_at': data.get('pushed_at', ''),
+            'homepage': data.get('homepage', ''),
+        }
+
+        # Try to get latest release
+        try:
+            release_resp = requests.get(
+                f'https://api.github.com/repos/{full_name}/releases/latest',
+                headers=headers,
+                timeout=10
+            )
+            if release_resp.status_code == 200:
+                release = release_resp.json()
+                metrics['last_release'] = release.get('tag_name', '')
+                metrics['last_release_date'] = release.get('published_at', '')
+        except:
+            pass
+
+        # Try to get last commit date
+        try:
+            commits_resp = requests.get(
+                f'https://api.github.com/repos/{full_name}/commits',
+                headers=headers,
+                params={'per_page': 1},
+                timeout=10
+            )
+            if commits_resp.status_code == 200:
+                commits = commits_resp.json()
+                if commits:
+                    metrics['last_commit_date'] = commits[0].get('commit', {}).get('committer', {}).get('date', '')
+        except:
+            pass
+
+        # Compute health score
+        metrics['health_score'] = compute_github_health_score(metrics)
+
+        time.sleep(0.5)  # Be kind to GitHub API
+        return metrics
+
+    except Exception as e:
+        print(f"  ⚠ Error fetching GitHub metadata for {full_name}: {e}")
+        return None
+
+
+def compute_github_health_score(metrics: Dict) -> int:
+    """Compute a 0-100 health score for a GitHub repository."""
+    score = 0
+
+    # Existence check
+    if not metrics.get('exists', True):
+        return 0
+    if metrics.get('is_archived', False):
+        return 10  # Archived repos get max 10
+
+    # Stars (up to 25 points) - logarithmic scale
+    stars = metrics.get('stars', 0)
+    if stars >= 1000: score += 25
+    elif stars >= 500: score += 22
+    elif stars >= 100: score += 18
+    elif stars >= 50: score += 14
+    elif stars >= 10: score += 10
+    elif stars >= 1: score += 5
+
+    # Recent activity (up to 30 points)
+    last_commit = metrics.get('last_commit_date', '') or metrics.get('pushed_at', '')
+    if last_commit:
+        try:
+            from datetime import datetime
+            commit_date = datetime.fromisoformat(last_commit.replace('Z', '+00:00'))
+            now = datetime.now(commit_date.tzinfo) if commit_date.tzinfo else datetime.now()
+            days_since = (now - commit_date).days
+
+            if days_since <= 30: score += 30
+            elif days_since <= 90: score += 25
+            elif days_since <= 180: score += 20
+            elif days_since <= 365: score += 12
+            elif days_since <= 730: score += 5
+        except:
+            pass
+
+    # Forks indicate community engagement (up to 15 points)
+    forks = metrics.get('forks', 0)
+    if forks >= 100: score += 15
+    elif forks >= 50: score += 12
+    elif forks >= 10: score += 8
+    elif forks >= 1: score += 3
+
+    # Has description (5 points)
+    if metrics.get('description'):
+        score += 5
+
+    # Has license (5 points)
+    if metrics.get('license'):
+        score += 5
+
+    # Has topics (5 points)
+    if metrics.get('topics'):
+        score += 5
+
+    # Has recent release (10 points)
+    if metrics.get('last_release'):
+        score += 10
+
+    # Has homepage/docs (5 points)
+    if metrics.get('homepage'):
+        score += 5
+
+    return min(100, score)
+
+
+def clean_github_tools(paper: Dict, fetch_missing: bool = True) -> List[Dict]:
     """
     Validate, deduplicate, and normalize github_tools from the scraper/export.
-    
+
     The scraper extracts GitHub URLs from paper text and the export enriches them
     with metrics from the GitHub API (stars, forks, health_score, etc.).
     This function preserves that data while ensuring consistency.
@@ -2013,25 +2198,70 @@ def clean_github_tools(paper: Dict) -> List[Dict]:
             topics = []
         topics = [str(t).strip() for t in topics if t]
         
+        # Check if we need to fetch missing data from GitHub API
+        description = str(tool.get('description', '') or '').strip()
+        language = str(tool.get('language', '') or '').strip()
+        stars = int(tool.get('stars', 0) or 0)
+        forks = int(tool.get('forks', 0) or 0)
+        open_issues = int(tool.get('open_issues', 0) or 0)
+        last_commit_date = str(tool.get('last_commit_date', '') or '').strip()
+        last_release = str(tool.get('last_release', '') or '').strip()
+        health_score = int(tool.get('health_score', 0) or 0)
+        is_archived = bool(tool.get('is_archived', False))
+        license_str = str(tool.get('license', '') or '').strip()
+
+        # If missing key data and fetch_missing is enabled, fetch from GitHub API
+        needs_fetch = fetch_missing and (not description or not language or health_score == 0)
+        if needs_fetch and HAS_REQUESTS:
+            print(f"  📥 Fetching GitHub metadata for {full_name}...")
+            gh_data = fetch_github_metadata(full_name, GITHUB_TOKEN)
+            if gh_data and gh_data.get('exists', False):
+                # Update with fetched data (only if missing)
+                if not description:
+                    description = gh_data.get('description', '')
+                if not language:
+                    language = gh_data.get('language', '')
+                if stars == 0:
+                    stars = gh_data.get('stars', 0)
+                if forks == 0:
+                    forks = gh_data.get('forks', 0)
+                if open_issues == 0:
+                    open_issues = gh_data.get('open_issues', 0)
+                if not last_commit_date:
+                    last_commit_date = gh_data.get('last_commit_date', '')
+                if not last_release:
+                    last_release = gh_data.get('last_release', '')
+                if health_score == 0:
+                    health_score = gh_data.get('health_score', 0)
+                if not license_str:
+                    license_str = gh_data.get('license', '')
+                if not topics:
+                    topics = gh_data.get('topics', [])
+                is_archived = gh_data.get('is_archived', is_archived)
+                print(f"    ✓ Got: {language or 'no lang'}, {stars} stars, health={health_score}")
+            elif gh_data and not gh_data.get('exists', True):
+                print(f"    ✗ Repository not found or deleted")
+                is_archived = True  # Mark as archived if not found
+
         cleaned.append({
             'full_name': full_name,
             'url': url,
-            'description': str(tool.get('description', '') or '').strip(),
-            'stars': int(tool.get('stars', 0) or 0),
-            'forks': int(tool.get('forks', 0) or 0),
-            'open_issues': int(tool.get('open_issues', 0) or 0),
-            'last_commit_date': str(tool.get('last_commit_date', '') or '').strip(),
-            'last_release': str(tool.get('last_release', '') or '').strip(),
-            'health_score': int(tool.get('health_score', 0) or 0),
-            'is_archived': bool(tool.get('is_archived', False)),
-            'language': str(tool.get('language', '') or '').strip(),
-            'license': str(tool.get('license', '') or '').strip(),
+            'description': description,
+            'stars': stars,
+            'forks': forks,
+            'open_issues': open_issues,
+            'last_commit_date': last_commit_date,
+            'last_release': last_release,
+            'health_score': health_score,
+            'is_archived': is_archived,
+            'language': language,
+            'license': license_str,
             'topics': topics,
             'paper_count': int(tool.get('paper_count', 0) or 0),
             'citing_paper_count': int(tool.get('citing_paper_count', 0) or 0),
             'relationship': relationship,
         })
-    
+
     return cleaned
 
 

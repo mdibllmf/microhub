@@ -72,8 +72,8 @@ $api_base = rest_url('microhub/v1');
             </div>
             <div class="mh-filter-item">
                 <select id="filter-min-papers" data-filter="min_papers">
-                    <option value="1">Min 1 Paper</option>
-                    <option value="2" selected>Min 2 Papers</option>
+                    <option value="1" selected>Min 1 Paper</option>
+                    <option value="2">Min 2 Papers</option>
                     <option value="3">Min 3 Papers</option>
                     <option value="5">Min 5 Papers</option>
                 </select>
@@ -335,7 +335,12 @@ $api_base = rest_url('microhub/v1');
             if (filter === 'sort') {
                 sortSelect.value = select.value;
             }
-            applyFilters();
+            // Re-fetch from API when min_papers changes (server-side filter)
+            if (filter === 'min_papers') {
+                fetchTools();
+            } else {
+                applyFilters();
+            }
         });
     });
 
@@ -356,7 +361,7 @@ $api_base = rest_url('microhub/v1');
         document.querySelectorAll('[data-filter]').forEach(s => {
             if (s.tagName === 'SELECT') {
                 if (s.id === 'filter-sort') s.value = 'citations';
-                else if (s.id === 'filter-min-papers') s.value = '2';
+                else if (s.id === 'filter-min-papers') s.value = '1';
                 else s.value = '';
             }
         });
@@ -364,16 +369,16 @@ $api_base = rest_url('microhub/v1');
         document.querySelectorAll('.mh-quick-btn').forEach(b => b.classList.remove('active'));
         activeFilters = {};
         currentPage = 1;
-        applyFilters();
+        fetchTools(); // Re-fetch with reset filters
     });
 
     // Fetch tools from API
     function fetchTools() {
         toolsGrid.innerHTML = '<div class="mh-loading-indicator"><div class="mh-spinner"></div><p>Loading GitHub tools...</p></div>';
 
-        const minPapers = document.getElementById('filter-min-papers')?.value || 2;
+        const minPapers = document.getElementById('filter-min-papers')?.value || 1;
 
-        fetch(apiBase + '/github-tools?limit=500&min_papers=' + minPapers + '&show_archived=1')
+        fetch(apiBase + '/github-tools?limit=1000&min_papers=' + minPapers + '&show_archived=1')
             .then(res => res.json())
             .then(data => {
                 allTools = data.tools || [];
