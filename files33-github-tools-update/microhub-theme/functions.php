@@ -3140,3 +3140,68 @@ function mh_get_ror_organizations($limit = 10) {
     
     return array_slice($rors, 0, $limit);
 }
+
+/**
+ * Get newest papers by publication date
+ */
+function mh_get_newest_papers($limit = 8) {
+    if (!mh_plugin_active()) return array();
+
+    $papers = get_posts(array(
+        'post_type' => 'mh_paper',
+        'post_status' => 'publish',
+        'posts_per_page' => $limit,
+        'meta_key' => '_mh_publication_year',
+        'orderby' => 'meta_value_num',
+        'order' => 'DESC',
+    ));
+
+    $results = array();
+    foreach ($papers as $paper) {
+        $results[] = array(
+            'id' => $paper->ID,
+            'title' => $paper->post_title,
+            'permalink' => get_permalink($paper->ID),
+            'year' => get_post_meta($paper->ID, '_mh_publication_year', true),
+        );
+    }
+
+    return $results;
+}
+
+/**
+ * Get papers that have ROR identifiers
+ */
+function mh_get_papers_with_rors($limit = 8) {
+    if (!mh_plugin_active()) return array();
+
+    global $wpdb;
+
+    $results = $wpdb->get_results($wpdb->prepare("
+        SELECT p.ID, p.post_title, pm.meta_value as rors_json
+        FROM {$wpdb->posts} p
+        JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+        WHERE p.post_type = 'mh_paper'
+        AND p.post_status = 'publish'
+        AND pm.meta_key = '_mh_rors'
+        AND pm.meta_value != ''
+        AND pm.meta_value != '[]'
+        ORDER BY p.post_date DESC
+        LIMIT %d
+    ", $limit));
+
+    $papers = array();
+    foreach ($results as $row) {
+        $rors = json_decode($row->rors_json, true);
+        $ror_count = is_array($rors) ? count($rors) : 0;
+
+        $papers[] = array(
+            'id' => $row->ID,
+            'title' => $row->post_title,
+            'permalink' => get_permalink($row->ID),
+            'ror_count' => $ror_count,
+        );
+    }
+
+    return $papers;
+}
