@@ -1,0 +1,41 @@
+Microscopy Techniques Knowledge Base
+
+CONFOCAL MICROSCOPY
+Keywords: confocal, CLSM, laser scanning, pinhole, optical sectioning, z-stack
+Confocal laser scanning microscopy uses a pinhole to eliminate out-of-focus light, enabling optical sectioning. Common applications include immunofluorescence imaging, 3D reconstruction, and colocalization studies.
+
+LIGHT SHEET MICROSCOPY
+Keywords: light sheet, SPIM, selective plane illumination, LSFM, diSPIM, lattice light sheet, mesoSPIM
+Light sheet fluorescence microscopy illuminates samples from the side with a thin sheet of light. Ideal for live imaging of embryos, organoids, and cleared tissues with minimal phototoxicity.
+
+TWO-PHOTON MICROSCOPY
+Keywords: two-photon, 2P, multiphoton, MPM, deep tissue, intravital
+Two-photon excitation microscopy uses near-infrared lasers for deep tissue imaging with reduced scattering. Essential for in vivo brain imaging and intravital microscopy.
+
+SUPER-RESOLUTION MICROSCOPY
+Keywords: super-resolution, nanoscopy, STED, PALM, STORM, SIM, SMLM, dSTORM, MINFLUX
+Super-resolution techniques break the diffraction limit. STED uses depletion lasers, PALM/STORM use photoswitchable fluorophores, and SIM uses structured illumination patterns.
+
+ELECTRON MICROSCOPY
+Keywords: electron microscopy, EM, TEM, SEM, cryo-EM, FIB-SEM, serial section, CLEM
+Electron microscopy provides nanometer-scale resolution. TEM for transmission imaging, SEM for surface topology, cryo-EM for native structure preservation.
+
+EXPANSION MICROSCOPY
+Keywords: expansion microscopy, ExM, hydrogel, physical magnification, isotropic expansion
+Expansion microscopy physically enlarges samples by embedding in swellable hydrogels, enabling super-resolution imaging on conventional microscopes.
+
+TIRF MICROSCOPY
+Keywords: TIRF, total internal reflection, evanescent wave, single molecule, membrane imaging
+Total internal reflection fluorescence microscopy creates an evanescent wave for selective excitation near the coverslip, ideal for membrane dynamics and single molecule studies.
+
+FRET IMAGING
+Keywords: FRET, Förster resonance energy transfer, protein interaction, biosensor, acceptor photobleaching
+FRET measures molecular proximity through energy transfer between fluorophores, used for studying protein-protein interactions and conformational changes.
+
+FLIM IMAGING
+Keywords: FLIM, fluorescence lifetime, time-correlated, TCSPC, phasor analysis
+Fluorescence lifetime imaging measures the decay rate of fluorescence, providing information about the molecular environment independent of concentration.
+
+MULTIPLEX IMAGING
+Keywords: multiplex, cyclic immunofluorescence, CyCIF, CODEX, imaging mass cytometry, spatial proteomics
+Multiplex imaging techniques detect many markers simultaneously or sequentially, enabling spatial proteomics and cell phenotyping in tissues.

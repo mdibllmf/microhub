@@ -1,0 +1,81 @@
+Microscope Manufacturers Knowledge Base
+
+ZEISS
+Keywords: Zeiss, Carl Zeiss, LSM, Axio, Lightsheet, Airyscan, Elyra, Celldiscoverer
+Carl Zeiss manufactures confocal systems (LSM series), light sheet microscopes (Lightsheet Z.1), super-resolution (Elyra), and the Airyscan detector for enhanced resolution. Axio line includes widefield and fluorescence microscopes.
+
+NIKON
+Keywords: Nikon, A1, Ti, Ti2, Eclipse, N-SIM, N-STORM, Perfect Focus, AX
+Nikon microscopes include the Ti2 inverted platform, A1/AX confocal systems, and N-SIM/N-STORM super-resolution. Perfect Focus System maintains focus during live imaging.
+
+LEICA
+Keywords: Leica, SP8, Stellaris, STED, THUNDER, DMi, TCS, HyD
+Leica Microsystems produces SP8/Stellaris confocal systems, STED super-resolution, and THUNDER computational clearing technology. HyD hybrid detectors for sensitive detection.
+
+OLYMPUS
+Keywords: Olympus, Evident, FV, IX, BX, SpinSR, FluoView, cellSens
+Olympus (now Evident) makes FluoView confocal systems, IX inverted microscopes, and SpinSR spinning disk super-resolution. cellSens software platform.
+
+BRUKER
+Keywords: Bruker, Ultima, Vivo, multiphoton, two-photon, in vivo, neuroscience
+Bruker (formerly Prairie Technologies) specializes in multiphoton systems for neuroscience. Ultima series for two-photon imaging. Vivo for in vivo applications.
+
+3I (INTELLIGENT IMAGING INNOVATIONS)
+Keywords: 3i, SlideBook, Marianas, spinning disk, FRAP, photoactivation
+3i provides integrated microscopy systems and SlideBook software. Marianas platforms for advanced fluorescence imaging applications.
+
+ANDOR
+Keywords: Andor, Dragonfly, iXon, Zyla, spinning disk, EMCCD, sCMOS
+Andor (Oxford Instruments) makes the Dragonfly spinning disk confocal and high-performance cameras including iXon EMCCD and Zyla sCMOS.
+
+HAMAMATSU
+Keywords: Hamamatsu, ORCA, Flash, Fusion, sCMOS, camera, detector
+Hamamatsu manufactures scientific cameras including the ORCA Flash and Fusion sCMOS series. High sensitivity detectors for microscopy.
+
+PHOTOMETRICS
+Keywords: Photometrics, Prime, Kinetix, BSI, sCMOS, back-illuminated
+Photometrics produces sCMOS cameras including Prime series and back-illuminated BSI for maximum sensitivity.
+
+THORLABS
+Keywords: Thorlabs, Bergamo, multiphoton, optics, components, DIY
+Thorlabs provides microscopy components and complete systems like Bergamo multiphoton. Popular for custom-built microscopes.
+
+ASI (APPLIED SCIENTIFIC INSTRUMENTATION)
+Keywords: ASI, stage, focus, RAMM, piezo, motorized
+ASI manufactures precision stages and focus controllers used across microscope platforms.
+
+PRIOR SCIENTIFIC
+Keywords: Prior Scientific, ProScan III, ProScan H117, NanoScanZ, OptiScan, Prior motorized stage, Prior focus controller
+Prior Scientific manufactures motorized stages, focus drives, and automation components for microscopy. Products include ProScan stage controllers and NanoScanZ piezo stages.
+
+LUMENCOR
+Keywords: Lumencor, Spectra, Celesta, LED, solid state, illumination
+Lumencor produces solid-state LED light engines for fluorescence microscopy excitation.
+
+CAIRN RESEARCH
+Keywords: Cairn, OptoSpin, MonoScan, filter wheel, monochromator
+Cairn Research makes filter wheels, monochromators, and optical accessories for fluorescence microscopy.
+
+VISITECH
+Keywords: Visitech, VT-iSIM, spinning disk, structured illumination
+Visitech produces the VT-iSIM instant structured illumination system for super-resolution.
+
+CREST OPTICS
+Keywords: Crest, X-Light, spinning disk, confocal
+Crest Optics makes the X-Light spinning disk confocal unit compatible with multiple microscope platforms.
+
+MOLECULAR DEVICES
+Keywords: Molecular Devices, ImageXpress, MetaXpress, high content, screening
+Molecular Devices provides automated imaging platforms and ImageXpress systems for high-content screening.
+
+YOKOGAWA
+Keywords: Yokogawa, CSU, spinning disk, dual camera, W1, X1
+Yokogawa manufactures CSU spinning disk confocal scanners used by many microscope companies. W1 and X1 series.
+
+FEI / THERMO FISHER
+Keywords: FEI, Thermo Fisher, cryo-EM, TEM, SEM, Titan, Talos, Glacios
+Thermo Fisher (formerly FEI) produces electron microscopes including Titan/Talos cryo-EM and various SEM systems.
+
+JEOL
+Keywords: JEOL, electron microscope, TEM, SEM, JEM, JSM
+JEOL manufactures transmission and scanning electron microscopes for materials and life sciences.

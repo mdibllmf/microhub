@@ -1,0 +1,61 @@
+Model Organisms Knowledge Base
+
+ZEBRAFISH
+Keywords: zebrafish, Danio rerio, zebrafish embryo, larvae, transparent, regeneration, developmental
+Zebrafish (Danio rerio) are popular for developmental biology and live imaging due to optical transparency of embryos. Rapid development, genetic tractability, and regeneration capacity.
+
+MOUSE
+Keywords: mouse, Mus musculus, murine, rodent, transgenic, knockout, in vivo
+Mouse (Mus musculus) is the primary mammalian model organism. Extensive genetic tools including transgenics and knockouts. Used for disease modeling and intravital imaging.
+
+DROSOPHILA
+Keywords: Drosophila, fruit fly, melanogaster, genetics, development, neuroscience
+Drosophila melanogaster (fruit fly) offers powerful genetics and rapid generation time. Key model for developmental biology and neuroscience.
+
+C. ELEGANS
+Keywords: C. elegans, nematode, worm, Caenorhabditis, connectome, transparent
+Caenorhabditis elegans is a transparent nematode with defined cell lineage and mapped neural connectome. Ideal for developmental and neurobiological studies.
+
+XENOPUS
+Keywords: Xenopus, frog, laevis, tropicalis, oocyte, embryo, development
+Xenopus laevis and tropicalis frogs provide large embryos for developmental studies. Oocytes used for protein expression.
+
+ARABIDOPSIS
+Keywords: Arabidopsis, thaliana, plant, plant cell, chloroplast, cell wall
+Arabidopsis thaliana is the primary plant model organism. Small genome, rapid life cycle, extensive genetic resources.
+
+YEAST
+Keywords: yeast, Saccharomyces, cerevisiae, S. pombe, cell cycle, single cell
+Saccharomyces cerevisiae (budding yeast) and S. pombe (fission yeast) are unicellular eukaryotic models for cell biology and genetics.
+
+RAT
+Keywords: rat, Rattus norvegicus, rodent, neuroscience, physiology
+Rat (Rattus norvegicus) used for physiology and neuroscience. Larger than mouse, suitable for surgical procedures and behavior.
+
+CHICKEN
+Keywords: chicken, chick embryo, Gallus, neural crest, development
+Chicken embryos are accessible for developmental biology. Neural crest and somite development studies.
+
+HUMAN CELLS
+Keywords: human, HeLa, HEK293, iPSC, organoid, patient-derived
+Human cell lines (HeLa, HEK293) and induced pluripotent stem cells (iPSCs) for human biology. Organoids model tissue organization.
+
+PRIMARY CELLS
+Keywords: primary cells, freshly isolated, culture, fibroblast, neuron, cardiomyocyte
+Primary cells isolated directly from tissue. More physiologically relevant than immortalized lines but limited lifespan.
+
+SPHEROIDS
+Keywords: spheroid, 3D culture, tumor spheroid, aggregate, multicellular
+Spheroids are 3D cell aggregates that better recapitulate tissue architecture than 2D cultures.
+
+ORGANOIDS
+Keywords: organoid, mini-organ, intestinal, brain, lung, stem cell derived
+Organoids are self-organizing 3D structures derived from stem cells that model organ development and disease.
+
+TISSUE SECTIONS
+Keywords: tissue section, histology, frozen section, FFPE, paraffin, cryosection
+Tissue sections prepared by freezing (cryosections) or paraffin embedding (FFPE) for histological analysis.
+
+CLEARED TISSUE
+Keywords: cleared tissue, tissue clearing, CLARITY, iDISCO, CUBIC, transparent
+Chemically cleared tissues rendered optically transparent for whole-mount imaging with light sheet microscopy.

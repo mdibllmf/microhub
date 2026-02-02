@@ -1,0 +1,104 @@
+/* MicroHub Frontend CSS */
+
+.microhub-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Navigation */
+.mh-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.mh-nav-brand a {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #e6edf3;
+    text-decoration: none;
+}
+
+.mh-nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.mh-nav-links a {
+    color: #8b949e;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.mh-nav-links a:hover {
+    color: #58a6ff;
+}
+
+/* Buttons */
+.mh-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.mh-btn:hover {
+    opacity: 0.9;
+}
+
+.mh-btn.doi { background: #238636; color: #fff; }
+.mh-btn.pubmed { background: #1f6feb; color: #fff; }
+.mh-btn.pmc { background: #388bfd; color: #fff; }
+.mh-btn.github { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+
+/* Tags */
+.mh-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #e6edf3;
+}
+
+.mh-tag.technique { border-color: #58a6ff; }
+.mh-tag.microscope { border-color: #f78166; }
+.mh-tag.software { border-color: #a371f7; }
+.mh-tag.organism { border-color: #3fb950; }
+
+/* Badges */
+.mh-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.mh-badge.foundational { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; }
+.mh-badge.high-impact { background: linear-gradient(135deg, #58a6ff, #a371f7); color: #fff; }
+.mh-badge.full-text { background: #238636; color: #fff; }
+.mh-badge.has-figures { background: #8957e5; color: #fff; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mh-nav {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .mh-papers-grid {
+        grid-template-columns: 1fr;
+    }
+}

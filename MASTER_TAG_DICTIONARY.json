@@ -1,0 +1,299 @@
+{
+  "_metadata": {
+    "version": "1.0",
+    "created": "2026-01-05",
+    "description": "Master tag dictionary ensuring alignment between microhub_scraper.py, cleanup_and_retag.py, microhub_export_json_v4.1.py, and WordPress plugin/theme"
+  },
+
+  "microscopy_techniques": {
+    "scraper_key": "MICROSCOPY_TECHNIQUES",
+    "cleanup_key": "TECHNIQUE_CANONICAL",
+    "cleanup_extraction_dict": "MICROSCOPY_TECHNIQUES",
+    "export_field": "microscopy_techniques",
+    "wp_taxonomy": "mh_technique",
+    "wp_meta_key": null,
+    "import_call": "wp_set_object_terms($post_id, $data['microscopy_techniques'], 'mh_technique', true)",
+    "all_valid_values": [
+      "3D Imaging", "4D Imaging", "AFM", "Airyscan", "Array Tomography", "Brightfield",
+      "CARS", "Calcium Imaging", "Confocal", "Cryo-EM", "Cryo-ET", "CLEM", "DIC",
+      "DNA-PAINT", "Darkfield", "Deconvolution", "Electron Tomography", "Epifluorescence",
+      "Expansion Microscopy", "FCS", "FCCS", "FIB-SEM", "FLIM", "FLIP", "FRAP", "FRET",
+      "Fluorescence Microscopy", "High-Content Screening", "Holographic", "Immuno-EM",
+      "Immunofluorescence", "Intravital", "Lattice Light Sheet", "Light Sheet",
+      "Live Cell Imaging", "MINFLUX", "MesoSPIM", "Multiphoton", "Negative Stain EM",
+      "OCT", "Optical Sectioning", "Optogenetics", "PALM", "Phase Contrast", "Photoacoustic",
+      "Polarization", "RESOLFT", "Raman", "SEM", "SHG", "SIM", "SMLM", "SOFI", "SRS",
+      "Serial Block-Face SEM", "Single Molecule", "Single Particle", "Spinning Disk",
+      "STED", "STORM", "Super-Resolution", "TEM", "TIRF", "Three-Photon", "Two-Photon",
+      "Voltage Imaging", "Volume EM", "Widefield", "Z-Stack", "dSTORM"
+    ]
+  },
+
+  "microscope_brands": {
+    "scraper_key": "MICROSCOPE_BRANDS",
+    "cleanup_key": "MICROSCOPE_BRAND_CANONICAL",
+    "cleanup_extraction_dict": "MICROSCOPE_BRANDS",
+    "export_field": "microscope_brands",
+    "wp_taxonomy": "mh_microscope",
+    "wp_meta_key": "_mh_microscope_brands",
+    "import_call": "wp_set_object_terms($post_id, $data['microscope_brands'], 'mh_microscope', true)",
+    "all_valid_values": [
+      "3i (Intelligent Imaging)", "ASI", "Abberior", "Andor", "Becker & Hickl", "Bruker",
+      "Chroma", "Coherent", "Edmund Optics", "Evident (Olympus)", "Hamamatsu", "JEOL",
+      "LaVision BioTec", "Leica", "Luxendo", "Miltenyi", "Molecular Devices", "Newport",
+      "Nikon", "Olympus", "PCO", "PerkinElmer", "Photometrics", "Photron", "PicoQuant",
+      "Princeton Instruments", "Prior Scientific", "QImaging", "Roper", "Semrock",
+      "Spectra-Physics", "Sutter", "Thermo Fisher", "Thorlabs", "Till Photonics",
+      "Visitech", "Yokogawa", "Zeiss"
+    ]
+  },
+
+  "microscope_models": {
+    "scraper_key": "MICROSCOPE_MODELS",
+    "cleanup_key": null,
+    "cleanup_extraction_dict": null,
+    "export_field": "microscope_models",
+    "wp_taxonomy": "mh_microscope_model",
+    "wp_meta_key": "_mh_microscope_models",
+    "import_call": "wp_set_object_terms($post_id, $data['microscope_models'], 'mh_microscope_model')",
+    "all_valid_values": [
+      "LSM 510", "LSM 700", "LSM 710", "LSM 780", "LSM 800", "LSM 880", "LSM 900", "LSM 980",
+      "Elyra", "Elyra 7", "Lightsheet Z.1", "Lightsheet 7", "Celldiscoverer 7",
+      "Axio Observer", "Axio Imager", "Axiovert", "Axioskop", "Observer 7",
+      "SP5", "SP8", "Stellaris", "STED 3X", "THUNDER", "DMi8", "DM6", "DM IL",
+      "A1", "AX", "Ti", "Ti2", "N-SIM", "N-STORM", "CSU-W1", "CSU-X1",
+      "FV1000", "FV1200", "FV3000", "SpinSR", "IX73", "IX83", "BX63", "VS120",
+      "Titan", "Glacios", "Talos", "Tecnai", "CM200", "JEM-1400", "JEM-2100",
+      "MesoSPIM", "diSPIM", "iSPIM", "OpenSPIM", "UltraMicroscope", "SmartSPIM"
+    ]
+  },
+
+  "image_analysis_software": {
+    "scraper_key": "IMAGE_ANALYSIS_SOFTWARE",
+    "cleanup_key": "SOFTWARE_CANONICAL",
+    "cleanup_extraction_dict": "IMAGE_ANALYSIS_SOFTWARE",
+    "export_field": "image_analysis_software",
+    "wp_taxonomy": "mh_analysis_software",
+    "wp_meta_key": "_mh_image_analysis_software",
+    "import_call": "wp_set_object_terms($post_id, $data['image_analysis_software'], 'mh_analysis_software')",
+    "all_valid_values": [
+      "Aivia", "Amira", "AutoQuant", "BigDataViewer", "Bio-Formats", "CellProfiler",
+      "CellSens", "Cellpose", "ChimeraX", "DeconvolutionLab", "DeepCell", "Digital Micrograph",
+      "Dragonfly", "EMAN2", "FluoView", "HALO", "Harmony", "Huygens", "IMOD", "Icy",
+      "ImageJ", "Fiji", "Imaris", "LAS X", "MATLAB", "Mask R-CNN", "MetaMorph", "MicroManager",
+      "NIS-Elements", "Neurolucida", "OMERO", "PyMOL", "Python", "QuPath", "R", "RELION",
+      "SAM", "Scipion", "SerialEM", "SlideBook", "StarDist", "ThunderSTORM", "TrackMate",
+      "U-Net", "UCSF Chimera", "Vaa3D", "Volocity", "YOLOv", "ZEN", "cryoSPARC",
+      "ilastik", "inForm", "napari", "scikit-image"
+    ]
+  },
+
+  "image_acquisition_software": {
+    "scraper_key": "IMAGE_ACQUISITION_SOFTWARE",
+    "cleanup_key": null,
+    "cleanup_extraction_dict": null,
+    "export_field": "image_acquisition_software",
+    "wp_taxonomy": "mh_acquisition_software",
+    "wp_meta_key": "_mh_image_acquisition_software",
+    "import_call": "wp_set_object_terms($post_id, $data['image_acquisition_software'], 'mh_acquisition_software')",
+    "all_valid_values": [
+      "ArrayScan", "CellReporterXpress", "CellSens", "Columbus", "FluoView", "HCImage",
+      "Harmony", "IN Cell", "ImageXpress", "Imspector", "LAS X", "MetaMorph", "MicroManager",
+      "NIS-Elements", "Opera Phenix", "Prairie View", "ScanImage", "SlideBook", "SymPhoTime",
+      "ThorImage", "Volocity Acquisition", "ZEN"
+    ]
+  },
+
+  "fluorophores": {
+    "scraper_key": "FLUOROPHORES",
+    "cleanup_key": "FLUOROPHORE_CANONICAL",
+    "cleanup_extraction_dict": "FLUOROPHORES",
+    "export_field": "fluorophores",
+    "wp_taxonomy": "mh_fluorophore",
+    "wp_meta_key": "_mh_fluorophores",
+    "import_call": "wp_set_object_terms($post_id, $data['fluorophores'], 'mh_fluorophore')",
+    "all_valid_values": [
+      "Acridine Orange", "Alexa Fluor 350", "Alexa Fluor 405", "Alexa Fluor 430",
+      "Alexa Fluor 488", "Alexa Fluor 514", "Alexa Fluor 532", "Alexa Fluor 546",
+      "Alexa Fluor 555", "Alexa Fluor 568", "Alexa Fluor 594", "Alexa Fluor 610",
+      "Alexa Fluor 633", "Alexa Fluor 647", "Alexa Fluor 660", "Alexa Fluor 680",
+      "Alexa Fluor 700", "Alexa Fluor 750", "Alexa Fluor 790", "APC", "ATTO 488",
+      "ATTO 565", "ATTO 647", "ATTO 647N", "ATTO 655", "BFP", "BODIPY", "BrdU",
+      "Calcein", "Calcein-AM", "CF568", "CFP", "CellMask", "Citrine", "Click-iT",
+      "Coumarin", "Cy3", "Cy5", "Cy7", "DAPI", "DiD", "DiI", "DiO", "DiR", "DRAQ5",
+      "Dendra2", "Dronpa", "DsRed", "DyLight", "EBFP", "ECFP", "EGFP", "EYFP",
+      "EdU", "ER-Tracker", "FITC", "FM Dyes", "Fluo-4", "Fura-2", "GCaMP", "GCaMP6",
+      "GCaMP6f", "GCaMP6s", "GFP", "Hoechst 33258", "Hoechst 33342", "JC-1",
+      "JF549", "JF646", "LysoTracker", "LysoTracker Red", "MitoTracker",
+      "MitoTracker Green", "MitoTracker Red", "NeonGreen", "PA-GFP", "PE",
+      "Phalloidin", "Propidium Iodide", "RFP", "Rhodamine", "Rhodamine 123",
+      "Rhodamine B", "SYTOX", "SYTOX Green", "SYTO", "SiR", "SiR-Actin", "SiR-Tubulin",
+      "TRITC", "TagRFP", "Texas Red", "Venus", "WGA", "YFP", "jRGECO",
+      "mCerulean", "mCherry", "mClover", "mEmerald", "mEos", "mEos2", "mEos3",
+      "mEos3.2", "mGFP", "mKate2", "mMaple", "mNeonGreen", "mRFP", "mScarlet",
+      "mTagBFP", "mTurquoise", "mVenus", "tdTomato"
+    ]
+  },
+
+  "organisms": {
+    "scraper_key": "ORGANISM_KEYWORDS",
+    "cleanup_key": "ORGANISM_CANONICAL",
+    "cleanup_extraction_dict": "ORGANISMS",
+    "export_field": "organisms",
+    "wp_taxonomy": "mh_organism",
+    "wp_meta_key": null,
+    "import_call": "wp_set_object_terms($post_id, $data['organisms'], 'mh_organism')",
+    "all_valid_values": [
+      "Arabidopsis", "Bacteria", "C. elegans", "Chicken", "Dog", "Drosophila",
+      "E. coli", "Human", "Maize", "Monkey", "Mouse", "Organoid", "Pig", "Plant",
+      "Rabbit", "Rat", "Spheroid", "Tobacco", "Xenopus", "Yeast", "Zebrafish"
+    ]
+  },
+
+  "cell_lines": {
+    "scraper_key": "CELL_LINE_KEYWORDS",
+    "cleanup_key": "CELL_LINE_CANONICAL",
+    "cleanup_extraction_dict": "CELL_LINES",
+    "export_field": "cell_lines",
+    "wp_taxonomy": "mh_cell_line",
+    "wp_meta_key": "_mh_cell_lines",
+    "import_call": "wp_set_object_terms($post_id, $data['cell_lines'], 'mh_cell_line')",
+    "all_valid_values": [
+      "A549", "CHO", "COS-7", "ESC", "HEK293", "HEK293T", "HeLa", "MDCK", "MCF7",
+      "MEF", "NIH 3T3", "PC12", "Primary Cardiomyocytes", "Primary Hepatocytes",
+      "Primary Neurons", "SH-SY5Y", "U2OS", "Vero", "iPSC"
+    ]
+  },
+
+  "sample_preparation": {
+    "scraper_key": "SAMPLE_PREPARATION",
+    "cleanup_key": "SAMPLE_PREP_CANONICAL",
+    "cleanup_extraction_dict": "SAMPLE_PREPARATION",
+    "export_field": "sample_preparation",
+    "wp_taxonomy": "mh_sample_prep",
+    "wp_meta_key": "_mh_sample_preparation",
+    "import_call": "wp_set_object_terms($post_id, $data['sample_preparation'], 'mh_sample_prep')",
+    "all_valid_values": [
+      "3D Culture", "3DISCO", "AAV", "Adenoviral", "Antigen Retrieval", "Blocking",
+      "CLARITY", "CRISPR", "Cell Culture", "Co-culture", "Cryosectioning",
+      "Electroporation", "Expansion Microscopy", "FISH", "Fixation", "Flat Mount",
+      "Glutaraldehyde", "H&E", "In Situ Hybridization", "Immunofluorescence",
+      "Immunohistochemistry", "Immunostaining", "Knockdown", "Knockout", "Lentiviral",
+      "Lipofection", "Live Imaging", "Methanol Fixation", "Microtome", "Monolayer",
+      "OCT Embedding", "Organoid", "PFA Fixation", "Paraffin Embedding",
+      "Permeabilization", "Primary Culture", "RNAscope", "SHIELD", "Spheroid",
+      "TUNEL", "Tissue Clearing", "Transfection", "Transduction", "Ultramicrotome",
+      "Vibratome", "Whole Mount", "iDISCO", "smFISH", "uDISCO", "CUBIC"
+    ]
+  },
+
+  "facilities": {
+    "scraper_key": null,
+    "cleanup_key": "KNOWN_INSTITUTIONS",
+    "cleanup_extraction_dict": "INSTITUTION_PATTERNS",
+    "export_field": "institutions",
+    "wp_taxonomy": "mh_facility",
+    "wp_meta_key": "_mh_facility",
+    "import_call": "wp_set_object_terms($post_id, $facilities, 'mh_facility')",
+    "notes": "Institutions are extracted from affiliations field only, not from paper text. ROR IDs looked up from INSTITUTION_ROR_IDS.",
+    "sample_values": [
+      "Harvard University", "MIT", "Stanford University", "Yale University",
+      "University of Oxford", "University of Cambridge", "EMBL", "Max Planck Institute"
+    ]
+  },
+
+  "protocol_types": {
+    "scraper_key": "PROTOCOL_PATTERNS",
+    "cleanup_key": "PROTOCOL_JOURNALS",
+    "cleanup_extraction_dict": "PROTOCOL_PATTERNS",
+    "export_field": "protocol_type",
+    "wp_taxonomy": "mh_protocol_type",
+    "wp_meta_key": "_mh_protocol_type",
+    "import_call": "wp_set_object_terms($post_id, $protocol_type, 'mh_protocol_type')",
+    "all_valid_values": [
+      "Bio-protocol", "Biotechniques", "Cold Spring Harbor Protocols",
+      "Current Protocols", "JoVE", "MethodsX", "Methods in Enzymology",
+      "Methods in Molecular Biology", "Nature Protocols", "Protocol Exchange",
+      "STAR Protocols"
+    ]
+  },
+
+  "repositories": {
+    "scraper_key": "REPOSITORY_PATTERNS",
+    "cleanup_key": "REPOSITORY_PATTERNS",
+    "cleanup_extraction_dict": "REPOSITORY_PATTERNS",
+    "export_field": "repositories",
+    "wp_taxonomy": null,
+    "wp_meta_key": "_mh_repositories",
+    "import_call": "update_post_meta($post_id, '_mh_repositories', wp_json_encode($repositories))",
+    "structure": {
+      "name": "string (Zenodo, GitHub, Figshare, etc.)",
+      "url": "string (full URL)",
+      "accession_id": "string (optional identifier)"
+    },
+    "all_valid_types": [
+      "ArrayExpress", "BioImage Archive", "BioStudies", "Code Ocean", "Dryad",
+      "EMDB", "EMPIAR", "Figshare", "GEO", "GitHub", "GitLab", "IDR",
+      "IDR Dataset", "IDR Image", "IDR Project", "Mendeley Data", "OMERO",
+      "OMERO Public", "OSF", "PDB", "PRIDE", "SRA", "SSBD", "Zenodo"
+    ]
+  },
+
+  "protocols": {
+    "scraper_key": "PROTOCOL_PATTERNS",
+    "cleanup_key": "PROTOCOL_PATTERNS",
+    "cleanup_extraction_dict": "PROTOCOL_PATTERNS",
+    "export_field": "protocols",
+    "wp_taxonomy": null,
+    "wp_meta_key": "_mh_protocols",
+    "import_call": "update_post_meta($post_id, '_mh_protocols', wp_json_encode($protocols))",
+    "structure": {
+      "name": "string (protocols.io, Bio-protocol, etc.)",
+      "url": "string (full URL)",
+      "source": "string (optional - fulltext, methods, etc.)"
+    },
+    "all_valid_sources": [
+      "Bio-protocol", "Cold Spring Harbor Protocols", "Current Protocols",
+      "JoVE", "Methods in Molecular Biology", "MethodsX", "Nature Protocols",
+      "STAR Protocols", "protocols.io"
+    ]
+  },
+
+  "rrids": {
+    "scraper_key": "RRID_PATTERNS",
+    "cleanup_key": null,
+    "cleanup_extraction_dict": null,
+    "export_field": "rrids",
+    "wp_taxonomy": null,
+    "wp_meta_key": "_mh_rrids",
+    "import_call": "update_post_meta($post_id, '_mh_rrids', wp_json_encode($rrids))",
+    "structure": {
+      "id": "string (RRID:AB_123456)",
+      "type": "string (antibody, software, cell_line, plasmid, organism)",
+      "url": "string (scicrunch.org resolver URL)"
+    },
+    "type_prefixes": {
+      "antibody": "AB_",
+      "software": "SCR_",
+      "cell_line": "CVCL_",
+      "plasmid": "Addgene_",
+      "organism": ["IMSR_", "BDSC_", "ZFIN_", "WB-STRAIN_", "MGI_", "MMRRC_", "ZIRC_", "DGRC_", "CGC_"]
+    }
+  },
+
+  "rors": {
+    "scraper_key": "ROR_PATTERNS",
+    "cleanup_key": "INSTITUTION_ROR_IDS",
+    "cleanup_extraction_dict": "ROR_PATTERNS",
+    "export_field": "rors",
+    "wp_taxonomy": null,
+    "wp_meta_key": "_mh_rors",
+    "import_call": "update_post_meta($post_id, '_mh_rors', wp_json_encode($rors))",
+    "structure": {
+      "id": "string (9-char alphanumeric starting with 0)",
+      "url": "string (https://ror.org/{id})",
+      "source": "string (institution_lookup, text, url)"
+    },
+    "notes": "ROR IDs are primarily looked up from institution names via INSTITUTION_ROR_IDS dictionary, not extracted from paper text"
+  }
+}

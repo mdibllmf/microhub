@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"Expand-Archive -Path ''microhub-v2.7-complete.zip'' -DestinationPath ''temp_extract'' -Force\")",
+      "Bash(python -m py_compile:*)",
+      "Bash(python cleanup_and_retag.py:*)",
+      "Bash(python:*)",
+      "Bash(php -l:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

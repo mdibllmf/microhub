@@ -1,0 +1,41 @@
+Protocol Journals Knowledge Base
+
+JOVE
+Keywords: JoVE, Journal of Visualized Experiments, video protocol, video methods, visualized
+JoVE (Journal of Visualized Experiments) publishes peer-reviewed video protocols. Videos demonstrate techniques that are difficult to learn from text alone.
+
+NATURE PROTOCOLS
+Keywords: Nature Protocols, Nat Protoc, step-by-step, detailed methods, Nature Publishing
+Nature Protocols publishes detailed, step-by-step experimental procedures. High-quality protocols from leading labs with troubleshooting guidance.
+
+STAR PROTOCOLS
+Keywords: STAR Protocols, Cell Press, structured, transparent, accessible, reproducible
+STAR Protocols from Cell Press uses structured format emphasizing accessibility and reproducibility. Linked to research papers.
+
+BIO-PROTOCOL
+Keywords: Bio-protocol, open access, peer-reviewed, community, reproducibility
+Bio-protocol is an open-access platform for peer-reviewed life science protocols. Community-driven with emphasis on reproducibility.
+
+CURRENT PROTOCOLS
+Keywords: Current Protocols, Wiley, comprehensive, regularly updated, standard methods
+Current Protocols publishes comprehensive, regularly updated protocol collections across life sciences. Standard reference for methods.
+
+COLD SPRING HARBOR PROTOCOLS
+Keywords: Cold Spring Harbor, CSH Protocols, CSHP, established methods, molecular biology
+Cold Spring Harbor Protocols covers molecular biology, cell biology, and related fields. Classic resource for established methods.
+
+METHODS IN ENZYMOLOGY
+Keywords: Methods in Enzymology, Elsevier, series, comprehensive, reference
+Methods in Enzymology is a long-running book series with detailed protocols for biochemistry and molecular biology techniques.
+
+PROTOCOLS.IO
+Keywords: protocols.io, digital protocol, version control, sharing, open
+Protocols.io is a platform for creating, sharing, and discovering research protocols. Includes version control and community features.
+
+PROTOCOL EXCHANGE
+Keywords: Protocol Exchange, Nature, preprint, community protocols
+Protocol Exchange is Nature's open repository for research protocols. Community-contributed methods with minimal peer review.
+
+METHODS IN MOLECULAR BIOLOGY
+Keywords: Methods in Molecular Biology, Springer, Humana, protocol series
+Methods in Molecular Biology (Humana/Springer) publishes detailed protocols in thematic volumes covering specialized topics.
