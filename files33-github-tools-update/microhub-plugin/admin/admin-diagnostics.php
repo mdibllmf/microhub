@@ -610,6 +610,7 @@ function microhub_diagnostic_page() {
             <li><a href="<?php echo rest_url('microhub/v1/enrichment-stats'); ?>" target="_blank">📊 Enrichment Stats API</a></li>
             <li><a href="<?php echo rest_url('microhub/v1/protocols'); ?>" target="_blank">📋 Protocols API</a></li>
             <li><a href="<?php echo rest_url('microhub/v1/github-repos'); ?>" target="_blank">💻 GitHub Repos API</a></li>
+            <li><a href="<?php echo rest_url('microhub/v1/github-tools'); ?>" target="_blank">💻 GitHub Tools API (sorted by citations)</a></li>
             <li><a href="<?php echo rest_url('microhub/v1/data-repos'); ?>" target="_blank">💾 Data Repositories API</a></li>
             <li><a href="<?php echo rest_url('microhub/v1/facilities'); ?>" target="_blank">🏛️ Facilities API</a></li>
         </ul>
