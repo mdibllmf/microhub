@@ -41,6 +41,14 @@ $urls = mh_get_page_urls();
                 </ul>
             </div>
         </div>
+        <div class="mh-footer-attribution">
+            <p>Data powered by:</p>
+            <ul>
+                <li><a href="https://www.semanticscholar.org/" target="_blank" rel="noopener">Semantic Scholar</a> - Citation data</li>
+                <li><a href="https://www.crossref.org/" target="_blank" rel="noopener">Crossref</a> - Metadata and citations</li>
+                <li><a href="https://docs.github.com/en/rest" target="_blank" rel="noopener">GitHub API</a> - Repository metrics</li>
+            </ul>
+        </div>
         <div class="mh-footer-bottom">
             &copy; <?php echo date('Y'); ?> MicroHub. Open source microscopy knowledge.
         </div>
