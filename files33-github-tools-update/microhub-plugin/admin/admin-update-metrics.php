@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
 // Register the admin page
 add_action('admin_menu', function() {
     add_submenu_page(
-        'microhub',
+        'microhub-settings',
         'Update Metrics',
         'Update Metrics',
         'manage_options',
