@@ -69,6 +69,7 @@ if (is_admin()) {
     require_once MICROHUB_PLUGIN_DIR . 'admin/admin-review.php';
     require_once MICROHUB_PLUGIN_DIR . 'admin/admin-ai-training.php';
     require_once MICROHUB_PLUGIN_DIR . 'admin/admin-ai-knowledge.php';
+    require_once MICROHUB_PLUGIN_DIR . 'admin/admin-update-metrics.php';
 }
 
 // Initialize plugin
