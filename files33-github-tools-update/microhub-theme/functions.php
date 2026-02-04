@@ -156,13 +156,46 @@ function mh_theme_search_protocols($request) {
     if (!mh_plugin_active()) {
         return new WP_REST_Response(array('protocols' => array(), 'total' => 0, 'pages' => 0), 200);
     }
-    
+
     $page = max(1, $request->get_param('page'));
     $per_page = min(100, max(1, $request->get_param('per_page') ?: 24));
     $search = $request->get_param('search');
     $source_filter = $request->get_param('source');
-    
+
+    // Check if this is a simple request (no filters) - can use cache
+    $has_filters = !empty($search) || !empty($source_filter)
+        || $request->get_param('technique')
+        || $request->get_param('microscope')
+        || $request->get_param('organism')
+        || $request->get_param('software')
+        || $request->get_param('year_min')
+        || $request->get_param('year_max')
+        || $request->get_param('citations_min')
+        || $request->get_param('author')
+        || $request->get_param('fluorophore')
+        || $request->get_param('sample_prep')
+        || $request->get_param('cell_line')
+        || $request->get_param('brand')
+        || $request->get_param('has_github')
+        || $request->get_param('has_figures');
+
+    // Build cache key based on sort parameters
+    $orderby = $request->get_param('orderby') ?: 'citations';
+    $order = strtolower($request->get_param('order') ?: 'desc');
+    $cache_key = 'mh_protocols_' . $orderby . '_' . $order;
+
     $all_protocols = array();
+
+    // If no filters, try to get from cache
+    if (!$has_filters) {
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            $all_protocols = $cached;
+        }
+    }
+
+    // Fetch protocols if not cached
+    if (empty($all_protocols)) {
     
     // =========================================================================
     // 1. PROTOCOL PAPERS (mh_paper with _mh_is_protocol = 1)
@@ -290,18 +323,9 @@ function mh_theme_search_protocols($request) {
 
         $doi = get_post_meta($post->ID, '_mh_doi', true);
 
-        // Parse authors - handle both string and JSON array formats
+        // Parse authors - handle all formats: JSON objects, JSON arrays, or comma-separated strings
         $authors = get_post_meta($post->ID, '_mh_authors', true);
-        $author_list = array();
-        if ($authors) {
-            $authors_arr = json_decode($authors, true);
-            if (is_array($authors_arr)) {
-                $author_list = array_slice(array_column($authors_arr, 'name'), 0, 5);
-            } else {
-                // If not JSON, treat as comma-separated string
-                $author_list = array_slice(array_map('trim', preg_split('/[,;]/', $authors)), 0, 5);
-            }
-        }
+        $author_list = mh_parse_authors_to_array($authors, 5);
 
         $all_protocols[] = array(
             'id' => $post->ID,
@@ -428,22 +452,10 @@ function mh_theme_search_protocols($request) {
         $microscopes = mh_get_terms_with_urls($post->ID, 'mh_microscope');
         $software_terms = mh_get_terms_with_urls($post->ID, 'mh_software');
 
-        // Get authors - try multiple formats
+        // Get authors - use unified parser for all formats
         $authors = get_post_meta($post->ID, '_mh_authors', true);
-        $author_list = array();
-        if ($authors) {
-            $authors_arr = json_decode($authors, true);
-            if (is_array($authors_arr)) {
-                // Check if it's array of objects with 'name' key
-                if (!empty($authors_arr) && isset($authors_arr[0]['name'])) {
-                    $author_list = array_slice(array_column($authors_arr, 'name'), 0, 5);
-                } elseif (!empty($authors_arr) && is_string($authors_arr[0])) {
-                    // It's already an array of strings
-                    $author_list = array_slice($authors_arr, 0, 5);
-                }
-            }
-        }
-        
+        $author_list = mh_parse_authors_to_array($authors, 5);
+
         // Get additional data for imported protocols
         $figures = json_decode(get_post_meta($post->ID, '_mh_figures', true), true) ?: array();
         $figure_count = intval(get_post_meta($post->ID, '_mh_figure_count', true));
@@ -506,7 +518,14 @@ function mh_theme_search_protocols($request) {
         
         return $order === 'asc' ? $val_a - $val_b : $val_b - $val_a;
     });
-    
+
+    } // End of if (empty($all_protocols))
+
+    // Save to cache if no filters were applied (cache for 10 minutes)
+    if (!$has_filters && !empty($all_protocols)) {
+        set_transient($cache_key, $all_protocols, 10 * MINUTE_IN_SECONDS);
+    }
+
     // Paginate
     $total = count($all_protocols);
     $total_pages = ceil($total / $per_page);
@@ -2695,19 +2714,65 @@ function mh_parse_authors($authors_string) {
 }
 
 /**
- * Get the last author from authors string
+ * Parse authors from any format and return array of author names
+ * Handles: JSON objects with 'name', JSON arrays of strings, or comma-separated strings
+ *
+ * @param mixed $authors_raw The raw authors data (string or JSON)
+ * @param int $max Maximum number of authors to return (0 for all)
+ * @return array Array of author name strings
  */
-function mh_get_last_author($authors_string) {
-    $authors = mh_parse_authors($authors_string);
+function mh_parse_authors_to_array($authors_raw, $max = 0) {
+    if (empty($authors_raw)) {
+        return array();
+    }
+
+    $author_list = array();
+
+    // Try to decode as JSON first
+    $authors_arr = json_decode($authors_raw, true);
+
+    if (is_array($authors_arr) && !empty($authors_arr)) {
+        // Check if it's array of objects with 'name' key like [{name: "John Doe"}, ...]
+        if (isset($authors_arr[0]['name'])) {
+            $author_list = array_column($authors_arr, 'name');
+        }
+        // Check if it's array of strings like ["John Doe", "Jane Doe"]
+        elseif (is_string($authors_arr[0])) {
+            $author_list = $authors_arr;
+        }
+    } else {
+        // Not JSON - treat as comma/semicolon/and-separated string
+        $author_list = mh_parse_authors($authors_raw);
+    }
+
+    // Filter empty values
+    $author_list = array_filter($author_list, function($a) {
+        return !empty($a) && strlen(trim($a)) > 1;
+    });
+    $author_list = array_values($author_list);
+
+    // Apply max limit if specified
+    if ($max > 0 && count($author_list) > $max) {
+        $author_list = array_slice($author_list, 0, $max);
+    }
+
+    return $author_list;
+}
+
+/**
+ * Get the last author from authors data (supports string or JSON)
+ */
+function mh_get_last_author($authors_data) {
+    $authors = mh_parse_authors_to_array($authors_data);
     if (empty($authors)) return '';
     return end($authors);
 }
 
 /**
- * Get the first author from authors string
+ * Get the first author from authors data (supports string or JSON)
  */
-function mh_get_first_author($authors_string) {
-    $authors = mh_parse_authors($authors_string);
+function mh_get_first_author($authors_data) {
+    $authors = mh_parse_authors_to_array($authors_data);
     if (empty($authors)) return '';
     return reset($authors);
 }
@@ -2725,9 +2790,10 @@ function mh_author_search_url($author_name) {
 
 /**
  * Display clickable authors with links
+ * Supports string or JSON author data
  */
-function mh_display_clickable_authors($authors_string, $max_display = 5, $show_last_author = true) {
-    $authors = mh_parse_authors($authors_string);
+function mh_display_clickable_authors($authors_data, $max_display = 5, $show_last_author = true) {
+    $authors = mh_parse_authors_to_array($authors_data);
     if (empty($authors)) return;
     
     $total = count($authors);
@@ -3316,6 +3382,15 @@ function mh_clear_sidebar_caches($post_id) {
     delete_transient('mh_recent_protocols_8');
     delete_transient('mh_institutions_10');
     delete_transient('mh_filter_options');
+
+    // Clear protocols endpoint caches
+    $sort_options = array('citations', 'year', 'title');
+    $order_options = array('asc', 'desc');
+    foreach ($sort_options as $sort) {
+        foreach ($order_options as $order) {
+            delete_transient('mh_protocols_' . $sort . '_' . $order);
+        }
+    }
 
     // Clear for common limit values
     for ($i = 5; $i <= 15; $i++) {

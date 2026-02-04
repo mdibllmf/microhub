@@ -244,7 +244,8 @@ $api_base = rest_url('microhub/v1');
 
 /* Card Authors */
 .mh-card-authors { font-size: 0.85rem; color: var(--text-muted, #8b949e); margin-bottom: 8px; }
-.mh-card-authors .mh-author-link { color: var(--text-light, #8b949e); }
+.mh-card-authors .mh-author-link { color: var(--text-light, #8b949e); text-decoration: none; cursor: pointer; transition: color 0.2s; }
+.mh-card-authors .mh-author-link:hover { color: var(--primary, #58a6ff); text-decoration: underline; }
 .mh-card-authors .mh-last-author { font-weight: 500; }
 .mh-card-authors .mh-author-sep { color: var(--text-muted, #6e7681); }
 .mh-card-authors .mh-author-note { font-size: 0.75rem; color: var(--accent, #a371f7); font-style: italic; }
@@ -302,6 +303,15 @@ $api_base = rest_url('microhub/v1');
 </style>
 
 <script>
+// Global function for author search - redirects to papers page with author filter
+function searchByAuthor(authorName) {
+    const searchUrl = new URL('<?php echo esc_url(home_url('/')); ?>');
+    searchUrl.searchParams.set('post_type', 'mh_paper');
+    searchUrl.searchParams.set('s', authorName);
+    searchUrl.searchParams.set('search_field', 'author');
+    window.location.href = searchUrl.toString();
+}
+
 (function() {
     const apiBase = <?php echo json_encode(esc_url_raw($api_base)); ?>;
     const searchInput = document.getElementById('mh-search-input');
@@ -591,16 +601,16 @@ $api_base = rest_url('microhub/v1');
         // Description
         const desc = tool.description ? truncate(tool.description, 150) : 'No description available.';
 
-        // Authors display
+        // Authors display - make clickable to search for their papers
         let authorsHtml = '';
         if (tool.authors?.length) {
             const firstAuthor = tool.authors[0];
             const lastAuthor = tool.authors.length > 1 ? tool.authors[tool.authors.length - 1] : null;
             authorsHtml = `<div class="mh-card-authors">`;
-            authorsHtml += `<span class="mh-author-link">${escapeHtml(firstAuthor)}</span>`;
+            authorsHtml += `<a href="#" class="mh-author-link" onclick="searchByAuthor('${escapeHtml(firstAuthor).replace(/'/g, "\\'")}'); return false;">${escapeHtml(firstAuthor)}</a>`;
             if (lastAuthor && lastAuthor !== firstAuthor) {
                 authorsHtml += tool.authors.length > 2 ? `<span class="mh-author-sep"> ... </span>` : `<span class="mh-author-sep">, </span>`;
-                authorsHtml += `<span class="mh-author-link mh-last-author">${escapeHtml(lastAuthor)}</span>`;
+                authorsHtml += `<a href="#" class="mh-author-link mh-last-author" onclick="searchByAuthor('${escapeHtml(lastAuthor).replace(/'/g, "\\'")}'); return false;">${escapeHtml(lastAuthor)}</a>`;
             }
             if (tool.papers_introducing > 0) {
                 authorsHtml += ` <span class="mh-author-note">(introduced)</span>`;
