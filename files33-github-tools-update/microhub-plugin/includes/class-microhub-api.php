@@ -326,6 +326,37 @@ class MicroHub_API {
     }
 
     /**
+     * Parse authors string/JSON and return array for display
+     * Returns first 3 authors max for card display
+     */
+    private function parse_authors_for_display($authors_raw, $max = 3) {
+        if (empty($authors_raw)) {
+            return array();
+        }
+
+        $authors = array();
+
+        // Try JSON array first
+        $decoded = json_decode($authors_raw, true);
+        if (is_array($decoded)) {
+            // Check if it's array of objects with 'name' key
+            if (!empty($decoded) && isset($decoded[0]['name'])) {
+                $authors = array_column($decoded, 'name');
+            } elseif (!empty($decoded) && is_string($decoded[0])) {
+                $authors = $decoded;
+            }
+        } else {
+            // Parse as comma/semicolon separated string
+            $authors_raw = preg_replace('/\s+and\s+/i', ', ', $authors_raw);
+            $authors_raw = str_replace('&', ',', $authors_raw);
+            $authors = array_map('trim', preg_split('/[,;]+/', $authors_raw));
+            $authors = array_filter($authors);
+        }
+
+        return array_slice($authors, 0, $max);
+    }
+
+    /**
      * Get single paper
      */
     public function get_paper($request) {
@@ -540,10 +571,11 @@ class MicroHub_API {
         $min_papers = max(1, intval($request->get_param('min_papers') ?: 1));
         $show_archived = $request->get_param('show_archived') ? true : false;
         
-        // Gather all github_tools meta from papers (also get citation_count)
+        // Gather all github_tools meta from papers (also get citation_count and authors)
         $rows = $wpdb->get_results("
             SELECT p.ID as paper_id, p.post_title, pm.meta_value as tools_json,
-                   COALESCE((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_mh_citation_count' LIMIT 1), 0) as citation_count
+                   COALESCE((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_mh_citation_count' LIMIT 1), 0) as citation_count,
+                   COALESCE((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_mh_authors' LIMIT 1), '') as authors
             FROM {$wpdb->postmeta} pm
             JOIN {$wpdb->posts} p ON p.ID = pm.post_id
             WHERE pm.meta_key = '_mh_github_tools'
@@ -586,6 +618,8 @@ class MicroHub_API {
                         'papers_benchmarking' => 0,
                         'paper_titles' => array(),
                         'paper_ids' => array(),
+                        'authors' => array(),
+                        'introducing_paper_id' => null,
                     );
                 }
                 
@@ -596,10 +630,22 @@ class MicroHub_API {
                 
                 // Track relationship types
                 $rel = $tool['relationship'] ?? 'uses';
-                if ($rel === 'introduces') $tools_aggregate[$full_name]['papers_introducing']++;
+                if ($rel === 'introduces') {
+                    $tools_aggregate[$full_name]['papers_introducing']++;
+                    // Store introducing paper's authors if not already set
+                    if (empty($tools_aggregate[$full_name]['authors']) && !empty($row->authors)) {
+                        $tools_aggregate[$full_name]['authors'] = $this->parse_authors_for_display($row->authors);
+                        $tools_aggregate[$full_name]['introducing_paper_id'] = intval($row->paper_id);
+                    }
+                }
                 elseif ($rel === 'extends') $tools_aggregate[$full_name]['papers_extending']++;
                 elseif ($rel === 'benchmarks') $tools_aggregate[$full_name]['papers_benchmarking']++;
                 else $tools_aggregate[$full_name]['papers_using']++;
+
+                // Fallback: use first paper's authors if no introducing paper
+                if (empty($tools_aggregate[$full_name]['authors']) && !empty($row->authors)) {
+                    $tools_aggregate[$full_name]['authors'] = $this->parse_authors_for_display($row->authors);
+                }
                 
                 // Keep best metadata - prefer non-empty values
                 if (empty($tools_aggregate[$full_name]['description']) && !empty($tool['description'])) {

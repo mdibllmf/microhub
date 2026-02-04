@@ -242,6 +242,13 @@ $api_base = rest_url('microhub/v1');
 .mh-card-title a { color: var(--primary, #58a6ff); text-decoration: none; }
 .mh-card-title a:hover { color: var(--accent, #a371f7); }
 
+/* Card Authors */
+.mh-card-authors { font-size: 0.85rem; color: var(--text-muted, #8b949e); margin-bottom: 8px; }
+.mh-card-authors .mh-author-link { color: var(--text-light, #8b949e); }
+.mh-card-authors .mh-last-author { font-weight: 500; }
+.mh-card-authors .mh-author-sep { color: var(--text-muted, #6e7681); }
+.mh-card-authors .mh-author-note { font-size: 0.75rem; color: var(--accent, #a371f7); font-style: italic; }
+
 /* Card Meta */
 .mh-card-meta { font-size: 0.8rem; color: var(--text-muted, #8b949e); margin-bottom: 10px; line-height: 1.4; }
 .mh-card-meta span { margin-right: 12px; }
@@ -584,12 +591,30 @@ $api_base = rest_url('microhub/v1');
         // Description
         const desc = tool.description ? truncate(tool.description, 150) : 'No description available.';
 
+        // Authors display
+        let authorsHtml = '';
+        if (tool.authors?.length) {
+            const firstAuthor = tool.authors[0];
+            const lastAuthor = tool.authors.length > 1 ? tool.authors[tool.authors.length - 1] : null;
+            authorsHtml = `<div class="mh-card-authors">`;
+            authorsHtml += `<span class="mh-author-link">${escapeHtml(firstAuthor)}</span>`;
+            if (lastAuthor && lastAuthor !== firstAuthor) {
+                authorsHtml += tool.authors.length > 2 ? `<span class="mh-author-sep"> ... </span>` : `<span class="mh-author-sep">, </span>`;
+                authorsHtml += `<span class="mh-author-link mh-last-author">${escapeHtml(lastAuthor)}</span>`;
+            }
+            if (tool.papers_introducing > 0) {
+                authorsHtml += ` <span class="mh-author-note">(introduced)</span>`;
+            }
+            authorsHtml += `</div>`;
+        }
+
         return `
             <article class="mh-paper-card health-${healthClass}">
                 <div class="mh-card-header-row">
                     <span class="mh-card-badge ${healthClass}">${healthLabel}</span>
                 </div>
                 <h3 class="mh-card-title"><a href="${escapeHtml(repoUrl)}" target="_blank" rel="noopener">${escapeHtml(tool.full_name)}</a></h3>
+                ${authorsHtml}
                 <div class="mh-card-meta">
                     ${tool.language ? `<span>📝 ${escapeHtml(tool.language)}</span>` : ''}
                     <span>📊 ${formatNumber(totalCitations)} citations</span>

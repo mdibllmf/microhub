@@ -127,6 +127,29 @@ function mh_theme_register_rest_routes() {
 add_action('rest_api_init', 'mh_theme_register_rest_routes');
 
 /**
+ * Helper: Get taxonomy terms with URLs for API responses
+ */
+function mh_get_terms_with_urls($post_id, $taxonomy) {
+    if (!taxonomy_exists($taxonomy)) {
+        return array();
+    }
+    $terms = wp_get_object_terms($post_id, $taxonomy);
+    if (is_wp_error($terms) || empty($terms)) {
+        return array();
+    }
+    $result = array();
+    foreach ($terms as $term) {
+        $url = get_term_link($term);
+        $result[] = array(
+            'name' => $term->name,
+            'slug' => $term->slug,
+            'url' => !is_wp_error($url) ? $url : home_url('/?s=' . urlencode($term->name)),
+        );
+    }
+    return $result;
+}
+
+/**
  * Search protocols (protocol papers + mh_protocol posts) with all filters
  */
 function mh_theme_search_protocols($request) {
@@ -259,22 +282,27 @@ function mh_theme_search_protocols($request) {
             continue;
         }
         
-        $techniques = taxonomy_exists('mh_technique') ? wp_get_object_terms($post->ID, 'mh_technique', array('fields' => 'names')) : array();
-        $organisms = taxonomy_exists('mh_organism') ? wp_get_object_terms($post->ID, 'mh_organism', array('fields' => 'names')) : array();
-        $microscopes = taxonomy_exists('mh_microscope') ? wp_get_object_terms($post->ID, 'mh_microscope', array('fields' => 'names')) : array();
-        $software_terms = taxonomy_exists('mh_software') ? wp_get_object_terms($post->ID, 'mh_software', array('fields' => 'names')) : array();
-        
+        // Get taxonomy terms with URLs for clickable tags
+        $techniques = mh_get_terms_with_urls($post->ID, 'mh_technique');
+        $organisms = mh_get_terms_with_urls($post->ID, 'mh_organism');
+        $microscopes = mh_get_terms_with_urls($post->ID, 'mh_microscope');
+        $software_terms = mh_get_terms_with_urls($post->ID, 'mh_software');
+
         $doi = get_post_meta($post->ID, '_mh_doi', true);
-        
+
+        // Parse authors - handle both string and JSON array formats
         $authors = get_post_meta($post->ID, '_mh_authors', true);
         $author_list = array();
         if ($authors) {
             $authors_arr = json_decode($authors, true);
             if (is_array($authors_arr)) {
                 $author_list = array_slice(array_column($authors_arr, 'name'), 0, 5);
+            } else {
+                // If not JSON, treat as comma-separated string
+                $author_list = array_slice(array_map('trim', preg_split('/[,;]/', $authors)), 0, 5);
             }
         }
-        
+
         $all_protocols[] = array(
             'id' => $post->ID,
             'title' => $post->post_title,
@@ -293,10 +321,10 @@ function mh_theme_search_protocols($request) {
             'repositories' => json_decode(get_post_meta($post->ID, '_mh_repositories', true), true) ?: array(),
             'rrids' => json_decode(get_post_meta($post->ID, '_mh_rrids', true), true) ?: array(),
             'protocols' => json_decode(get_post_meta($post->ID, '_mh_protocols', true), true) ?: array(),
-            'techniques' => is_array($techniques) && !is_wp_error($techniques) ? $techniques : array(),
-            'organisms' => is_array($organisms) && !is_wp_error($organisms) ? $organisms : array(),
-            'microscopes' => is_array($microscopes) && !is_wp_error($microscopes) ? $microscopes : array(),
-            'software' => is_array($software_terms) && !is_wp_error($software_terms) ? $software_terms : array(),
+            'techniques' => $techniques,
+            'organisms' => $organisms,
+            'microscopes' => $microscopes,
+            'software' => $software_terms,
             'fluorophores' => json_decode(get_post_meta($post->ID, '_mh_fluorophores', true), true) ?: array(),
             'sample_preparation' => json_decode(get_post_meta($post->ID, '_mh_sample_preparation', true), true) ?: array(),
             'cell_lines' => json_decode(get_post_meta($post->ID, '_mh_cell_lines', true), true) ?: array(),
@@ -394,11 +422,12 @@ function mh_theme_search_protocols($request) {
             $external_url = $proto_url;
         }
         
-        $techniques = taxonomy_exists('mh_technique') ? wp_get_object_terms($post->ID, 'mh_technique', array('fields' => 'names')) : array();
-        $organisms = taxonomy_exists('mh_organism') ? wp_get_object_terms($post->ID, 'mh_organism', array('fields' => 'names')) : array();
-        $microscopes = taxonomy_exists('mh_microscope') ? wp_get_object_terms($post->ID, 'mh_microscope', array('fields' => 'names')) : array();
-        $software_terms = taxonomy_exists('mh_software') ? wp_get_object_terms($post->ID, 'mh_software', array('fields' => 'names')) : array();
-        
+        // Get taxonomy terms with URLs for clickable tags
+        $techniques = mh_get_terms_with_urls($post->ID, 'mh_technique');
+        $organisms = mh_get_terms_with_urls($post->ID, 'mh_organism');
+        $microscopes = mh_get_terms_with_urls($post->ID, 'mh_microscope');
+        $software_terms = mh_get_terms_with_urls($post->ID, 'mh_software');
+
         // Get authors - try multiple formats
         $authors = get_post_meta($post->ID, '_mh_authors', true);
         $author_list = array();
@@ -444,10 +473,10 @@ function mh_theme_search_protocols($request) {
             'repositories' => $repositories,
             'rrids' => $rrids,
             'protocols' => $protocols_linked,
-            'techniques' => is_array($techniques) && !is_wp_error($techniques) ? $techniques : array(),
-            'organisms' => is_array($organisms) && !is_wp_error($organisms) ? $organisms : array(),
-            'microscopes' => is_array($microscopes) && !is_wp_error($microscopes) ? $microscopes : array(),
-            'software' => is_array($software_terms) && !is_wp_error($software_terms) ? $software_terms : array(),
+            'techniques' => $techniques,
+            'organisms' => $organisms,
+            'microscopes' => $microscopes,
+            'software' => $software_terms,
             'fluorophores' => json_decode(get_post_meta($post->ID, '_mh_fluorophores', true), true) ?: array(),
             'sample_preparation' => json_decode(get_post_meta($post->ID, '_mh_sample_preparation', true), true) ?: array(),
             'cell_lines' => json_decode(get_post_meta($post->ID, '_mh_cell_lines', true), true) ?: array(),
@@ -944,36 +973,64 @@ function mh_theme_search_papers($request) {
             $repositories = json_decode(get_post_meta($id, '_mh_repositories', true), true) ?: array();
             $rrids = json_decode(get_post_meta($id, '_mh_rrids', true), true) ?: array();
             
-            // Get taxonomy terms
+            // Get taxonomy terms with URLs for clickable tags
             $techniques = array();
             if (taxonomy_exists('mh_technique')) {
                 $terms = get_the_terms($id, 'mh_technique');
                 if ($terms && !is_wp_error($terms)) {
-                    $techniques = wp_list_pluck($terms, 'name');
+                    foreach ($terms as $term) {
+                        $url = get_term_link($term);
+                        $techniques[] = array(
+                            'name' => $term->name,
+                            'slug' => $term->slug,
+                            'url' => !is_wp_error($url) ? $url : home_url('/?s=' . urlencode($term->name)),
+                        );
+                    }
                 }
             }
-            
+
             $microscopes = array();
             if (taxonomy_exists('mh_microscope')) {
                 $terms = get_the_terms($id, 'mh_microscope');
                 if ($terms && !is_wp_error($terms)) {
-                    $microscopes = wp_list_pluck($terms, 'name');
+                    foreach ($terms as $term) {
+                        $url = get_term_link($term);
+                        $microscopes[] = array(
+                            'name' => $term->name,
+                            'slug' => $term->slug,
+                            'url' => !is_wp_error($url) ? $url : home_url('/?s=' . urlencode($term->name)),
+                        );
+                    }
                 }
             }
-            
+
             $organisms = array();
             if (taxonomy_exists('mh_organism')) {
                 $terms = get_the_terms($id, 'mh_organism');
                 if ($terms && !is_wp_error($terms)) {
-                    $organisms = wp_list_pluck($terms, 'name');
+                    foreach ($terms as $term) {
+                        $url = get_term_link($term);
+                        $organisms[] = array(
+                            'name' => $term->name,
+                            'slug' => $term->slug,
+                            'url' => !is_wp_error($url) ? $url : home_url('/?s=' . urlencode($term->name)),
+                        );
+                    }
                 }
             }
-            
+
             $software = array();
             if (taxonomy_exists('mh_software')) {
                 $terms = get_the_terms($id, 'mh_software');
                 if ($terms && !is_wp_error($terms)) {
-                    $software = wp_list_pluck($terms, 'name');
+                    foreach ($terms as $term) {
+                        $url = get_term_link($term);
+                        $software[] = array(
+                            'name' => $term->name,
+                            'slug' => $term->slug,
+                            'url' => !is_wp_error($url) ? $url : home_url('/?s=' . urlencode($term->name)),
+                        );
+                    }
                 }
             }
             
@@ -2821,9 +2878,16 @@ function mh_handle_contact_form() {
  */
 function mh_get_recent_protocol_papers($limit = 8) {
     if (!mh_plugin_active()) return array();
-    
+
+    // Check cache first - 10 minute cache
+    $cache_key = 'mh_recent_protocols_' . $limit;
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
+    }
+
     $protocol_papers = array();
-    
+
     // First, try getting mh_protocol post type
     $protocols = get_posts(array(
         'post_type' => 'mh_protocol',
@@ -2924,7 +2988,12 @@ function mh_get_recent_protocol_papers($limit = 8) {
         }
     }
     
-    return array_slice($protocol_papers, 0, $limit);
+    $result = array_slice($protocol_papers, 0, $limit);
+
+    // Cache for 10 minutes
+    set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+
+    return $result;
 }
 
 /**
@@ -2965,9 +3034,16 @@ function mh_detect_protocol_source($journal) {
  */
 function mh_get_institutions($limit = 10) {
     if (!mh_plugin_active()) return array();
-    
+
+    // Check cache first - 10 minute cache
+    $cache_key = 'mh_institutions_' . $limit;
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
+    }
+
     $institutions = array();
-    
+
     // First try to get from taxonomy (uses mh_facility for backward compatibility)
     if (taxonomy_exists('mh_facility')) {
         $terms = get_terms(array(
@@ -2994,10 +3070,11 @@ function mh_get_institutions($limit = 10) {
                     'website' => $website ?: '',
                 );
             }
+            set_transient($cache_key, $institutions, 10 * MINUTE_IN_SECONDS);
             return $institutions;
         }
     }
-    
+
     // Fallback to meta-based query
     global $wpdb;
     
@@ -3023,7 +3100,8 @@ function mh_get_institutions($limit = 10) {
             'website' => '',
         );
     }
-    
+
+    set_transient($cache_key, $institutions, 10 * MINUTE_IN_SECONDS);
     return $institutions;
 }
 
@@ -3147,6 +3225,13 @@ function mh_get_ror_organizations($limit = 10) {
 function mh_get_newest_papers($limit = 8) {
     if (!mh_plugin_active()) return array();
 
+    // Check cache first - 10 minute cache
+    $cache_key = 'mh_newest_papers_' . $limit;
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
+    }
+
     $papers = get_posts(array(
         'post_type' => 'mh_paper',
         'post_status' => 'publish',
@@ -3166,6 +3251,7 @@ function mh_get_newest_papers($limit = 8) {
         );
     }
 
+    set_transient($cache_key, $results, 10 * MINUTE_IN_SECONDS);
     return $results;
 }
 
@@ -3174,6 +3260,13 @@ function mh_get_newest_papers($limit = 8) {
  */
 function mh_get_papers_with_rors($limit = 8) {
     if (!mh_plugin_active()) return array();
+
+    // Check cache first - 10 minute cache
+    $cache_key = 'mh_papers_with_rors_' . $limit;
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
+    }
 
     global $wpdb;
 
@@ -3203,5 +3296,35 @@ function mh_get_papers_with_rors($limit = 8) {
         );
     }
 
+    set_transient($cache_key, $papers, 10 * MINUTE_IN_SECONDS);
     return $papers;
 }
+
+/**
+ * Clear sidebar caches when papers are added/updated
+ * This ensures sidebars update with new content
+ */
+function mh_clear_sidebar_caches($post_id) {
+    $post_type = get_post_type($post_id);
+    if (!in_array($post_type, array('mh_paper', 'mh_protocol'))) {
+        return;
+    }
+
+    // Clear all sidebar-related transients
+    delete_transient('mh_newest_papers_8');
+    delete_transient('mh_papers_with_rors_8');
+    delete_transient('mh_recent_protocols_8');
+    delete_transient('mh_institutions_10');
+    delete_transient('mh_filter_options');
+
+    // Clear for common limit values
+    for ($i = 5; $i <= 15; $i++) {
+        delete_transient('mh_newest_papers_' . $i);
+        delete_transient('mh_papers_with_rors_' . $i);
+        delete_transient('mh_recent_protocols_' . $i);
+        delete_transient('mh_institutions_' . $i);
+    }
+}
+add_action('save_post', 'mh_clear_sidebar_caches');
+add_action('delete_post', 'mh_clear_sidebar_caches');
+add_action('trashed_post', 'mh_clear_sidebar_caches');
