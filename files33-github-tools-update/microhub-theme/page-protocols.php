@@ -1204,8 +1204,26 @@ function filterByInstitution(institutionSlug) {
         else if (citations >= 50) { badgeClass = 'high-impact'; badgeText = '⭐ High Impact'; }
         
         let tagsHtml = '';
-        if (protocol.techniques?.length) tagsHtml += protocol.techniques.slice(0, 2).map(t => `<span class="mh-card-tag technique">${escapeHtml(t)}</span>`).join('');
-        if (protocol.microscopes?.length) tagsHtml += `<span class="mh-card-tag microscope">🔬 ${escapeHtml(protocol.microscopes[0])}</span>`;
+        // Handle both old string format and new object format {name, url}
+        const getTagName = (t) => typeof t === 'object' ? t.name : t;
+        const getTagUrl = (t) => typeof t === 'object' ? t.url : null;
+        if (protocol.techniques?.length) {
+            tagsHtml += protocol.techniques.slice(0, 2).map(t => {
+                const name = getTagName(t);
+                const url = getTagUrl(t);
+                return url
+                    ? `<a href="${escapeHtml(url)}" class="mh-card-tag technique">${escapeHtml(name)}</a>`
+                    : `<span class="mh-card-tag technique">${escapeHtml(name)}</span>`;
+            }).join('');
+        }
+        if (protocol.microscopes?.length) {
+            const m = protocol.microscopes[0];
+            const name = getTagName(m);
+            const url = getTagUrl(m);
+            tagsHtml += url
+                ? `<a href="${escapeHtml(url)}" class="mh-card-tag microscope">🔬 ${escapeHtml(name)}</a>`
+                : `<span class="mh-card-tag microscope">🔬 ${escapeHtml(name)}</span>`;
+        }
         
         let enrichmentHtml = '';
         const items = [];
