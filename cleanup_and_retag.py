@@ -1,7 +1,23 @@
 #!/usr/bin/env python3
 """
-MicroHub Paper Cleanup and Re-tagging Script v3.2
+MicroHub Paper Cleanup and Re-tagging Script v3.3
 Cleans up JSON data, extracts missing tags, and normalizes tag variants.
+
+CHANGES in v3.3:
+- ANTIBODY SOURCE FILTERING: Organisms that only appear as antibody sources
+  (e.g., "rabbit anti-GFP", "goat secondary antibody") are now filtered out.
+  Species like rabbit, goat, donkey, chicken, guinea pig are validated for
+  non-antibody context before being added as research organisms.
+- LATIN NAME VALIDATION: Organisms with Latin name matches (e.g., "Mus musculus")
+  are always kept, providing more reliable organism identification.
+- IMPROVED TAG PATTERNS: Fixed patterns for DiD, DiI, DiO, DiR (lipophilic dyes),
+  SiR (silicon rhodamine), EdU, BrdU to avoid false positives from common words.
+- API VALIDATION: New optional --validate-apis flag enables Semantic Scholar and
+  CrossRef API calls to validate DOIs, get citation counts, and verify metadata.
+- CROSSREF INTEGRATION: fetch_crossref_metadata() function for DOI validation,
+  journal info, and publication type verification.
+- SEMANTIC SCHOLAR INTEGRATION: fetch_semantic_scholar_metadata() function for
+  fields of study, citation counts, and paper validation.
 
 CHANGES in v3.2:
 - GITHUB TOOLS: Properly preserves and validates github_tools data from scraper v5.1+
@@ -1023,10 +1039,12 @@ FLUOROPHORES = {
     'Phalloidin': [r'\bphalloidin\b'],
     'WGA': [r'\bwga\b', r'\bwheat germ agglutinin\b'],
     'BODIPY': [r'\bbodipy\b'],
-    'DiI': [r'\bdii\b(?!d)'],
-    'DiO': [r'\bdio\b(?!d)'],
-    'DiD': [r'\bdid\b'],
-    'DiR': [r'\bdir\b'],
+    # DiI, DiO, DiD, DiR are lipophilic membrane dyes
+    # These patterns require context to avoid matching common words
+    'DiI': [r'\bdii\b(?!d|gest|vers)', r'\bdi-?i\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?i\b'],
+    'DiO': [r'\bdio\b(?!d|de)', r'\bdi-?o\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?o\b'],
+    'DiD': [r'\bdi-?d\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?d\b', r'(?:DiI|DiO|DiR).{0,20}\bDiD\b', r'\bDiD\b.{0,20}(?:DiI|DiO|DiR)'],
+    'DiR': [r'\bdi-?r\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?r\b', r'(?:DiI|DiO|DiD).{0,20}\bDiR\b', r'\bDiR\b.{0,20}(?:DiI|DiO|DiD)'],
     'Fluo-4': [r'\bfluo.?4\b'],
     'Fura-2': [r'\bfura.?2\b'],
     'GCaMP': [r'\bgcamp\b(?!\d)'],
@@ -1055,7 +1073,8 @@ FLUOROPHORES = {
     'mMaple': [r'\bmmaple\d*\b'],
     'PA-GFP': [r'\bpa.?gfp\b'],
     'Dronpa': [r'\bdronpa\b'],
-    'SiR': [r'\bsir\b(?!.*tubulin|.*actin)', r'\bsilicon rhodamine\b'],
+    # SiR (Silicon Rhodamine) - requires context to avoid matching "sir" (title)
+    'SiR': [r'\bsilicon\s+rhodamine\b', r'\bSiR\b(?=[\s-]*(?:dye|fluor|label|stain|probe))', r'(?:dye|label|stain|probe).*\bSiR\b', r'\bSiR-\w+'],
     'SiR-Actin': [r'\bsir.?actin\b'],
     'SiR-Tubulin': [r'\bsir.?tubulin\b'],
     'JF549': [r'\bjf\s*549\b', r'\bjanelia\s+fluor\s*549\b'],
@@ -1063,8 +1082,10 @@ FLUOROPHORES = {
     'CF568': [r'\bcf\s*568\b'],
     'CF Dye': [r'\bcf\s+dye\b'],
     'DyLight': [r'\bdylight\b'],
-    'EdU': [r'\bedu\b'],
-    'BrdU': [r'\bbrdu\b'],
+    # EdU (5-ethynyl-2'-deoxyuridine) - require context to avoid matching "education"
+    'EdU': [r'\bEdU\b', r'\bedu\b(?=.*(?:label|stain|incorporat|pulse|click))', r'(?:label|stain|incorporat|pulse|click).*\bedu\b', r'5.?ethynyl.?(?:2.?)?deoxyuridine'],
+    # BrdU (5-bromo-2'-deoxyuridine)
+    'BrdU': [r'\bBrdU\b', r'\bbrdu\b(?=.*(?:label|stain|incorporat|pulse))', r'5.?bromo.?(?:2.?)?deoxyuridine'],
     'Click-iT': [r'\bclick.?it\b'],
     'CellMask': [r'\bcellmask\b'],
     'FM Dyes': [r'\bfm\s+dye\b', r'\bfm\s*(?:1-43|4-64)\b'],
@@ -1099,6 +1120,67 @@ ORGANISMS = {
     'Maize': [r'\bmaize\b', r'\bzea\s+mays\b', r'\bcorn\b'],
     'Organoid': [r'\borganoid\b'],
     'Spheroid': [r'\bspheroid\b'],
+}
+
+# ============================================================================
+# ANTIBODY SOURCE SPECIES FILTERING
+# These species are commonly used as antibody sources (e.g., "rabbit anti-X")
+# and should be filtered out when they only appear in antibody context
+# ============================================================================
+
+ANTIBODY_SOURCE_SPECIES = {'Rabbit', 'Goat', 'Donkey', 'Chicken', 'Guinea Pig'}
+
+# Patterns that indicate antibody context - if a species appears near these,
+# it's likely an antibody source, not a research organism
+ANTIBODY_CONTEXT_PATTERNS = [
+    # "anti-rabbit", "anti-mouse", etc.
+    r'anti-?(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)\b',
+
+    # "rabbit anti-X", "rabbit polyclonal", "rabbit IgG"
+    r'(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)\s+(?:anti-?\w*|polyclonal|monoclonal|IgG|IgM|primary|secondary)',
+
+    # "rabbit antibody", "rabbit serum"
+    r'(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)\s+(?:anti-?\w+\s+)?(?:antibod(?:y|ies)|serum|antiserum)',
+
+    # "raised in rabbit", "from rabbit"
+    r'(?:raised\s+in|from|host(?:ed)?\s+in)\s+(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)',
+
+    # "rabbit origin"
+    r'(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)\s+origin',
+
+    # "secondary antibody from rabbit"
+    r'secondary\s+(?:antibod(?:y|ies))?\s*(?:from|raised\s+in)?\s*(?:rabbit|mouse|rat|goat|donkey|chicken)',
+
+    # "goat anti-rabbit" (secondary antibody context)
+    r'(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)\s+anti-?(?:rabbit|mouse|rat|goat|donkey|chicken|guinea\s*pig)',
+
+    # Conjugated antibodies
+    r'(?:alexa|hrp|fitc|cy\d|dylight|irdye)[-\s]?(?:conjugated|labeled)?\s*anti-?(?:rabbit|mouse|rat|goat|donkey|chicken)',
+
+    # Catalog number patterns near species
+    r'(?:rabbit|goat|donkey|chicken)\s*(?:cat\.?\s*(?:#|no\.?)?|catalog\s*(?:#|no\.?)?|#)\s*\w+',
+]
+
+# Latin names for validation - used to confirm organism tags
+# A match on a Latin name is more reliable than a common name match
+ORGANISM_LATIN_NAMES = {
+    'Mouse': [r'\bmus\s+musculus\b'],
+    'Human': [r'\bhomo\s+sapiens\b'],
+    'Rat': [r'\brattus\s+norvegicus\b', r'\brattus\b'],
+    'Zebrafish': [r'\bdanio\s+rerio\b'],
+    'Drosophila': [r'\bdrosophila\s+melanogaster\b', r'\bdrosophila\b'],
+    'C. elegans': [r'\bcaenorhabditis\s+elegans\b', r'\bc\.\s*elegans\b'],
+    'Xenopus': [r'\bxenopus\s+laevis\b', r'\bxenopus\s+tropicalis\b', r'\bxenopus\b'],
+    'Chicken': [r'\bgallus\s+gallus\b', r'\bgallus\s+domesticus\b'],
+    'Pig': [r'\bsus\s+scrofa\b'],
+    'Rabbit': [r'\boryctolagus\s+cuniculus\b', r'\boryctolagus\b'],
+    'Dog': [r'\bcanis\s+(?:lupus\s+)?familiaris\b'],
+    'Yeast': [r'\bsaccharomyces\s+cerevisiae\b', r'\bschizosaccharomyces\s+pombe\b'],
+    'E. coli': [r'\bescherichia\s+coli\b'],
+    'Arabidopsis': [r'\barabidopsis\s+thaliana\b'],
+    'Tobacco': [r'\bnicotiana\s+(?:tabacum|benthamiana)\b'],
+    'Maize': [r'\bzea\s+mays\b'],
+    'Monkey': [r'\bmacaca\s+(?:mulatta|fascicularis)\b'],
 }
 
 CELL_LINES = {
@@ -1582,17 +1664,105 @@ def extract_tags(text: str, patterns: Dict[str, List[str]]) -> List[str]:
     """Extract tags from text using patterns."""
     if not text:
         return []
-    
+
     text_lower = text.lower()
     found = []
-    
+
     for tag_name, tag_patterns in patterns.items():
         for pattern in tag_patterns:
             if re.search(pattern, text_lower, re.IGNORECASE):
                 found.append(tag_name)
                 break
-    
+
     return found
+
+
+def is_antibody_context(text: str, species: str, match_start: int, match_end: int) -> bool:
+    """
+    Check if a species mention at the given position is in antibody context.
+
+    Returns True if the species mention appears to be referencing an antibody source
+    (e.g., "rabbit anti-GFP", "goat secondary antibody") rather than a research organism.
+    """
+    if not text or species not in ANTIBODY_SOURCE_SPECIES:
+        return False
+
+    # Use a context window of 100 characters before and after
+    context_start = max(0, match_start - 100)
+    context_end = min(len(text), match_end + 100)
+    context = text[context_start:context_end].lower()
+
+    # Check if any antibody pattern matches in this context
+    for pattern in ANTIBODY_CONTEXT_PATTERNS:
+        if re.search(pattern, context, re.IGNORECASE):
+            return True
+
+    return False
+
+
+def has_latin_name_match(text: str, organism: str) -> bool:
+    """
+    Check if the organism has a Latin name match in the text.
+
+    Latin name matches are more reliable than common name matches
+    for confirming organism identity.
+    """
+    if not text or organism not in ORGANISM_LATIN_NAMES:
+        return False
+
+    text_lower = text.lower()
+    for pattern in ORGANISM_LATIN_NAMES[organism]:
+        if re.search(pattern, text_lower, re.IGNORECASE):
+            return True
+
+    return False
+
+
+def filter_antibody_source_organisms(text: str, organisms: List[str]) -> List[str]:
+    """
+    Filter out organisms that only appear as antibody sources.
+
+    For species that are commonly used as antibody sources (rabbit, goat, etc.),
+    we check if they appear in non-antibody context. If they ONLY appear in
+    antibody context, we remove them from the organism list.
+
+    Species with Latin name matches are always kept, as Latin names
+    strongly indicate the organism is the actual research subject.
+    """
+    if not text or not organisms:
+        return organisms
+
+    text_lower = text.lower()
+    filtered = []
+
+    for organism in organisms:
+        # Always keep if not in the antibody source species set
+        if organism not in ANTIBODY_SOURCE_SPECIES:
+            filtered.append(organism)
+            continue
+
+        # Check for Latin name - if present, always keep
+        if has_latin_name_match(text, organism):
+            filtered.append(organism)
+            continue
+
+        # For antibody source species, find all mentions and check context
+        patterns = ORGANISMS.get(organism, [])
+        has_non_antibody_mention = False
+
+        for pattern in patterns:
+            for match in re.finditer(pattern, text_lower, re.IGNORECASE):
+                if not is_antibody_context(text, organism, match.start(), match.end()):
+                    has_non_antibody_mention = True
+                    break
+            if has_non_antibody_mention:
+                break
+
+        # Only keep if there's at least one non-antibody mention
+        if has_non_antibody_mention:
+            filtered.append(organism)
+
+    return filtered
 
 
 def extract_urls(text: str, patterns: Dict[str, str]) -> List[Dict]:
@@ -2138,6 +2308,240 @@ def fetch_github_metadata(full_name: str, token: str = None) -> Optional[Dict]:
         return None
 
 
+def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: str = None) -> Optional[Dict]:
+    """
+    Fetch paper metadata from Semantic Scholar API.
+
+    Can look up by DOI, PMID, or title. Returns standardized metadata including
+    fields of study (useful for validating microscopy technique tags).
+
+    Args:
+        doi: Digital Object Identifier
+        pmid: PubMed ID
+        title: Paper title (fallback search)
+
+    Returns:
+        Dict with metadata or None if failed
+    """
+    if not HAS_REQUESTS:
+        return None
+
+    if not doi and not pmid and not title:
+        return None
+
+    base_url = 'https://api.semanticscholar.org/graph/v1'
+    fields = 'paperId,title,authors,year,citationCount,fieldsOfStudy,publicationTypes,tldr'
+
+    try:
+        # Try DOI first
+        if doi:
+            doi_clean = doi.strip()
+            # Remove common prefixes
+            for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
+                if doi_clean.lower().startswith(prefix.lower()):
+                    doi_clean = doi_clean[len(prefix):]
+            resp = requests.get(
+                f'{base_url}/paper/DOI:{doi_clean}',
+                params={'fields': fields},
+                timeout=15
+            )
+            if resp.status_code == 200:
+                return _parse_semantic_scholar_response(resp.json())
+
+        # Try PMID
+        if pmid:
+            pmid_clean = str(pmid).strip()
+            resp = requests.get(
+                f'{base_url}/paper/PMID:{pmid_clean}',
+                params={'fields': fields},
+                timeout=15
+            )
+            if resp.status_code == 200:
+                return _parse_semantic_scholar_response(resp.json())
+
+        # Fallback to title search
+        if title:
+            resp = requests.get(
+                f'{base_url}/paper/search',
+                params={'query': title[:200], 'fields': fields, 'limit': 1},
+                timeout=15
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get('data') and len(data['data']) > 0:
+                    return _parse_semantic_scholar_response(data['data'][0])
+
+        return None
+
+    except Exception as e:
+        print(f"  ⚠ Error fetching Semantic Scholar metadata: {e}")
+        return None
+
+
+def _parse_semantic_scholar_response(data: Dict) -> Dict:
+    """Parse Semantic Scholar API response into standardized format."""
+    if not data:
+        return None
+
+    authors = []
+    for author in data.get('authors', []):
+        if isinstance(author, dict):
+            authors.append(author.get('name', ''))
+        elif isinstance(author, str):
+            authors.append(author)
+
+    return {
+        'paper_id': data.get('paperId', ''),
+        'title': data.get('title', ''),
+        'authors': authors,
+        'year': data.get('year'),
+        'citation_count': data.get('citationCount', 0),
+        'fields_of_study': data.get('fieldsOfStudy', []),
+        'publication_types': data.get('publicationTypes', []),
+        'tldr': data.get('tldr', {}).get('text', '') if data.get('tldr') else '',
+    }
+
+
+def fetch_crossref_metadata(doi: str) -> Optional[Dict]:
+    """
+    Fetch paper metadata from CrossRef API.
+
+    CrossRef provides authoritative metadata for DOIs including
+    journal information, publication dates, and funding.
+
+    Args:
+        doi: Digital Object Identifier
+
+    Returns:
+        Dict with metadata or None if failed
+    """
+    if not HAS_REQUESTS or not doi:
+        return None
+
+    # Clean DOI
+    doi_clean = doi.strip()
+    for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
+        if doi_clean.lower().startswith(prefix.lower()):
+            doi_clean = doi_clean[len(prefix):]
+
+    try:
+        resp = requests.get(
+            f'https://api.crossref.org/works/{doi_clean}',
+            headers={'User-Agent': 'MicroHub/1.0 (mailto:support@microhub.io)'},
+            timeout=15
+        )
+
+        if resp.status_code != 200:
+            return None
+
+        data = resp.json().get('message', {})
+
+        # Parse authors
+        authors = []
+        for author in data.get('author', []):
+            name_parts = []
+            if author.get('given'):
+                name_parts.append(author['given'])
+            if author.get('family'):
+                name_parts.append(author['family'])
+            if name_parts:
+                authors.append(' '.join(name_parts))
+
+        # Parse container (journal) title
+        container = data.get('container-title', [])
+        journal = container[0] if container else ''
+
+        # Parse date
+        pub_date = data.get('published-print', data.get('published-online', {}))
+        date_parts = pub_date.get('date-parts', [[]])[0] if pub_date else []
+        year = date_parts[0] if date_parts else None
+
+        return {
+            'doi': data.get('DOI', doi_clean),
+            'title': data.get('title', [''])[0] if data.get('title') else '',
+            'authors': authors,
+            'journal': journal,
+            'year': year,
+            'type': data.get('type', ''),
+            'publisher': data.get('publisher', ''),
+            'issn': data.get('ISSN', []),
+            'subject': data.get('subject', []),
+            'funder': [f.get('name', '') for f in data.get('funder', [])],
+            'reference_count': data.get('reference-count', 0),
+            'is_referenced_by_count': data.get('is-referenced-by-count', 0),
+            'license': [lic.get('URL', '') for lic in data.get('license', [])],
+        }
+
+    except Exception as e:
+        print(f"  ⚠ Error fetching CrossRef metadata for {doi}: {e}")
+        return None
+
+
+def validate_paper_metadata(paper: Dict, use_apis: bool = False) -> Dict:
+    """
+    Validate and enrich paper metadata using external APIs.
+
+    This function can optionally call Semantic Scholar and CrossRef
+    to validate DOIs, get citation counts, and verify fields of study.
+
+    Args:
+        paper: Paper dict to validate
+        use_apis: Whether to make API calls (default False for batch processing)
+
+    Returns:
+        Updated paper dict with validation results
+    """
+    if not use_apis or not HAS_REQUESTS:
+        return paper
+
+    doi = paper.get('doi', '')
+    pmid = paper.get('pmid', '')
+    title = paper.get('title', '')
+
+    validation_notes = []
+
+    # Try Semantic Scholar
+    s2_data = fetch_semantic_scholar_metadata(doi=doi, pmid=pmid, title=title)
+    if s2_data:
+        # Update citation count if we have newer data
+        if s2_data.get('citation_count', 0) > paper.get('citation_count', 0):
+            paper['citation_count'] = s2_data['citation_count']
+            validation_notes.append('citation_count_updated')
+
+        # Store fields of study for potential tag validation
+        if s2_data.get('fields_of_study'):
+            paper['_s2_fields'] = s2_data['fields_of_study']
+            validation_notes.append('fields_of_study_fetched')
+
+        time.sleep(0.5)  # Rate limiting
+
+    # Try CrossRef if we have a DOI
+    if doi:
+        cr_data = fetch_crossref_metadata(doi)
+        if cr_data:
+            # Validate/update journal name
+            if cr_data.get('journal') and not paper.get('journal'):
+                paper['journal'] = cr_data['journal']
+                validation_notes.append('journal_from_crossref')
+
+            # Validate/update year
+            if cr_data.get('year') and not paper.get('year'):
+                paper['year'] = cr_data['year']
+                validation_notes.append('year_from_crossref')
+
+            # Store subjects for potential tag validation
+            if cr_data.get('subject'):
+                paper['_cr_subjects'] = cr_data['subject']
+                validation_notes.append('subjects_fetched')
+
+            time.sleep(0.5)  # Rate limiting
+
+    if validation_notes:
+        paper['_validation_notes'] = validation_notes
+
+    return paper
+
+
 def compute_github_health_score(metrics: Dict) -> int:
     """Compute a 0-100 health score for a GitHub repository."""
     score = 0
@@ -2346,9 +2750,14 @@ def clean_github_tools(paper: Dict, fetch_missing: bool = True) -> List[Dict]:
     return cleaned
 
 
-def clean_paper(paper: Dict) -> Dict:
-    """Clean and re-tag a single paper."""
-    
+def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
+    """Clean and re-tag a single paper.
+
+    Args:
+        paper: Paper dict to clean
+        fetch_github: Whether to fetch missing GitHub metadata from API
+    """
+
     # Get full_text for tag extraction, but we won't store it
     full_text = str(paper.get('full_text', '') or '')
     
@@ -2407,11 +2816,17 @@ def clean_paper(paper: Dict) -> Dict:
         FLUOROPHORE_CANONICAL
     )
     
-    paper['organisms'] = normalize_tag_list(
+    # Normalize organisms first
+    raw_organisms_normalized = normalize_tag_list(
         merge_lists(paper.get('organisms', []), raw_organisms),
         ORGANISM_CANONICAL
     )
-    
+
+    # Filter out species that only appear as antibody sources (e.g., "rabbit anti-X")
+    # This prevents tagging rabbit/goat/etc. as research organisms when they're
+    # only mentioned as antibody host species
+    paper['organisms'] = filter_antibody_source_organisms(combined_text, raw_organisms_normalized)
+
     paper['cell_lines'] = normalize_tag_list(
         merge_lists(paper.get('cell_lines', []), raw_cell_lines),
         CELL_LINE_CANONICAL
@@ -2435,8 +2850,8 @@ def clean_paper(paper: Dict) -> Dict:
     # ==========================================
     # GITHUB TOOLS - Clean and validate detailed repo data (scraper v5.1+)
     # ==========================================
-    paper['github_tools'] = clean_github_tools(paper)
-    
+    paper['github_tools'] = clean_github_tools(paper, fetch_missing=fetch_github)
+
     # If we have github_tools but no github_url, derive it from the tools
     # Prefer a tool the paper "introduces" (the paper's own tool), otherwise use first tool
     if not paper.get('github_url') and paper['github_tools']:
@@ -2550,38 +2965,52 @@ def clean_paper(paper: Dict) -> Dict:
     return paper
 
 
-def process_file(input_file: str, output_file: str) -> Dict:
-    """Process a single JSON file and return statistics."""
-    
+def process_file(input_file: str, output_file: str, validate_apis: bool = False, fetch_github: bool = True) -> Dict:
+    """Process a single JSON file and return statistics.
+
+    Args:
+        input_file: Path to input JSON file
+        output_file: Path to output JSON file
+        validate_apis: Whether to use Semantic Scholar/CrossRef APIs for validation
+        fetch_github: Whether to fetch missing GitHub metadata from API
+    """
+
     print(f"\nLoading {input_file}...")
     with open(input_file, 'r', encoding='utf-8') as f:
         papers = json.load(f)
-    
+
     if not isinstance(papers, list):
         papers = [papers]
-    
+
     print(f"Processing {len(papers)} papers...")
-    
+    if validate_apis:
+        print("  API validation enabled (Semantic Scholar, CrossRef)")
+    if fetch_github:
+        print("  GitHub metadata fetching enabled")
+
     fields_to_track = [
         'microscopy_techniques', 'microscope_brands', 'image_analysis_software',
         'fluorophores', 'organisms', 'cell_lines', 'sample_preparation',
         'protocols', 'repositories', 'rrids', 'rors', 'antibodies', 'institutions',
         'github_tools', 'is_protocol'
     ]
-    
+
     stats_before = {f: sum(1 for p in papers if p.get(f)) for f in fields_to_track}
-    
+
     for i, paper in enumerate(papers):
-        papers[i] = clean_paper(paper)
+        papers[i] = clean_paper(paper, fetch_github=fetch_github)
+        # Apply API validation if enabled
+        if validate_apis:
+            papers[i] = validate_paper_metadata(papers[i], use_apis=True)
         if (i + 1) % 1000 == 0:
             print(f"  Processed {i + 1}/{len(papers)} papers...")
-    
+
     stats_after = {f: sum(1 for p in papers if p.get(f)) for f in fields_to_track}
-    
+
     print(f"Saving to {output_file}...")
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(papers, f, indent=2, ensure_ascii=False)
-    
+
     return {'papers': len(papers), 'before': stats_before, 'after': stats_after}
 
 
@@ -2602,7 +3031,11 @@ def main():
                         help='Overwrite input files instead of creating new ones')
     parser.add_argument('--output-dir', default='cleaned_export',
                         help='Output directory for cleaned files')
-    
+    parser.add_argument('--validate-apis', action='store_true',
+                        help='Use Semantic Scholar and CrossRef APIs to validate metadata (slower)')
+    parser.add_argument('--fetch-github', action='store_true',
+                        help='Fetch missing GitHub repository metadata from API')
+
     args = parser.parse_args()
     
     if args.input:
@@ -2625,8 +3058,8 @@ def main():
         sys.exit(1)
     
     print("=" * 60)
-    print("MICROHUB CLEANUP AND RE-TAGGING v3.2")
-    print("With tag normalization, GitHub tools, and institution fixes")
+    print("MICROHUB CLEANUP AND RE-TAGGING v3.3")
+    print("With tag normalization, antibody filtering, API validation")
     print("=" * 60)
     print(f"Script directory: {script_dir}")
     print(f"Found {len(input_files)} JSON file(s)")
@@ -2658,8 +3091,13 @@ def main():
         else:
             base = os.path.basename(input_file)
             output_file = os.path.join(args.output_dir, base)
-        
-        result = process_file(input_file, output_file)
+
+        result = process_file(
+            input_file,
+            output_file,
+            validate_apis=args.validate_apis,
+            fetch_github=args.fetch_github
+        )
         total_papers += result['papers']
         for f in fields_to_track:
             total_before[f] += result['before'][f]
