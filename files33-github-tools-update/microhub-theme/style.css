@@ -131,9 +131,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* Clickable Authors */
 .mh-authors-list { display: flex; flex-wrap: wrap; align-items: baseline; }
-.mh-author-link { color: var(--text-light); text-decoration: none; transition: color 0.2s; }
+.mh-author-link { color: var(--text-light); text-decoration: none; transition: color 0.2s; cursor: pointer; }
 .mh-author-link:hover { color: var(--primary); text-decoration: underline; }
-.mh-author-link.mh-last-author { color: var(--primary); font-weight: 600; }
+.mh-author-link.mh-last-author { color: var(--primary); font-weight: 600; cursor: pointer; }
 .mh-author-link.mh-last-author:hover { color: var(--accent); }
 .mh-author-sep { color: var(--text-muted); margin-right: 4px; }
 .mh-authors-more { color: var(--text-muted); font-style: italic; margin: 0 4px; }
