@@ -161,186 +161,170 @@ function mh_theme_search_protocols($request) {
     $per_page = min(100, max(1, $request->get_param('per_page') ?: 24));
     $search = $request->get_param('search');
     $source_filter = $request->get_param('source');
-
-    // Check if this is a simple request (no filters) - can use cache
-    $has_filters = !empty($search) || !empty($source_filter)
-        || $request->get_param('technique')
-        || $request->get_param('microscope')
-        || $request->get_param('organism')
-        || $request->get_param('software')
-        || $request->get_param('year_min')
-        || $request->get_param('year_max')
-        || $request->get_param('citations_min')
-        || $request->get_param('author')
-        || $request->get_param('fluorophore')
-        || $request->get_param('sample_prep')
-        || $request->get_param('cell_line')
-        || $request->get_param('brand')
-        || $request->get_param('has_github')
-        || $request->get_param('has_figures');
-
-    // Build cache key based on sort parameters
     $orderby = $request->get_param('orderby') ?: 'citations';
-    $order = strtolower($request->get_param('order') ?: 'desc');
-    $cache_key = 'mh_protocols_' . $orderby . '_' . $order;
+    $order = strtoupper($request->get_param('order') ?: 'desc');
 
-    $all_protocols = array();
-
-    // If no filters, try to get from cache
-    if (!$has_filters) {
-        $cached = get_transient($cache_key);
-        if ($cached !== false) {
-            $all_protocols = $cached;
-        }
-    }
-
-    // Fetch protocols if not cached
-    if (empty($all_protocols)) {
-    
-    // =========================================================================
-    // 1. PROTOCOL PAPERS (mh_paper with _mh_is_protocol = 1)
-    // =========================================================================
-    $paper_args = array(
-        'post_type' => 'mh_paper',
-        'posts_per_page' => -1,
+    // Build query args - query BOTH post types at once with database-level pagination
+    $args = array(
+        'post_type' => array('mh_paper', 'mh_protocol'),
+        'posts_per_page' => $per_page,
+        'paged' => $page,
         'post_status' => 'publish',
-        'meta_query' => array(
-            array(
-                'key' => '_mh_is_protocol',
-                'value' => '1',
-                'compare' => '='
-            )
-        )
     );
-    
+
     // Search
     if (!empty($search)) {
-        $paper_args['s'] = $search;
+        $args['s'] = $search;
     }
-    
+
+    // Set up ordering - use meta_key for citations/year
+    if ($orderby === 'citations') {
+        $args['meta_key'] = '_mh_citation_count';
+        $args['orderby'] = 'meta_value_num';
+        $args['order'] = $order;
+    } elseif ($orderby === 'year') {
+        $args['meta_key'] = '_mh_publication_year';
+        $args['orderby'] = 'meta_value_num';
+        $args['order'] = $order;
+    } elseif ($orderby === 'title') {
+        $args['orderby'] = 'title';
+        $args['order'] = $order;
+    } else {
+        $args['meta_key'] = '_mh_citation_count';
+        $args['orderby'] = 'meta_value_num';
+        $args['order'] = 'DESC';
+    }
+
+    // Build meta query - papers need is_protocol=1, protocols are always included
+    $meta_query = array(
+        'relation' => 'OR',
+        array(
+            'relation' => 'AND',
+            array('key' => '_mh_is_protocol', 'value' => '1', 'compare' => '='),
+        ),
+        // mh_protocol posts don't need the is_protocol flag - they ARE protocols by post type
+    );
+
     // Taxonomy filters
     $tax_query = array('relation' => 'AND');
     $has_tax = false;
-    
+
     $technique = $request->get_param('technique');
     if (!empty($technique) && taxonomy_exists('mh_technique')) {
         $tax_query[] = array('taxonomy' => 'mh_technique', 'field' => 'slug', 'terms' => $technique);
         $has_tax = true;
     }
-    
+
     $microscope = $request->get_param('microscope');
     if (!empty($microscope) && taxonomy_exists('mh_microscope')) {
         $tax_query[] = array('taxonomy' => 'mh_microscope', 'field' => 'slug', 'terms' => $microscope);
         $has_tax = true;
     }
-    
+
     $organism = $request->get_param('organism');
     if (!empty($organism) && taxonomy_exists('mh_organism')) {
         $tax_query[] = array('taxonomy' => 'mh_organism', 'field' => 'slug', 'terms' => $organism);
         $has_tax = true;
     }
-    
+
     $software = $request->get_param('software');
     if (!empty($software) && taxonomy_exists('mh_software')) {
         $tax_query[] = array('taxonomy' => 'mh_software', 'field' => 'slug', 'terms' => $software);
         $has_tax = true;
     }
-    
+
     if ($has_tax) {
-        $paper_args['tax_query'] = $tax_query;
+        $args['tax_query'] = $tax_query;
     }
-    
-    // Meta filters
-    $meta_query = array('relation' => 'AND');
-    $meta_query[] = array('key' => '_mh_is_protocol', 'value' => '1', 'compare' => '=');
-    
-    $year_min = $request->get_param('year_min');
-    $year_max = $request->get_param('year_max');
-    if ($year_min || $year_max) {
-        if ($year_min && $year_max) {
-            $meta_query[] = array('key' => '_mh_publication_year', 'value' => array($year_min, $year_max), 'compare' => 'BETWEEN', 'type' => 'NUMERIC');
-        } elseif ($year_min) {
-            $meta_query[] = array('key' => '_mh_publication_year', 'value' => $year_min, 'compare' => '>=', 'type' => 'NUMERIC');
-        } else {
-            $meta_query[] = array('key' => '_mh_publication_year', 'value' => $year_max, 'compare' => '<=', 'type' => 'NUMERIC');
-        }
-    }
-    
+
+    // Additional meta filters
     $citations_min = $request->get_param('citations_min');
     if ($citations_min) {
         $meta_query[] = array('key' => '_mh_citation_count', 'value' => $citations_min, 'compare' => '>=', 'type' => 'NUMERIC');
     }
-    
+
     $author_filter = $request->get_param('author');
     if (!empty($author_filter)) {
         $meta_query[] = array('key' => '_mh_authors', 'value' => $author_filter, 'compare' => 'LIKE');
     }
-    
-    $fluorophore = $request->get_param('fluorophore');
-    if (!empty($fluorophore)) {
-        $meta_query[] = array('key' => '_mh_fluorophores', 'value' => $fluorophore, 'compare' => 'LIKE');
-    }
-    
-    $sample_prep = $request->get_param('sample_prep');
-    if (!empty($sample_prep)) {
-        $meta_query[] = array('key' => '_mh_sample_preparation', 'value' => $sample_prep, 'compare' => 'LIKE');
-    }
-    
-    $cell_line = $request->get_param('cell_line');
-    if (!empty($cell_line)) {
-        $meta_query[] = array('key' => '_mh_cell_lines', 'value' => $cell_line, 'compare' => 'LIKE');
-    }
-    
-    $brand = $request->get_param('brand');
-    if (!empty($brand)) {
-        $meta_query[] = array('key' => '_mh_microscope_brands', 'value' => $brand, 'compare' => 'LIKE');
-    }
-    
+
     if ($request->get_param('has_github')) {
         $meta_query[] = array('key' => '_mh_github_url', 'value' => '', 'compare' => '!=');
     }
-    
+
     if ($request->get_param('has_figures')) {
         $meta_query[] = array('key' => '_mh_figures', 'value' => '[]', 'compare' => '!=');
     }
-    
-    $paper_args['meta_query'] = $meta_query;
-    
-    $protocol_papers = get_posts($paper_args);
-    
-    foreach ($protocol_papers as $post) {
-        $protocol_type = get_post_meta($post->ID, '_mh_protocol_type', true) ?: 'Protocol Journal';
-        
-        if ($source_filter && stripos($protocol_type, $source_filter) === false) {
+
+    // Use custom filter to handle the complex OR condition for post types
+    add_filter('posts_where', 'mh_protocols_where_filter', 10, 2);
+
+    $query = new WP_Query($args);
+
+    remove_filter('posts_where', 'mh_protocols_where_filter', 10);
+
+    $protocols = array();
+
+    foreach ($query->posts as $post) {
+        $post_type = get_post_type($post->ID);
+        $is_paper = ($post_type === 'mh_paper');
+
+        // Get source/protocol type
+        $source = get_post_meta($post->ID, '_mh_protocol_type', true);
+        if (empty($source) && !$is_paper) {
+            $source = get_post_meta($post->ID, '_mh_protocol_source', true);
+            if (empty($source)) {
+                $protocol_type_terms = wp_get_object_terms($post->ID, 'mh_protocol_type', array('fields' => 'names'));
+                if (!is_wp_error($protocol_type_terms) && !empty($protocol_type_terms)) {
+                    $source = $protocol_type_terms[0];
+                }
+            }
+        }
+        if (empty($source)) {
+            $source = $is_paper ? 'Protocol Journal' : 'Community';
+        }
+
+        // Apply source filter
+        if ($source_filter && stripos($source, $source_filter) === false) {
             continue;
         }
-        
-        // Get taxonomy terms with URLs for clickable tags
+
+        $doi = get_post_meta($post->ID, '_mh_doi', true);
+
+        // Build URL
+        $permalink = get_permalink($post->ID);
+        $external_url = $doi ? "https://doi.org/{$doi}" : $permalink;
+
+        // Get taxonomy terms with URLs
         $techniques = mh_get_terms_with_urls($post->ID, 'mh_technique');
         $organisms = mh_get_terms_with_urls($post->ID, 'mh_organism');
         $microscopes = mh_get_terms_with_urls($post->ID, 'mh_microscope');
         $software_terms = mh_get_terms_with_urls($post->ID, 'mh_software');
 
-        $doi = get_post_meta($post->ID, '_mh_doi', true);
-
-        // Parse authors - handle all formats: JSON objects, JSON arrays, or comma-separated strings
+        // Parse authors
         $authors = get_post_meta($post->ID, '_mh_authors', true);
         $author_list = mh_parse_authors_to_array($authors, 5);
 
-        $all_protocols[] = array(
+        // Get year - mh_paper uses _mh_publication_year, mh_protocol uses _mh_year
+        $year = get_post_meta($post->ID, '_mh_publication_year', true);
+        if (empty($year)) {
+            $year = get_post_meta($post->ID, '_mh_year', true);
+        }
+
+        $protocols[] = array(
             'id' => $post->ID,
             'title' => $post->post_title,
-            'permalink' => get_permalink($post->ID),
-            'external_url' => $doi ? "https://doi.org/{$doi}" : '',
-            'source' => $protocol_type,
-            'type' => 'protocol_paper',
+            'permalink' => $permalink,
+            'external_url' => $external_url,
+            'source' => $source,
+            'type' => $is_paper ? 'protocol_paper' : 'imported',
             'doi' => $doi,
             'pubmed_id' => get_post_meta($post->ID, '_mh_pubmed_id', true),
             'authors' => $author_list,
             'journal' => get_post_meta($post->ID, '_mh_journal', true),
-            'year' => get_post_meta($post->ID, '_mh_publication_year', true),
+            'year' => $year,
             'citations' => intval(get_post_meta($post->ID, '_mh_citation_count', true)),
-            'abstract' => wp_trim_words(get_post_meta($post->ID, '_mh_abstract', true), 40, '...'),
+            'abstract' => wp_trim_words(get_post_meta($post->ID, '_mh_abstract', true) ?: $post->post_content, 40, '...'),
             'github_url' => get_post_meta($post->ID, '_mh_github_url', true),
             'repositories' => json_decode(get_post_meta($post->ID, '_mh_repositories', true), true) ?: array(),
             'rrids' => json_decode(get_post_meta($post->ID, '_mh_rrids', true), true) ?: array(),
@@ -358,186 +342,38 @@ function mh_theme_search_protocols($request) {
             'has_figures' => !empty(get_post_meta($post->ID, '_mh_figures', true)) && get_post_meta($post->ID, '_mh_figures', true) !== '[]',
         );
     }
-    
-    // =========================================================================
-    // 2. IMPORTED PROTOCOLS (mh_protocol post type)
-    // =========================================================================
-    $proto_args = array(
-        'post_type' => 'mh_protocol',
-        'posts_per_page' => -1,
-        'post_status' => 'publish',
-    );
-    
-    if (!empty($search)) {
-        $proto_args['s'] = $search;
-    }
-    
-    // Reuse taxonomy filters for mh_protocol
-    if ($has_tax) {
-        $proto_args['tax_query'] = $tax_query;
-    }
-    
-    // Build meta query for mh_protocol (similar structure)
-    $proto_meta_query = array('relation' => 'AND');
-    
-    if ($year_min || $year_max) {
-        if ($year_min && $year_max) {
-            $proto_meta_query[] = array('key' => '_mh_year', 'value' => array($year_min, $year_max), 'compare' => 'BETWEEN', 'type' => 'NUMERIC');
-        } elseif ($year_min) {
-            $proto_meta_query[] = array('key' => '_mh_year', 'value' => $year_min, 'compare' => '>=', 'type' => 'NUMERIC');
-        } else {
-            $proto_meta_query[] = array('key' => '_mh_year', 'value' => $year_max, 'compare' => '<=', 'type' => 'NUMERIC');
-        }
-    }
-    
-    if (!empty($fluorophore)) {
-        $proto_meta_query[] = array('key' => '_mh_fluorophores', 'value' => $fluorophore, 'compare' => 'LIKE');
-    }
-    
-    if (!empty($sample_prep)) {
-        $proto_meta_query[] = array('key' => '_mh_sample_preparation', 'value' => $sample_prep, 'compare' => 'LIKE');
-    }
-    
-    if (!empty($cell_line)) {
-        $proto_meta_query[] = array('key' => '_mh_cell_lines', 'value' => $cell_line, 'compare' => 'LIKE');
-    }
-    
-    if (!empty($brand)) {
-        $proto_meta_query[] = array('key' => '_mh_microscope_brands', 'value' => $brand, 'compare' => 'LIKE');
-    }
-    
-    if (count($proto_meta_query) > 1) {
-        $proto_args['meta_query'] = $proto_meta_query;
-    }
-    
-    $imported_protocols = get_posts($proto_args);
-    
-    foreach ($imported_protocols as $post) {
-        $source = get_post_meta($post->ID, '_mh_protocol_type', true);
-        if (empty($source)) {
-            $source = get_post_meta($post->ID, '_mh_protocol_source', true);
-        }
-        if (empty($source)) {
-            $protocol_type_terms = wp_get_object_terms($post->ID, 'mh_protocol_type', array('fields' => 'names'));
-            if (!is_wp_error($protocol_type_terms) && !empty($protocol_type_terms)) {
-                $source = $protocol_type_terms[0];
-            }
-        }
-        if (empty($source)) {
-            $source = 'Community';
-        }
-        
-        if ($source_filter && stripos($source, $source_filter) === false) {
-            continue;
-        }
-        
-        $doi = get_post_meta($post->ID, '_mh_doi', true);
-        $proto_url = '';
-        $external_url = '';
-        
-        if (!empty($doi)) {
-            $external_url = "https://doi.org/{$doi}";
-            $proto_url = get_permalink($post->ID);
-        } else {
-            $proto_url = get_post_meta($post->ID, '_mh_protocol_url', true);
-            if (empty($proto_url)) {
-                $proto_url = get_permalink($post->ID);
-            }
-            $external_url = $proto_url;
-        }
-        
-        // Get taxonomy terms with URLs for clickable tags
-        $techniques = mh_get_terms_with_urls($post->ID, 'mh_technique');
-        $organisms = mh_get_terms_with_urls($post->ID, 'mh_organism');
-        $microscopes = mh_get_terms_with_urls($post->ID, 'mh_microscope');
-        $software_terms = mh_get_terms_with_urls($post->ID, 'mh_software');
 
-        // Get authors - use unified parser for all formats
-        $authors = get_post_meta($post->ID, '_mh_authors', true);
-        $author_list = mh_parse_authors_to_array($authors, 5);
-
-        // Get additional data for imported protocols
-        $figures = json_decode(get_post_meta($post->ID, '_mh_figures', true), true) ?: array();
-        $figure_count = intval(get_post_meta($post->ID, '_mh_figure_count', true));
-        $has_figures = !empty($figures) || $figure_count > 0;
-        $github_url = get_post_meta($post->ID, '_mh_github_url', true);
-        $repositories = json_decode(get_post_meta($post->ID, '_mh_repositories', true), true) ?: array();
-        $rrids = json_decode(get_post_meta($post->ID, '_mh_rrids', true), true) ?: array();
-        $protocols_linked = json_decode(get_post_meta($post->ID, '_mh_protocols', true), true) ?: array();
-        $journal = get_post_meta($post->ID, '_mh_journal', true);
-        $citations = intval(get_post_meta($post->ID, '_mh_citation_count', true));
-        
-        $all_protocols[] = array(
-            'id' => $post->ID,
-            'title' => $post->post_title,
-            'permalink' => $proto_url,
-            'external_url' => $external_url,
-            'source' => $source,
-            'type' => 'imported',
-            'doi' => $doi,
-            'pubmed_id' => get_post_meta($post->ID, '_mh_pubmed_id', true),
-            'authors' => $author_list,
-            'journal' => $journal,
-            'year' => get_post_meta($post->ID, '_mh_year', true),
-            'citations' => $citations,
-            'abstract' => wp_trim_words(get_post_meta($post->ID, '_mh_abstract', true) ?: $post->post_content, 40, '...'),
-            'github_url' => $github_url,
-            'repositories' => $repositories,
-            'rrids' => $rrids,
-            'protocols' => $protocols_linked,
-            'techniques' => $techniques,
-            'organisms' => $organisms,
-            'microscopes' => $microscopes,
-            'software' => $software_terms,
-            'fluorophores' => json_decode(get_post_meta($post->ID, '_mh_fluorophores', true), true) ?: array(),
-            'sample_preparation' => json_decode(get_post_meta($post->ID, '_mh_sample_preparation', true), true) ?: array(),
-            'cell_lines' => json_decode(get_post_meta($post->ID, '_mh_cell_lines', true), true) ?: array(),
-            'microscope_brands' => json_decode(get_post_meta($post->ID, '_mh_microscope_brands', true), true) ?: array(),
-            'figures' => $figures,
-            'figure_count' => $figure_count,
-            'has_figures' => $has_figures,
-        );
-    }
-    
-    // Sort protocols
-    $orderby = $request->get_param('orderby') ?: 'citations';
-    $order = strtolower($request->get_param('order') ?: 'desc');
-    
-    usort($all_protocols, function($a, $b) use ($orderby, $order) {
-        $val_a = $val_b = 0;
-        
-        if ($orderby === 'citations') {
-            $val_a = $a['citations'];
-            $val_b = $b['citations'];
-        } elseif ($orderby === 'year') {
-            $val_a = intval($a['year']);
-            $val_b = intval($b['year']);
-        } elseif ($orderby === 'title') {
-            return $order === 'asc' ? strcmp($a['title'], $b['title']) : strcmp($b['title'], $a['title']);
-        }
-        
-        return $order === 'asc' ? $val_a - $val_b : $val_b - $val_a;
-    });
-
-    } // End of if (empty($all_protocols))
-
-    // Save to cache if no filters were applied (cache for 10 minutes)
-    if (!$has_filters && !empty($all_protocols)) {
-        set_transient($cache_key, $all_protocols, 10 * MINUTE_IN_SECONDS);
-    }
-
-    // Paginate
-    $total = count($all_protocols);
-    $total_pages = ceil($total / $per_page);
-    $offset = ($page - 1) * $per_page;
-    $protocols_page = array_slice($all_protocols, $offset, $per_page);
-    
     return new WP_REST_Response(array(
-        'protocols' => $protocols_page,
-        'total' => $total,
-        'pages' => $total_pages,
+        'protocols' => $protocols,
+        'total' => $query->found_posts,
+        'pages' => $query->max_num_pages,
         'page' => $page,
     ), 200);
+}
+
+/**
+ * Filter to include both mh_paper (with is_protocol=1) and mh_protocol posts
+ */
+function mh_protocols_where_filter($where, $query) {
+    global $wpdb;
+
+    // Only modify our specific query
+    if (!isset($query->query_vars['post_type']) ||
+        !is_array($query->query_vars['post_type']) ||
+        !in_array('mh_protocol', $query->query_vars['post_type'])) {
+        return $where;
+    }
+
+    // Add condition: post_type = 'mh_protocol' OR (post_type = 'mh_paper' AND _mh_is_protocol = '1')
+    $where .= $wpdb->prepare(
+        " AND ({$wpdb->posts}.post_type = %s OR ({$wpdb->posts}.post_type = %s AND {$wpdb->posts}.ID IN (
+            SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_mh_is_protocol' AND meta_value = '1'
+        )))",
+        'mh_protocol',
+        'mh_paper'
+    );
+
+    return $where;
 }
 
 /**

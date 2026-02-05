@@ -432,27 +432,103 @@ function microhub_stream_import($file_path, $skip_existing, $update_existing, &$
 }
 
 /**
+ * Normalize DOI for consistent comparison
+ * Removes common prefixes and standardizes format
+ */
+function microhub_normalize_doi($doi) {
+    if (empty($doi)) {
+        return '';
+    }
+
+    $doi = trim($doi);
+
+    // Remove common URL prefixes
+    $prefixes = array(
+        'https://doi.org/',
+        'http://doi.org/',
+        'https://dx.doi.org/',
+        'http://dx.doi.org/',
+        'doi.org/',
+        'dx.doi.org/',
+        'doi:',
+        'DOI:',
+        'doi: ',
+        'DOI: ',
+    );
+
+    foreach ($prefixes as $prefix) {
+        if (stripos($doi, $prefix) === 0) {
+            $doi = substr($doi, strlen($prefix));
+            break;
+        }
+    }
+
+    // Remove any remaining whitespace
+    $doi = trim($doi);
+
+    // Convert to lowercase for consistent comparison
+    // Note: DOIs are case-insensitive per the DOI specification
+    $doi = strtolower($doi);
+
+    return $doi;
+}
+
+/**
  * Import a single paper with ALL enrichment data
  */
 function microhub_import_paper($data, $skip_existing, $update_existing, &$enrichment_stats) {
-    $doi = sanitize_text_field($data['doi']);
+    // Normalize DOI - remove prefixes like 'doi:', 'DOI:', 'https://doi.org/', etc.
+    $doi = isset($data['doi']) ? sanitize_text_field($data['doi']) : '';
+    $doi = microhub_normalize_doi($doi);
 
-    // Check if paper already exists (check BOTH post types)
-    $existing = get_posts(array(
-        'post_type' => array('mh_paper', 'mh_protocol'),
-        'meta_key' => '_mh_doi',
-        'meta_value' => $doi,
-        'posts_per_page' => 1,
-    ));
+    // Get PMID for fallback check
+    $pmid = isset($data['pmid']) ? sanitize_text_field($data['pmid']) : '';
 
-    if ($existing) {
+    // Get title for last-resort check
+    $title = isset($data['title']) ? sanitize_text_field($data['title']) : '';
+
+    $existing = null;
+    $is_update = false;
+    $post_id = null;
+
+    // Check if paper already exists - try DOI first, then PMID, then title
+    if (!empty($doi)) {
+        $existing = get_posts(array(
+            'post_type' => array('mh_paper', 'mh_protocol'),
+            'meta_key' => '_mh_doi',
+            'meta_value' => $doi,
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+        ));
+    }
+
+    // Fallback to PMID if DOI not found or empty
+    if (empty($existing) && !empty($pmid)) {
+        $existing = get_posts(array(
+            'post_type' => array('mh_paper', 'mh_protocol'),
+            'meta_key' => '_mh_pubmed_id',
+            'meta_value' => $pmid,
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+        ));
+    }
+
+    // Last resort: check by exact title match (only if both DOI and PMID are empty)
+    if (empty($existing) && empty($doi) && empty($pmid) && !empty($title)) {
+        $existing = get_posts(array(
+            'post_type' => array('mh_paper', 'mh_protocol'),
+            'title' => $title,
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+        ));
+    }
+
+    if (!empty($existing)) {
         if ($skip_existing && !$update_existing) {
             return 'skipped';
         }
         $post_id = $existing[0]->ID;
         $is_update = true;
-    } else {
-        $is_update = false;
     }
 
     // ============================================
