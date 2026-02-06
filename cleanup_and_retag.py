@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """
-MicroHub Paper Cleanup and Re-tagging Script v3.6
+MicroHub Paper Cleanup and Re-tagging Script v3.7
 Cleans up JSON data, extracts missing tags, and normalizes tag variants.
 
+CHANGES in v3.7:
+- TECHNIQUES: ONLY full expansions match - NO abbreviations at all
+  STED = "stimulated emission depletion" ONLY (not "STED microscopy")
+  TEM = "transmission electron microscopy" ONLY (not "TEM imaging")
+  Same for STORM, PALM, SIM, SEM, FRET, FRAP, FLIM, FCS, etc.
+- ORGANISMS: ONLY Latin names match - NO common names
+  Mouse = "Mus musculus" ONLY (not "mouse" or "mice")
+  Rat = "Rattus norvegicus" ONLY (not "rat")
+  Zebrafish = "Danio rerio" ONLY (not "zebrafish")
+  This eliminates false positives from antibody mentions.
+
 CHANGES in v3.6:
-- API VALIDATION ALWAYS ON: Semantic Scholar and CrossRef APIs are now called
-  by default for every paper to ensure maximum data accuracy. Use --no-validate-apis
-  to disable if needed (not recommended).
-- Combined with strict acronym patterns, this ensures the most accurate tagging.
+- API VALIDATION ALWAYS ON: Semantic Scholar and CrossRef APIs called by default.
 
 CHANGES in v3.5:
 - CRITICAL FIX: All acronym-based technique patterns now require IMMEDIATE context
@@ -821,200 +829,83 @@ SAMPLE_PREP_CANONICAL = {
 # ============================================================================
 
 MICROSCOPY_TECHNIQUES = {
-    # Confocal microscopy - specific patterns
-    'Confocal': [r'\bconfocal\s+(?:microscop|imag|laser|scan)', r'\bclsm\b', r'\blscm\b', r'\bconfocal\b(?=.*(?:microscop|imag|fluor))'],
+    # ONLY FULL EXPANSIONS - NO ABBREVIATIONS
+    # This ensures maximum accuracy by requiring the complete term
 
-    # Multiphoton techniques - require microscopy context
-    'Two-Photon': [r'\btwo.?photon\s+(?:microscop|imag|excitat|laser)', r'\b2.?photon\s+(?:microscop|imag|excitat)', r'\b2p\s+(?:microscop|imag)'],
-    'Three-Photon': [r'\bthree.?photon\s+(?:microscop|imag|excitat)', r'\b3.?photon\s+(?:microscop|imag)'],
-    'Multiphoton': [r'\bmultiphoton\s+(?:microscop|imag|excitat)', r'\bmulti.?photon\s+(?:microscop|imag)'],
+    # Super-resolution techniques - ONLY full expansions
+    'STED': [r'stimulated\s+emission\s+depletion'],
+    'STORM': [r'stochastic\s+optical\s+reconstruction\s+microscop'],
+    'PALM': [r'photoactivated\s+localization\s+microscop'],
+    'dSTORM': [r'direct\s+stochastic\s+optical\s+reconstruction'],
+    'SIM': [r'structured\s+illumination\s+microscop'],
+    'SMLM': [r'single\s+molecule\s+localization\s+microscop'],
+    'Super-Resolution': [r'super.?resolution\s+microscop', r'\bnanoscopy\b'],
+    'DNA-PAINT': [r'points\s+accumulation\s+for\s+imaging\s+in\s+nanoscale\s+topography'],
+    'MINFLUX': [r'minflux\s+nanoscop', r'minimal\s+photon\s+flux'],
+    'RESOLFT': [r'reversible\s+saturable\s+optical\s+fluorescence\s+transitions'],
+    'SOFI': [r'super.?resolution\s+optical\s+fluctuation\s+imaging'],
+    'Expansion Microscopy': [r'expansion\s+microscopy'],
 
-    # Super-resolution techniques - VERY STRICT patterns to avoid false positives
-    # STED: Only match explicit STED microscopy terms or full expansion
-    'STED': [
-        r'\bsted\s+microscop',           # "STED microscopy" or "STED microscope"
-        r'\bsted\s+imaging\b',           # "STED imaging"
-        r'\bsted\s+nanoscop',            # "STED nanoscopy"
-        r'\bsted\s+super.?resolution',   # "STED super-resolution"
-        r'\bsted\s+beam\b',              # "STED beam"
-        r'\bsted\s+laser\b',             # "STED laser"
-        r'stimulated\s+emission\s+depletion',  # Full expansion
-    ],
-    # PALM: Only match explicit PALM microscopy terms
-    'PALM': [
-        r'\bpalm\s+microscop',           # "PALM microscopy"
-        r'\bpalm\s+imaging\b',           # "PALM imaging"
-        r'\bpalm\s+super.?resolution',   # "PALM super-resolution"
-        r'photoactivated\s+localization\s+microscop',  # Full expansion
-    ],
-    # STORM: Only match explicit STORM microscopy terms
-    'STORM': [
-        r'\bstorm\s+microscop',          # "STORM microscopy"
-        r'\bstorm\s+imaging\b',          # "STORM imaging"
-        r'\bstorm\s+super.?resolution',  # "STORM super-resolution"
-        r'stochastic\s+optical\s+reconstruction\s+microscop',  # Full expansion
-    ],
-    'dSTORM': [
-        r'\bdstorm\s+microscop',         # "dSTORM microscopy"
-        r'\bdstorm\s+imaging\b',         # "dSTORM imaging"
-        r'direct\s+stochastic\s+optical\s+reconstruction',  # Full expansion
-    ],
-    # SIM: Only match explicit SIM microscopy terms (NOT simulation, similar, simple)
-    'SIM': [
-        r'\bsim\s+microscop',            # "SIM microscopy"
-        r'\bsim\s+imaging\b',            # "SIM imaging"
-        r'\bsim\s+super.?resolution',    # "SIM super-resolution"
-        r'structured\s+illumination\s+microscop',  # Full expansion
-    ],
-    'MINFLUX': [r'\bminflux\b'],
-    'RESOLFT': [r'\bresolft\b'],
-    'SOFI': [r'\bsofi\s+(?:microscop|imag)', r'super.?resolution\s+optical\s+fluctuation'],
-    'DNA-PAINT': [r'\bdna.?paint\b'],
+    # Confocal & Light microscopy - full terms
+    'Confocal': [r'confocal\s+microscop', r'confocal\s+laser\s+scanning', r'laser\s+scanning\s+confocal\s+microscop'],
+    'Two-Photon': [r'two.?photon\s+microscop', r'multiphoton\s+microscop'],
+    'Three-Photon': [r'three.?photon\s+microscop'],
+    'Light Sheet': [r'light.?sheet\s+microscop', r'selective\s+plane\s+illumination\s+microscop'],
+    'Lattice Light Sheet': [r'lattice\s+light.?sheet\s+microscop'],
+    'Spinning Disk': [r'spinning\s*dis[ck]\s+confocal'],
+    'Airyscan': [r'airyscan\s+microscop', r'airyscan\s+imaging'],
+    'Widefield': [r'widefield\s+microscop', r'wide.?field\s+microscop', r'widefield\s+fluorescence'],
+    'Epifluorescence': [r'epifluorescence\s+microscop', r'epi.?fluorescence\s+microscop'],
+    'Brightfield': [r'brightfield\s+microscop', r'bright.?field\s+microscop'],
+    'Phase Contrast': [r'phase\s+contrast\s+microscop'],
+    'DIC': [r'differential\s+interference\s+contrast\s+microscop', r'differential\s+interference\s+contrast'],
+    'Darkfield': [r'darkfield\s+microscop', r'dark.?field\s+microscop'],
 
-    # Light sheet - the technique (not the microscope systems)
-    'Light Sheet': [r'\blight.?sheet\s+(?:microscop|imag|fluor)', r'\blsfm\b', r'selective\s+plane\s+illumination\s+microscop'],
-    'Lattice Light Sheet': [r'lattice\s+light.?sheet'],
+    # TIRF - full expansion only
+    'TIRF': [r'total\s+internal\s+reflection\s+fluorescence\s+microscop', r'total\s+internal\s+reflection\s+fluorescence'],
 
-    # Spinning disk and Airyscan
-    'Spinning Disk': [r'\bspinning\s*dis[ck]\s+(?:confocal|microscop)', r'\bspinning\s*dis[ck]\b(?=.*(?:microscop|confocal|imag))'],
-    'Airyscan': [r'\bairyscan\b'],
+    # Electron Microscopy - ONLY full expansions
+    'Cryo-EM': [r'cryo.?electron\s+microscop', r'cryogenic\s+electron\s+microscop'],
+    'Cryo-ET': [r'cryo.?electron\s+tomograph', r'cryogenic\s+electron\s+tomograph'],
+    'TEM': [r'transmission\s+electron\s+microscop'],
+    'SEM': [r'scanning\s+electron\s+microscop'],
+    'FIB-SEM': [r'focused\s+ion\s+beam\s+scanning\s+electron\s+microscop', r'focused\s+ion\s+beam.?scanning\s+electron'],
+    'Array Tomography': [r'array\s+tomography'],
+    'Serial Block-Face SEM': [r'serial\s+block.?face\s+scanning\s+electron\s+microscop'],
+    'Volume EM': [r'volume\s+electron\s+microscop'],
+    'Immuno-EM': [r'immuno.?electron\s+microscop', r'immunoelectron\s+microscop'],
+    'Negative Stain EM': [r'negative\s+stain\s+electron\s+microscop'],
 
-    # TIRF - require context
-    'TIRF': [r'\btirf\s+(?:microscop|imag)', r'\btirfm\b', r'total\s+internal\s+reflection\s+(?:fluor|microscop)'],
+    # Functional imaging - ONLY full expansions
+    'FRET': [r'fluorescence\s+resonance\s+energy\s+transfer', r'förster\s+resonance\s+energy\s+transfer', r'forster\s+resonance\s+energy\s+transfer'],
+    'FLIM': [r'fluorescence\s+lifetime\s+imaging\s+microscop', r'fluorescence\s+lifetime\s+imaging'],
+    'FRAP': [r'fluorescence\s+recovery\s+after\s+photobleaching'],
+    'FLIP': [r'fluorescence\s+loss\s+in\s+photobleaching'],
+    'FCS': [r'fluorescence\s+correlation\s+spectroscop'],
+    'FCCS': [r'fluorescence\s+cross.?correlation\s+spectroscop'],
+    'Calcium Imaging': [r'calcium\s+imaging'],
+    'Voltage Imaging': [r'voltage\s+imaging', r'voltage.?sensitive\s+imaging'],
+    'Optogenetics': [r'optogenetic\s+(?:stimulat|manipulat|activat)', r'optogenetics'],
 
-    # Functional imaging techniques - STRICT patterns
-    'FRAP': [
-        r'\bfrap\s+(?:experiment|assay|analysis|recover|curve)',  # FRAP experiment/analysis
-        r'fluorescence\s+recovery\s+after\s+photobleaching',  # Full expansion
-    ],
-    'FLIP': [
-        r'\bflip\s+(?:experiment|assay|analysis)',  # FLIP experiment/analysis
-        r'fluorescence\s+loss\s+in\s+photobleaching',  # Full expansion
-    ],
-    'FRET': [
-        r'\bfret\s+(?:experiment|assay|imag|analysis|efficien|signal|pair|sensor|probe)',  # FRET + context
-        r'förster\s+resonance\s+energy\s+transfer',  # Full expansion (umlaut)
-        r'forster\s+resonance\s+energy\s+transfer',  # Full expansion (no umlaut)
-        r'fluorescence\s+resonance\s+energy\s+transfer',  # Alternative expansion
-    ],
-    'FLIM': [
-        r'\bflim\s+(?:microscop|imag|measurement|analysis)',  # FLIM + context
-        r'fluorescence\s+lifetime\s+(?:imag|microscop|measurement)',  # Full expansion
-    ],
-    'FCS': [
-        r'\bfcs\s+(?:measurement|experiment|analysis|curve)',  # FCS + context
-        r'fluorescence\s+correlation\s+spectroscop',  # Full expansion
-    ],
-    'FCCS': [
-        r'\bfccs\s+(?:measurement|experiment|analysis)',  # FCCS + context
-        r'fluorescence\s+cross.?correlation\s+spectroscop',  # Full expansion
-    ],
-
-    # Super-resolution general
-    'Super-Resolution': [r'\bsuper.?resolution\s+(?:microscop|imag)', r'\bnanoscopy\b'],
-    'Expansion Microscopy': [
-        r'\bexpansion\s+microscopy\b',  # Full term
-        r'\bexm\s+(?:microscop|protocol|sample)',  # ExM + context
-    ],
-
-    # Electron microscopy - STRICT patterns
-    'Cryo-EM': [
-        r'\bcryo.?em\s+(?:structur|imag|microscop|analysis)',  # cryo-EM structure/imaging
-        r'\bcryo.?electron\s+microscop',    # cryo-electron microscopy
-        r'cryogenic\s+electron\s+microscop',  # Full expansion
-    ],
-    'Cryo-ET': [
-        r'\bcryo.?et\s+(?:reconstruct|tomogra|imag)',  # cryo-ET reconstruction
-        r'cryo.?electron\s+tomograph',      # cryo-electron tomography
-    ],
-    # SEM: Only match explicit SEM microscopy terms (NOT semantic, semester, etc.)
-    'SEM': [
-        r'\bsem\s+(?:microscop|imag|analysis)',  # "SEM microscopy/imaging/analysis"
-        r'\bsem\s+micrograph',              # "SEM micrograph"
-        r'scanning\s+electron\s+microscop', # Full expansion
-    ],
-    # TEM: Only match explicit TEM microscopy terms (NOT temperature, temporary, etc.)
-    'TEM': [
-        r'\btem\s+(?:microscop|imag|analysis)',  # "TEM microscopy/imaging/analysis"
-        r'\btem\s+micrograph',              # "TEM micrograph"
-        r'\btem\s+grid',                    # "TEM grid"
-        r'\btem\s+section',                 # "TEM section"
-        r'transmission\s+electron\s+microscop',  # Full expansion
-    ],
-    'FIB-SEM': [
-        r'\bfib.?sem\s+(?:microscop|imag|tomograph)',  # FIB-SEM + context
-        r'focused\s+ion\s+beam\s+(?:sem|scanning\s+electron)',  # Full expansion
-    ],
-    'Serial Block-Face SEM': [
-        r'serial\s+block.?face\s+(?:sem|scanning)',  # SBF-SEM
-        r'\bsbf.?sem\b',
-        r'\bsbem\b',
-    ],
-    'Volume EM': [
-        r'\bvolume\s+em\s+(?:microscop|imag|reconstruct)',  # Volume EM + context
-        r'\bvolume\s+electron\s+microscop',  # Full term
-    ],
-    # AFM: Only match explicit AFM microscopy terms
-    'AFM': [
-        r'\bafm\s+(?:microscop|imag|scan|measurement|tip|cantilever)',  # AFM + context
-        r'atomic\s+force\s+microscop',  # Full expansion
-    ],
-    'CLEM': [
-        r'\bclem\s+(?:microscop|imag|workflow)',  # CLEM + context
-        r'correlative\s+light\s+(?:and\s+)?electron\s+microscop',  # Full expansion
-    ],
-    'Immuno-EM': [
-        r'\bimmuno.?em\s+(?:microscop|imag|label)',  # Immuno-EM + context
-        r'immuno.?electron\s+microscop',  # Full expansion
-        r'immunogold\s+(?:label|stain|microscop)',  # Immunogold + context
-    ],
-    'Negative Stain EM': [r'negative\s+stain(?:ing)?\s+(?:em|electron)'],
-    'Array Tomography': [r'\barray\s+tomograph'],
-    'Electron Tomography': [r'\belectron\s+tomograph'],
-
-    # Standard microscopy
-    'Phase Contrast': [r'\bphase\s+contrast\s+(?:microscop|imag)'],
-    'DIC': [r'\bdic\s+(?:microscop|imag|optic)', r'differential\s+interference\s+contrast'],
-    'Brightfield': [r'\bbright.?field\s+(?:microscop|imag)'],
-    'Darkfield': [r'\bdark.?field\s+(?:microscop|imag)'],
-    'Fluorescence Microscopy': [r'\bfluorescence\s+microscop', r'\bfluorescent\s+microscop'],
-    'Widefield': [r'\bwide.?field\s+(?:microscop|imag|fluor)'],
-    'Epifluorescence': [r'\bepi.?fluorescence\s+(?:microscop|imag)'],
-
-    # Processing and imaging modes
-    'Deconvolution': [r'\bdeconvolution\s+(?:microscop|imag|software)'],
-    'Live Cell Imaging': [r'\blive.?cell\s+(?:microscop|imag)', r'\btime.?lapse\s+(?:microscop|imag)'],
-    'Intravital': [r'\bintravital\s+(?:microscop|imag)'],
-    'Single Molecule': [r'\bsingle.?molecule\s+(?:microscop|imag|track|local)'],
-    'SMLM': [r'\bsmlm\b', r'single.?molecule\s+localization\s+microscop'],
-    'High-Content Screening': [r'\bhigh.?content\s+(?:screen|imag|analysis)', r'\bhcs\b(?=.*(?:screen|imag|analysis))'],
-    'Z-Stack': [r'\bz.?stack\s+(?:imag|acquisit|microscop)'],
-    '3D Imaging': [r'\b3d\s+(?:microscop|imag|reconstruct)', r'\bthree.?dimensional\s+(?:microscop|imag)'],
-    '4D Imaging': [r'\b4d\s+(?:microscop|imag)', r'\bfour.?dimensional\s+(?:microscop|imag)'],
-    'Optical Sectioning': [r'\boptical\s+sectioning\b'],
-
-    # Spectroscopy/special techniques
-    'Raman': [r'\braman\s+(?:microscop|spectroscop|imag)'],
-    'CARS': [
-        r'\bcars\s+(?:microscop|imag)',  # CARS microscopy/imaging
-        r'coherent\s+anti.?stokes\s+raman\s+(?:microscop|scattering)',  # Full expansion
-    ],
-    'SRS': [
-        r'\bsrs\s+(?:microscop|imag)',  # SRS microscopy/imaging
-        r'stimulated\s+raman\s+scattering\s+(?:microscop|imag)',  # Full expansion
-    ],
-    'SHG': [
-        r'\bshg\s+(?:microscop|imag|signal)',  # SHG + context
-        r'second\s+harmonic\s+generation\s+(?:microscop|imag)',  # Full expansion
-    ],
-    # OCT: Only match explicit OCT imaging terms (NOT October, etc.)
-    'OCT': [
-        r'\boct\s+(?:imag|scan|angiograph)',  # OCT + context
-        r'\boct\s+(?:of\s+the\s+)?(?:retin|eye|cornea|macula)',  # OCT of retina/eye
-        r'optical\s+coherence\s+tomograph',  # Full expansion
-    ],
-    'Holographic': [r'\bholograph(?:ic)?\s+(?:microscop|imag)'],
-    'Photoacoustic': [r'\bphotoacoustic\s+(?:microscop|imag)'],
+    # Other techniques - full terms
+    'Live Cell Imaging': [r'live.?cell\s+imaging', r'live.?cell\s+microscop'],
+    'Intravital': [r'intravital\s+microscop', r'intravital\s+imaging'],
+    'High-Content Screening': [r'high.?content\s+screening', r'high.?content\s+imaging'],
+    'Deconvolution': [r'deconvolution\s+microscop'],
+    'Single Molecule': [r'single\s+molecule\s+imaging', r'single.?molecule\s+microscop'],
+    'Single Particle': [r'single\s+particle\s+analysis', r'single\s+particle\s+reconstruction'],
+    'Holographic': [r'holographic\s+microscop', r'digital\s+holographic\s+microscop'],
+    'OCT': [r'optical\s+coherence\s+tomograph'],
+    'Photoacoustic': [r'photoacoustic\s+microscop', r'photoacoustic\s+imaging'],
+    'AFM': [r'atomic\s+force\s+microscop'],
+    'CLEM': [r'correlative\s+light\s+and\s+electron\s+microscop', r'correlative\s+light.?electron\s+microscop'],
+    'Raman': [r'raman\s+microscop', r'raman\s+imaging'],
+    'CARS': [r'coherent\s+anti.?stokes\s+raman\s+scattering\s+microscop'],
+    'SRS': [r'stimulated\s+raman\s+scattering\s+microscop', r'stimulated\s+raman\s+scattering\s+imaging'],
+    'Second Harmonic': [r'second\s+harmonic\s+generation\s+microscop', r'second\s+harmonic\s+imaging'],
+    'Polarization': [r'polarization\s+microscop', r'polarized\s+light\s+microscop'],
+    'Fluorescence Microscopy': [r'fluorescence\s+microscop'],
+    'Immunofluorescence': [r'immunofluorescence\s+microscop', r'immunofluorescence\s+staining'],
 
     # Single particle
     'Single Particle': [r'\bsingle.?particle\s+(?:analysis|reconstruct|cryo)'],
@@ -1277,26 +1168,29 @@ FLUOROPHORES = {
     'mGFP': [r'\bmgfp\b'],
 }
 
+# ORGANISMS - ONLY Latin names to avoid false positives
+# Common names like "mouse", "rabbit" often appear as antibody sources
+# Latin names are reliable indicators of actual model organisms
 ORGANISMS = {
-    'Mouse': [r'\bmouse\b', r'\bmice\b', r'\bmurine\b', r'\bmus\s*musculus\b'],
-    'Human': [r'\bhuman\b', r'\bpatient\b', r'\bhomo\s*sapiens\b'],
-    'Rat': [r'\brat\b', r'\brattus\b'],
-    'Zebrafish': [r'\bzebrafish\b', r'\bdanio\s*rerio\b'],
-    'Drosophila': [r'\bdrosophila\b', r'\bfruit\s*fly\b', r'\bd\.\s*melanogaster\b'],
-    'C. elegans': [r'\bc\.\s*elegans\b', r'\bcaenorhabditis\b'],
-    'Xenopus': [r'\bxenopus\b'],
-    'Chicken': [r'\bchicken\b', r'\bchick\s+embryo\b', r'\bgallus\b'],
-    'Pig': [r'\bpig\b(?!ment)', r'\bporcine\b', r'\bsus\s*scrofa\b'],
-    'Monkey': [r'\bmonkey\b', r'\bmacaque\b', r'\bprimate\b(?!.*non)'],
-    'Rabbit': [r'\brabbit\b', r'\boryctolagus\b'],
-    'Dog': [r'\bdog\b', r'\bcanine\b'],
-    'Yeast': [r'\byeast\b', r'\bsaccharomyces\b', r'\bs\.\s*cerevisiae\b', r'\bs\.\s*pombe\b'],
-    'E. coli': [r'\be\.\s*coli\b', r'\bescherichia\b'],
-    'Bacteria': [r'\bbacteria\b', r'\bbacterial\b'],
-    'Arabidopsis': [r'\barabidopsis\b'],
-    'Plant': [r'\bplant\s+cell\b', r'\bplant\s+tissue\b'],
-    'Tobacco': [r'\btobacco\b', r'\bnicotiana\b'],
-    'Maize': [r'\bmaize\b', r'\bzea\s+mays\b', r'\bcorn\b'],
+    'Mouse': [r'\bmus\s+musculus\b', r'\bm\.\s*musculus\b'],
+    'Human': [r'\bhomo\s+sapiens\b', r'\bh\.\s*sapiens\b'],
+    'Rat': [r'\brattus\s+norvegicus\b', r'\br\.\s*norvegicus\b'],
+    'Zebrafish': [r'\bdanio\s+rerio\b', r'\bd\.\s*rerio\b'],
+    'Drosophila': [r'\bdrosophila\s+melanogaster\b', r'\bd\.\s*melanogaster\b'],
+    'C. elegans': [r'\bcaenorhabditis\s+elegans\b', r'\bc\.\s*elegans\b'],
+    'Xenopus': [r'\bxenopus\s+laevis\b', r'\bxenopus\s+tropicalis\b', r'\bx\.\s*laevis\b', r'\bx\.\s*tropicalis\b'],
+    'Chicken': [r'\bgallus\s+gallus\b', r'\bg\.\s*gallus\b'],
+    'Pig': [r'\bsus\s+scrofa\b', r'\bs\.\s*scrofa\b'],
+    'Monkey': [r'\bmacaca\s+mulatta\b', r'\bmacaca\s+fascicularis\b', r'\bm\.\s*mulatta\b', r'\bm\.\s*fascicularis\b'],
+    'Rabbit': [r'\boryctolagus\s+cuniculus\b', r'\bo\.\s*cuniculus\b'],
+    'Dog': [r'\bcanis\s+familiaris\b', r'\bcanis\s+lupus\s+familiaris\b', r'\bc\.\s*familiaris\b'],
+    'Yeast': [r'\bsaccharomyces\s+cerevisiae\b', r'\bs\.\s*cerevisiae\b', r'\bschizosaccharomyces\s+pombe\b', r'\bs\.\s*pombe\b'],
+    'E. coli': [r'\bescherichia\s+coli\b', r'\be\.\s*coli\b'],
+    'Arabidopsis': [r'\barabidopsis\s+thaliana\b', r'\ba\.\s*thaliana\b'],
+    'Tobacco': [r'\bnicotiana\s+tabacum\b', r'\bnicotiana\s+benthamiana\b', r'\bn\.\s*tabacum\b', r'\bn\.\s*benthamiana\b'],
+    'Maize': [r'\bzea\s+mays\b', r'\bz\.\s*mays\b'],
+    'Rice': [r'\boryza\s+sativa\b', r'\bo\.\s*sativa\b'],
+    # Keep organoid/spheroid as they are specific terms
     'Organoid': [r'\borganoid\b'],
     'Spheroid': [r'\bspheroid\b'],
 }
@@ -3450,8 +3344,8 @@ def main():
         sys.exit(1)
     
     print("=" * 60)
-    print("MICROHUB CLEANUP AND RE-TAGGING v3.6")
-    print("APIs ALWAYS ON + STRICT patterns = Maximum accuracy")
+    print("MICROHUB CLEANUP AND RE-TAGGING v3.7")
+    print("FULL EXPANSIONS ONLY + LATIN NAMES ONLY = Maximum accuracy")
     print("=" * 60)
     print(f"Script directory: {script_dir}")
     print(f"Found {len(input_files)} JSON file(s)")
@@ -3507,23 +3401,22 @@ def main():
         print(f"{f:<25} {total_before[f]:>8,} {total_after[f]:>8,} {sign}{change:>7,}")
     
     print("\n" + "=" * 60)
-    print("FEATURES IN THIS VERSION (v3.6)")
+    print("FEATURES IN THIS VERSION (v3.7)")
     print("=" * 60)
-    print("1. API VALIDATION ALWAYS ON:")
-    print("   - Semantic Scholar API: fields of study, citation counts")
-    print("   - CrossRef API: DOI validation, journal info, publication type")
-    print("   - Use --no-validate-apis to disable (not recommended)")
-    print("2. STRICT ACRONYM PATTERNS:")
-    print("   - STED only matches: 'STED microscopy', 'STED imaging', etc.")
-    print("   - TEM only matches: 'TEM microscopy', 'TEM grid', etc.")
-    print("   - Same for STORM, PALM, SIM, SEM, AFM, FRET, FRAP, FLIM, etc.")
-    print("3. GitHub Tools: Fetches stars, forks, health_score, language, etc.")
-    print("   ENABLED BY DEFAULT - use --no-fetch-github to disable")
-    print("4. SPIM Microscopes: MesoSPIM, diSPIM, OpenSPIM, iSPIM added")
-    print("5. Antibody Filtering: Filters organisms only as antibody sources")
-    print("6. Environment Variables for API keys:")
-    print("   GITHUB_TOKEN - for higher GitHub API rate limits")
-    print("   SEMANTIC_SCHOLAR_API_KEY - for Semantic Scholar API")
+    print("1. TECHNIQUES - FULL EXPANSIONS ONLY:")
+    print("   - STED = 'stimulated emission depletion' ONLY")
+    print("   - TEM = 'transmission electron microscopy' ONLY")
+    print("   - STORM = 'stochastic optical reconstruction microscopy' ONLY")
+    print("   - NO abbreviations match (not 'STED microscopy', etc.)")
+    print("2. ORGANISMS - LATIN NAMES ONLY:")
+    print("   - Mouse = 'Mus musculus' ONLY (not 'mouse' or 'mice')")
+    print("   - Rat = 'Rattus norvegicus' ONLY (not 'rat')")
+    print("   - Zebrafish = 'Danio rerio' ONLY (not 'zebrafish')")
+    print("   - This eliminates antibody source false positives")
+    print("3. API Validation: Semantic Scholar + CrossRef (always on)")
+    print("4. GitHub Tools: Fetches stars, forks, health_score (always on)")
+    print("5. Environment Variables:")
+    print("   GITHUB_TOKEN, SEMANTIC_SCHOLAR_API_KEY")
 
     print("\nDone!")
 
