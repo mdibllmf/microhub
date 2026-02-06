@@ -320,113 +320,11 @@ while (have_posts()) : the_post();
             </section>
         <?php endif; ?>
 
-        <!-- GitHub Code & Software - using same display as papers -->
-        <?php if (function_exists('mh_display_github')): ?>
-            <?php mh_display_github($github_url, $github_tools); ?>
-        <?php elseif (!empty($github_tools)): ?>
-            <section class="mh-protocol-section">
-                <h2>💻 Code & Software</h2>
-                <div class="mh-github-tools-list">
-                    <?php foreach ($github_tools as $tool):
-                        $tool_url = !empty($tool['url']) ? $tool['url'] : 'https://github.com/' . ($tool['full_name'] ?? '');
-                        $health = intval($tool['health_score'] ?? 0);
-                        $is_archived = !empty($tool['is_archived']);
+        <!-- GitHub Code & Software - using same helper function as papers -->
+        <?php mh_display_github($github_url, $github_tools); ?>
 
-                        if ($is_archived) { $health_class = 'archived'; $health_label = 'Archived'; }
-                        elseif ($health >= 70) { $health_class = 'active'; $health_label = 'Active'; }
-                        elseif ($health >= 40) { $health_class = 'moderate'; $health_label = 'Moderate'; }
-                        elseif ($health > 0) { $health_class = 'low'; $health_label = 'Low Activity'; }
-                        else { $health_class = 'unknown'; $health_label = ''; }
-
-                        $rel = $tool['relationship'] ?? 'uses';
-                        $rel_labels = array('introduces' => '🆕 Introduced here', 'uses' => '🔧 Used', 'extends' => '🔀 Extended', 'benchmarks' => '📊 Benchmarked');
-                        $rel_label = $rel_labels[$rel] ?? '🔧 Used';
-                    ?>
-                        <a href="<?php echo esc_url($tool_url); ?>" class="mh-github-tool-card health-<?php echo $health_class; ?>" target="_blank" rel="noopener">
-                            <div class="mh-ght-header">
-                                <strong class="mh-ght-name"><?php echo esc_html($tool['full_name'] ?? ''); ?></strong>
-                                <?php if ($health_label): ?>
-                                    <span class="mh-ght-health <?php echo $health_class; ?>"><?php echo $health_label; ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <?php if (!empty($tool['description'])): ?>
-                                <p class="mh-ght-desc"><?php echo esc_html(wp_trim_words($tool['description'], 20, '...')); ?></p>
-                            <?php endif; ?>
-                            <div class="mh-ght-metrics">
-                                <span class="mh-ght-rel <?php echo esc_attr($rel); ?>"><?php echo $rel_label; ?></span>
-                                <?php if (!empty($tool['stars'])): ?>
-                                    <span>⭐ <?php echo number_format(intval($tool['stars'])); ?></span>
-                                <?php endif; ?>
-                                <?php if (!empty($tool['forks'])): ?>
-                                    <span>🍴 <?php echo number_format(intval($tool['forks'])); ?></span>
-                                <?php endif; ?>
-                                <?php if (!empty($tool['language'])): ?>
-                                    <span>📝 <?php echo esc_html($tool['language']); ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <?php if (!empty($tool['topics']) && is_array($tool['topics'])): ?>
-                                <div class="mh-ght-topics">
-                                    <?php foreach (array_slice($tool['topics'], 0, 5) as $topic): ?>
-                                        <span class="mh-ght-topic"><?php echo esc_html($topic); ?></span>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-        <?php elseif (!empty($github_url)): ?>
-            <section class="mh-protocol-section">
-                <h2>💻 Code & Software</h2>
-                <?php
-                $repo_name = preg_replace('/^https?:\/\/(www\.)?github\.com\//', '', $github_url);
-                $repo_name = rtrim($repo_name, '/');
-                ?>
-                <a href="<?php echo esc_url($github_url); ?>" class="mh-github-card" target="_blank" rel="noopener">
-                    <span class="mh-github-icon">🐙</span>
-                    <div class="mh-github-info">
-                        <strong>GitHub Repository</strong>
-                        <span><?php echo esc_html($repo_name); ?></span>
-                    </div>
-                    <span class="mh-github-arrow">→</span>
-                </a>
-            </section>
-        <?php endif; ?>
-
-        <!-- Data Repositories - using same display as papers -->
-        <?php if (function_exists('mh_display_repositories')): ?>
-            <?php mh_display_repositories($repositories); ?>
-        <?php elseif (!empty($repositories)): ?>
-            <section class="mh-protocol-section">
-                <h2>🗄️ Data Repositories</h2>
-                <div class="mh-repo-list">
-                    <?php foreach ($repositories as $repo):
-                        $repo_url = isset($repo['url']) ? $repo['url'] : (is_string($repo) ? $repo : '');
-                        $repo_name = isset($repo['name']) ? $repo['name'] : '';
-                        if (empty($repo_url)) continue;
-                        if (empty($repo_name)) {
-                            if (strpos($repo_url, 'zenodo') !== false) $repo_name = 'Zenodo';
-                            elseif (strpos($repo_url, 'figshare') !== false) $repo_name = 'Figshare';
-                            elseif (strpos($repo_url, 'github') !== false) $repo_name = 'GitHub';
-                            elseif (strpos($repo_url, 'dryad') !== false) $repo_name = 'Dryad';
-                            elseif (strpos($repo_url, 'osf.io') !== false) $repo_name = 'OSF';
-                            else $repo_name = 'Data Repository';
-                        }
-                    ?>
-                        <a href="<?php echo esc_url($repo_url); ?>" class="mh-repo-card" target="_blank" rel="noopener">
-                            <span class="mh-repo-icon">📦</span>
-                            <div class="mh-repo-info">
-                                <strong><?php echo esc_html($repo_name); ?></strong>
-                                <?php if (isset($repo['id']) && !empty($repo['id'])): ?>
-                                    <span><?php echo esc_html($repo['id']); ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <span class="mh-repo-arrow">→</span>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-        <?php endif; ?>
+        <!-- Data Repositories - using same helper function as papers -->
+        <?php mh_display_repositories($repositories); ?>
 
         <!-- RRIDs - using same display as papers -->
         <?php if (function_exists('mh_display_rrids') && !empty($rrids)): ?>
@@ -733,18 +631,21 @@ while (have_posts()) : the_post();
     background: var(--primary-hover, #79b8ff);
 }
 
-/* Sections */
-.mh-protocol-section {
+/* Sections - support both protocol-section and paper-section (from helper functions) */
+.mh-protocol-section,
+.mh-paper-section {
     margin-bottom: 24px;
     padding-bottom: 24px;
     border-bottom: 1px solid var(--border, #30363d);
 }
-.mh-protocol-section:last-child {
+.mh-protocol-section:last-child,
+.mh-paper-section:last-child {
     border-bottom: none;
     margin-bottom: 0;
     padding-bottom: 0;
 }
-.mh-protocol-section h2 {
+.mh-protocol-section h2,
+.mh-paper-section h2 {
     font-size: 1.1rem;
     margin: 0 0 16px 0;
     color: var(--text, #c9d1d9);
