@@ -71,7 +71,12 @@ except ImportError:
     print("Warning: 'requests' not installed. GitHub API fetching disabled. Install with: pip install requests")
 
 # GitHub API token (set via environment variable for higher rate limits)
+# Get a token from: https://github.com/settings/tokens
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+
+# Semantic Scholar API key (optional - for higher rate limits)
+# Get from: https://www.semanticscholar.org/product/api#api-key
+SEMANTIC_SCHOLAR_API_KEY = os.environ.get('SEMANTIC_SCHOLAR_API_KEY', '')
 
 # ============================================================================
 # CANONICAL MAPPINGS - Normalize variants to standard forms
@@ -2332,6 +2337,11 @@ def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: st
     base_url = 'https://api.semanticscholar.org/graph/v1'
     fields = 'paperId,title,authors,year,citationCount,fieldsOfStudy,publicationTypes,tldr'
 
+    # Set up headers with API key if available (for higher rate limits)
+    headers = {}
+    if SEMANTIC_SCHOLAR_API_KEY:
+        headers['x-api-key'] = SEMANTIC_SCHOLAR_API_KEY
+
     try:
         # Try DOI first
         if doi:
@@ -2343,6 +2353,7 @@ def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: st
             resp = requests.get(
                 f'{base_url}/paper/DOI:{doi_clean}',
                 params={'fields': fields},
+                headers=headers,
                 timeout=15
             )
             if resp.status_code == 200:
@@ -2354,6 +2365,7 @@ def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: st
             resp = requests.get(
                 f'{base_url}/paper/PMID:{pmid_clean}',
                 params={'fields': fields},
+                headers=headers,
                 timeout=15
             )
             if resp.status_code == 200:
@@ -2364,6 +2376,7 @@ def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: st
             resp = requests.get(
                 f'{base_url}/paper/search',
                 params={'query': title[:200], 'fields': fields, 'limit': 1},
+                headers=headers,
                 timeout=15
             )
             if resp.status_code == 200:
@@ -3033,11 +3046,14 @@ def main():
                         help='Output directory for cleaned files')
     parser.add_argument('--validate-apis', action='store_true',
                         help='Use Semantic Scholar and CrossRef APIs to validate metadata (slower)')
-    parser.add_argument('--fetch-github', action='store_true',
-                        help='Fetch missing GitHub repository metadata from API')
+    parser.add_argument('--no-fetch-github', action='store_true',
+                        help='Disable fetching GitHub repository metadata from API (enabled by default)')
 
     args = parser.parse_args()
-    
+
+    # GitHub fetching is ON by default, use --no-fetch-github to disable
+    args.fetch_github = not args.no_fetch_github
+
     if args.input:
         # If input file is specified, make it absolute if it's not already
         if not os.path.isabs(args.input):
@@ -3115,16 +3131,20 @@ def main():
         print(f"{f:<25} {total_before[f]:>8,} {total_after[f]:>8,} {sign}{change:>7,}")
     
     print("\n" + "=" * 60)
-    print("FEATURES IN THIS VERSION (v3.2)")
+    print("FEATURES IN THIS VERSION (v3.3)")
     print("=" * 60)
-    print("1. GitHub Tools: Validates and deduplicates github_tools data")
-    print("   Preserves stars, forks, health_score, language, topics, etc.")
+    print("1. GitHub Tools: Fetches stars, forks, health_score, language, etc.")
+    print("   ENABLED BY DEFAULT - use --no-fetch-github to disable")
     print("   Auto-populates github_url from tools if missing")
-    print("2. Prior Scientific: Only matches specific company name variants")
-    print("   Prevents 'prior to treatment' from being tagged as a brand")
-    print("3. Institutions: Extracted ONLY from author affiliations")
-    print("   ROR IDs looked up from institution names")
-    
+    print("2. Antibody Filtering: Filters organisms that only appear as antibody sources")
+    print("   (e.g., 'rabbit anti-GFP' won't tag Rabbit as organism)")
+    print("3. Latin Name Validation: Organisms with Latin names always kept")
+    print("4. API Validation: --validate-apis enables Semantic Scholar + CrossRef")
+    print("5. Improved Tag Patterns: DiD, SiR, EdU, BrdU require context")
+    print("6. Environment Variables for API keys:")
+    print("   GITHUB_TOKEN - for higher GitHub API rate limits")
+    print("   SEMANTIC_SCHOLAR_API_KEY - for Semantic Scholar API")
+
     print("\nDone!")
 
 
