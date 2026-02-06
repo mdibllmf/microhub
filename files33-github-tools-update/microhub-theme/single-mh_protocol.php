@@ -50,12 +50,18 @@ while (have_posts()) : the_post();
     
     // Get enrichment data
     $github_url = get_post_meta($post_id, '_mh_github_url', true);
+    $github_tools = json_decode(get_post_meta($post_id, '_mh_github_tools', true), true) ?: array();
     $repositories = json_decode(get_post_meta($post_id, '_mh_repositories', true), true) ?: array();
     $rrids = json_decode(get_post_meta($post_id, '_mh_rrids', true), true) ?: array();
+    $rors = json_decode(get_post_meta($post_id, '_mh_rors', true), true) ?: array();
     $protocols_linked = json_decode(get_post_meta($post_id, '_mh_protocols', true), true) ?: array();
     $sample_preparation = json_decode(get_post_meta($post_id, '_mh_sample_preparation', true), true) ?: array();
     $cell_lines = json_decode(get_post_meta($post_id, '_mh_cell_lines', true), true) ?: array();
     $microscope_brands = json_decode(get_post_meta($post_id, '_mh_microscope_brands', true), true) ?: array();
+    $fluorophores_meta = json_decode(get_post_meta($post_id, '_mh_fluorophores', true), true) ?: array();
+    $methods = get_post_meta($post_id, '_mh_methods', true);
+    $facility = get_post_meta($post_id, '_mh_facility', true);
+    $institutions = json_decode(get_post_meta($post_id, '_mh_institutions', true), true) ?: array();
     
     // Get external URL
     $external_url = '';
@@ -185,8 +191,8 @@ while (have_posts()) : the_post();
                 </a>
             <?php endif; ?>
             
-            <?php if ($github_url): ?>
-                <a href="<?php echo esc_url($github_url); ?>" target="_blank" rel="noopener" class="mh-action-btn github">
+            <?php if ($github_url || !empty($github_tools)): ?>
+                <a href="<?php echo esc_url($github_url ?: ($github_tools[0]['url'] ?? '#')); ?>" target="_blank" rel="noopener" class="mh-action-btn github">
                     💻 GitHub
                 </a>
             <?php endif; ?>
@@ -314,29 +320,127 @@ while (have_posts()) : the_post();
             </section>
         <?php endif; ?>
 
-        <?php if (!empty($repositories)): ?>
+        <!-- GitHub Code & Software - using same display as papers -->
+        <?php if (function_exists('mh_display_github')): ?>
+            <?php mh_display_github($github_url, $github_tools); ?>
+        <?php elseif (!empty($github_tools)): ?>
             <section class="mh-protocol-section">
-                <h2>💾 Data Repositories</h2>
-                <div class="mh-repositories-list">
-                    <?php foreach ($repositories as $repo): 
-                        $repo_url = isset($repo['url']) ? $repo['url'] : (is_string($repo) ? $repo : '');
-                        $repo_name = isset($repo['name']) ? $repo['name'] : $repo_url;
-                        if (empty($repo_url)) continue;
+                <h2>💻 Code & Software</h2>
+                <div class="mh-github-tools-list">
+                    <?php foreach ($github_tools as $tool):
+                        $tool_url = !empty($tool['url']) ? $tool['url'] : 'https://github.com/' . ($tool['full_name'] ?? '');
+                        $health = intval($tool['health_score'] ?? 0);
+                        $is_archived = !empty($tool['is_archived']);
+
+                        if ($is_archived) { $health_class = 'archived'; $health_label = 'Archived'; }
+                        elseif ($health >= 70) { $health_class = 'active'; $health_label = 'Active'; }
+                        elseif ($health >= 40) { $health_class = 'moderate'; $health_label = 'Moderate'; }
+                        elseif ($health > 0) { $health_class = 'low'; $health_label = 'Low Activity'; }
+                        else { $health_class = 'unknown'; $health_label = ''; }
+
+                        $rel = $tool['relationship'] ?? 'uses';
+                        $rel_labels = array('introduces' => '🆕 Introduced here', 'uses' => '🔧 Used', 'extends' => '🔀 Extended', 'benchmarks' => '📊 Benchmarked');
+                        $rel_label = $rel_labels[$rel] ?? '🔧 Used';
                     ?>
-                        <a href="<?php echo esc_url($repo_url); ?>" class="mh-repository-link" target="_blank" rel="noopener">
-                            💾 <?php echo esc_html($repo_name); ?>
+                        <a href="<?php echo esc_url($tool_url); ?>" class="mh-github-tool-card health-<?php echo $health_class; ?>" target="_blank" rel="noopener">
+                            <div class="mh-ght-header">
+                                <strong class="mh-ght-name"><?php echo esc_html($tool['full_name'] ?? ''); ?></strong>
+                                <?php if ($health_label): ?>
+                                    <span class="mh-ght-health <?php echo $health_class; ?>"><?php echo $health_label; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!empty($tool['description'])): ?>
+                                <p class="mh-ght-desc"><?php echo esc_html(wp_trim_words($tool['description'], 20, '...')); ?></p>
+                            <?php endif; ?>
+                            <div class="mh-ght-metrics">
+                                <span class="mh-ght-rel <?php echo esc_attr($rel); ?>"><?php echo $rel_label; ?></span>
+                                <?php if (!empty($tool['stars'])): ?>
+                                    <span>⭐ <?php echo number_format(intval($tool['stars'])); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($tool['forks'])): ?>
+                                    <span>🍴 <?php echo number_format(intval($tool['forks'])); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($tool['language'])): ?>
+                                    <span>📝 <?php echo esc_html($tool['language']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!empty($tool['topics']) && is_array($tool['topics'])): ?>
+                                <div class="mh-ght-topics">
+                                    <?php foreach (array_slice($tool['topics'], 0, 5) as $topic): ?>
+                                        <span class="mh-ght-topic"><?php echo esc_html($topic); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php elseif (!empty($github_url)): ?>
+            <section class="mh-protocol-section">
+                <h2>💻 Code & Software</h2>
+                <?php
+                $repo_name = preg_replace('/^https?:\/\/(www\.)?github\.com\//', '', $github_url);
+                $repo_name = rtrim($repo_name, '/');
+                ?>
+                <a href="<?php echo esc_url($github_url); ?>" class="mh-github-card" target="_blank" rel="noopener">
+                    <span class="mh-github-icon">🐙</span>
+                    <div class="mh-github-info">
+                        <strong>GitHub Repository</strong>
+                        <span><?php echo esc_html($repo_name); ?></span>
+                    </div>
+                    <span class="mh-github-arrow">→</span>
+                </a>
+            </section>
+        <?php endif; ?>
+
+        <!-- Data Repositories - using same display as papers -->
+        <?php if (function_exists('mh_display_repositories')): ?>
+            <?php mh_display_repositories($repositories); ?>
+        <?php elseif (!empty($repositories)): ?>
+            <section class="mh-protocol-section">
+                <h2>🗄️ Data Repositories</h2>
+                <div class="mh-repo-list">
+                    <?php foreach ($repositories as $repo):
+                        $repo_url = isset($repo['url']) ? $repo['url'] : (is_string($repo) ? $repo : '');
+                        $repo_name = isset($repo['name']) ? $repo['name'] : '';
+                        if (empty($repo_url)) continue;
+                        if (empty($repo_name)) {
+                            if (strpos($repo_url, 'zenodo') !== false) $repo_name = 'Zenodo';
+                            elseif (strpos($repo_url, 'figshare') !== false) $repo_name = 'Figshare';
+                            elseif (strpos($repo_url, 'github') !== false) $repo_name = 'GitHub';
+                            elseif (strpos($repo_url, 'dryad') !== false) $repo_name = 'Dryad';
+                            elseif (strpos($repo_url, 'osf.io') !== false) $repo_name = 'OSF';
+                            else $repo_name = 'Data Repository';
+                        }
+                    ?>
+                        <a href="<?php echo esc_url($repo_url); ?>" class="mh-repo-card" target="_blank" rel="noopener">
+                            <span class="mh-repo-icon">📦</span>
+                            <div class="mh-repo-info">
+                                <strong><?php echo esc_html($repo_name); ?></strong>
+                                <?php if (isset($repo['id']) && !empty($repo['id'])): ?>
+                                    <span><?php echo esc_html($repo['id']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="mh-repo-arrow">→</span>
                         </a>
                     <?php endforeach; ?>
                 </div>
             </section>
         <?php endif; ?>
 
-        <?php if (!empty($rrids)): ?>
+        <!-- RRIDs - using same display as papers -->
+        <?php if (function_exists('mh_display_rrids') && !empty($rrids)): ?>
+            <section class="mh-protocol-section">
+                <h2>🏷️ Research Resource Identifiers (RRIDs)</h2>
+                <p class="mh-section-note">Verified research resources used in this protocol:</p>
+                <?php mh_display_rrids($rrids); ?>
+            </section>
+        <?php elseif (!empty($rrids)): ?>
             <section class="mh-protocol-section">
                 <h2>🏷️ Research Resource Identifiers (RRIDs)</h2>
                 <p class="mh-section-note">Verified research resources used in this protocol:</p>
                 <div class="mh-rrids-list">
-                    <?php foreach ($rrids as $rrid): 
+                    <?php foreach ($rrids as $rrid):
                         $rrid_id = isset($rrid['id']) ? $rrid['id'] : (is_string($rrid) ? $rrid : '');
                         $rrid_name = isset($rrid['name']) ? $rrid['name'] : '';
                         if (empty($rrid_id)) continue;
@@ -351,6 +455,15 @@ while (have_posts()) : the_post();
                         </div>
                     <?php endforeach; ?>
                 </div>
+            </section>
+        <?php endif; ?>
+
+        <!-- RORs - using same display as papers -->
+        <?php if (function_exists('mh_display_rors') && !empty($rors)): ?>
+            <section class="mh-protocol-section">
+                <h2>🏛️ Research Organizations (ROR)</h2>
+                <p class="mh-section-note">Affiliated research institutions:</p>
+                <?php mh_display_rors($rors); ?>
             </section>
         <?php endif; ?>
 
@@ -880,6 +993,176 @@ while (have_posts()) : the_post();
     background: var(--primary-hover, #79b8ff);
 }
 
+/* GitHub Tools List */
+.mh-github-tools-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* GitHub Tool Card */
+.mh-github-tool-card {
+    display: block;
+    padding: 16px;
+    background: var(--bg-hover, #21262d);
+    border: 1px solid var(--border, #30363d);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.mh-github-tool-card:hover {
+    border-color: var(--primary, #58a6ff);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.mh-github-tool-card.health-active { border-left: 3px solid #56d364; }
+.mh-github-tool-card.health-moderate { border-left: 3px solid #f0883e; }
+.mh-github-tool-card.health-low { border-left: 3px solid #f85149; }
+.mh-github-tool-card.health-archived { border-left: 3px solid #8b949e; opacity: 0.7; }
+.mh-github-tool-card.health-unknown { border-left: 3px solid #30363d; }
+
+.mh-ght-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.mh-ght-name {
+    color: var(--primary, #58a6ff);
+    font-size: 0.95rem;
+    word-break: break-word;
+}
+.mh-ght-health {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.mh-ght-health.active { background: #1f3d2d; color: #56d364; }
+.mh-ght-health.moderate { background: #3d2f1f; color: #f0883e; }
+.mh-ght-health.low { background: #3d1f1f; color: #f85149; }
+.mh-ght-health.archived { background: #2d2d2d; color: #8b949e; }
+.mh-ght-health.unknown { background: #21262d; color: #6e7681; }
+
+.mh-ght-desc {
+    color: var(--text-muted, #8b949e);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 8px 0;
+}
+
+.mh-ght-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-light, #6e7681);
+    margin-bottom: 8px;
+}
+.mh-ght-rel {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+.mh-ght-rel.introduces { background: #1f3d2d; color: #56d364; }
+.mh-ght-rel.uses { background: #1e3a5f; color: #58a6ff; }
+.mh-ght-rel.extends { background: #2d1f3d; color: #a371f7; }
+.mh-ght-rel.benchmarks { background: #3d2f1f; color: #f0883e; }
+
+.mh-ght-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+.mh-ght-topic {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    background: var(--bg-card, #161b22);
+    border-radius: 4px;
+    color: var(--text-muted, #8b949e);
+}
+
+/* Simple GitHub Card (fallback) */
+.mh-github-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-hover, #21262d);
+    border: 1px solid var(--border, #30363d);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.mh-github-card:hover {
+    border-color: var(--primary, #58a6ff);
+    background: #161b22;
+}
+.mh-github-icon {
+    font-size: 1.5rem;
+}
+.mh-github-info {
+    flex: 1;
+}
+.mh-github-info strong {
+    display: block;
+    color: var(--text, #c9d1d9);
+    margin-bottom: 2px;
+}
+.mh-github-info span {
+    color: var(--text-muted, #8b949e);
+    font-size: 0.85rem;
+}
+.mh-github-arrow {
+    color: var(--text-muted, #8b949e);
+    font-size: 1.2rem;
+}
+
+/* Data Repository List */
+.mh-repo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.mh-repo-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-hover, #21262d);
+    border: 1px solid var(--border, #30363d);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.mh-repo-card:hover {
+    border-color: var(--primary, #58a6ff);
+    background: #161b22;
+}
+.mh-repo-icon {
+    font-size: 1.3rem;
+}
+.mh-repo-info {
+    flex: 1;
+}
+.mh-repo-info strong {
+    display: block;
+    color: var(--text, #c9d1d9);
+    margin-bottom: 2px;
+}
+.mh-repo-info span {
+    color: var(--text-muted, #8b949e);
+    font-size: 0.85rem;
+    font-family: monospace;
+}
+.mh-repo-arrow {
+    color: var(--text-muted, #8b949e);
+    font-size: 1.2rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .mh-single-protocol {
@@ -899,6 +1182,9 @@ while (have_posts()) : the_post();
     }
     .mh-action-btn {
         justify-content: center;
+    }
+    .mh-github-tools-list {
+        grid-template-columns: 1fr;
     }
 }
 </style>
