@@ -248,8 +248,21 @@ function mh_theme_search_protocols($request) {
         $meta_query[] = array('key' => '_mh_authors', 'value' => $author_filter, 'compare' => 'LIKE');
     }
 
+    // Has GitHub filter - check github_url or github_tools JSON
     if ($request->get_param('has_github')) {
-        $meta_query[] = array('key' => '_mh_github_url', 'value' => '', 'compare' => '!=');
+        $meta_query[] = array(
+            'relation' => 'OR',
+            array(
+                'key' => '_mh_github_url',
+                'value' => '',
+                'compare' => '!='
+            ),
+            array(
+                'key' => '_mh_github_tools',
+                'value' => '"full_name"',  // JSON with full_name field indicates GitHub tools
+                'compare' => 'LIKE'
+            )
+        );
     }
 
     if ($request->get_param('has_figures')) {
@@ -657,7 +670,7 @@ function mh_theme_search_papers($request) {
         $has_meta_filter = true;
     }
     
-    // Has GitHub filter
+    // Has GitHub filter - check has_github flag, github_url, or github_tools JSON
     if ($request->get_param('has_github')) {
         $meta_query[] = array(
             'relation' => 'OR',
@@ -670,6 +683,11 @@ function mh_theme_search_papers($request) {
                 'key' => '_mh_github_url',
                 'value' => '',
                 'compare' => '!='
+            ),
+            array(
+                'key' => '_mh_github_tools',
+                'value' => '"full_name"',  // JSON with full_name field indicates GitHub tools
+                'compare' => 'LIKE'
             )
         );
         $has_meta_filter = true;
