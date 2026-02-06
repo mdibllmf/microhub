@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
-MicroHub Paper Cleanup and Re-tagging Script v3.5
+MicroHub Paper Cleanup and Re-tagging Script v3.6
 Cleans up JSON data, extracts missing tags, and normalizes tag variants.
+
+CHANGES in v3.6:
+- API VALIDATION ALWAYS ON: Semantic Scholar and CrossRef APIs are now called
+  by default for every paper to ensure maximum data accuracy. Use --no-validate-apis
+  to disable if needed (not recommended).
+- Combined with strict acronym patterns, this ensures the most accurate tagging.
 
 CHANGES in v3.5:
 - CRITICAL FIX: All acronym-based technique patterns now require IMMEDIATE context
@@ -16,19 +22,11 @@ CHANGES in v3.5:
 - Removed all lookahead patterns (?=...) that could match false positives
 
 CHANGES in v3.4:
-- CONTEXT-AWARE TAG PATTERNS: All microscopy technique patterns now require
-  proper context to avoid false positives. STED, TEM, SIM, STORM, PALM, etc.
-  must appear near microscopy/imaging terms to be detected.
 - SPIM MICROSCOPE SYSTEMS: Added MesoSPIM, diSPIM, OpenSPIM, iSPIM and other
   SPIM-based systems to microscope_brands (not techniques) since these are
   specific microscope systems, not general techniques.
-- COMPREHENSIVE TAG VALIDATION: New validate_tags_with_api() function validates
+- COMPREHENSIVE TAG VALIDATION: validate_tags_with_api() function validates
   ALL extracted tags using Semantic Scholar fields of study and text context.
-  Removes false positive technique tags that lack proper scientific context.
-- IMPROVED ORGANISM VALIDATION: Organisms are now checked for research context
-  (model organism, transgenic, tissue, etc.) beyond just antibody filtering.
-- TAG VALIDATION ALWAYS ON: Context-based validation runs automatically.
-  Use --validate-apis for additional API-based validation.
 
 CHANGES in v3.3:
 - ANTIBODY SOURCE FILTERING: Organisms that only appear as antibody sources
@@ -3420,13 +3418,15 @@ def main():
                         help='Overwrite input files instead of creating new ones')
     parser.add_argument('--output-dir', default='cleaned_export',
                         help='Output directory for cleaned files')
-    parser.add_argument('--validate-apis', action='store_true',
-                        help='Use Semantic Scholar and CrossRef APIs to validate metadata (slower)')
+    parser.add_argument('--no-validate-apis', action='store_true',
+                        help='Disable Semantic Scholar and CrossRef API validation (enabled by default)')
     parser.add_argument('--no-fetch-github', action='store_true',
                         help='Disable fetching GitHub repository metadata from API (enabled by default)')
 
     args = parser.parse_args()
 
+    # API validation is ON by default, use --no-validate-apis to disable
+    args.validate_apis = not args.no_validate_apis
     # GitHub fetching is ON by default, use --no-fetch-github to disable
     args.fetch_github = not args.no_fetch_github
 
@@ -3450,8 +3450,8 @@ def main():
         sys.exit(1)
     
     print("=" * 60)
-    print("MICROHUB CLEANUP AND RE-TAGGING v3.5")
-    print("With STRICT acronym patterns - NO false positives for STED/TEM/SIM/etc.")
+    print("MICROHUB CLEANUP AND RE-TAGGING v3.6")
+    print("APIs ALWAYS ON + STRICT patterns = Maximum accuracy")
     print("=" * 60)
     print(f"Script directory: {script_dir}")
     print(f"Found {len(input_files)} JSON file(s)")
@@ -3507,20 +3507,21 @@ def main():
         print(f"{f:<25} {total_before[f]:>8,} {total_after[f]:>8,} {sign}{change:>7,}")
     
     print("\n" + "=" * 60)
-    print("FEATURES IN THIS VERSION (v3.5)")
+    print("FEATURES IN THIS VERSION (v3.6)")
     print("=" * 60)
-    print("1. STRICT ACRONYM PATTERNS (CRITICAL FIX):")
+    print("1. API VALIDATION ALWAYS ON:")
+    print("   - Semantic Scholar API: fields of study, citation counts")
+    print("   - CrossRef API: DOI validation, journal info, publication type")
+    print("   - Use --no-validate-apis to disable (not recommended)")
+    print("2. STRICT ACRONYM PATTERNS:")
     print("   - STED only matches: 'STED microscopy', 'STED imaging', etc.")
-    print("   - TEM only matches: 'TEM microscopy', 'TEM grid', 'TEM section', etc.")
-    print("   - SIM only matches: 'SIM microscopy', 'structured illumination'")
-    print("   - Same for STORM, PALM, SEM, AFM, FRET, FRAP, FLIM, FCS, CLEM, OCT")
-    print("   - Acronyms REQUIRE immediate context - no lookahead matching!")
-    print("2. SPIM MICROSCOPE SYSTEMS: MesoSPIM, diSPIM, OpenSPIM, iSPIM, etc.")
-    print("   added to microscope_brands (instruments, not techniques)")
+    print("   - TEM only matches: 'TEM microscopy', 'TEM grid', etc.")
+    print("   - Same for STORM, PALM, SIM, SEM, AFM, FRET, FRAP, FLIM, etc.")
     print("3. GitHub Tools: Fetches stars, forks, health_score, language, etc.")
     print("   ENABLED BY DEFAULT - use --no-fetch-github to disable")
-    print("4. Antibody Filtering: Filters organisms only appearing as antibody sources")
-    print("5. Environment Variables for API keys:")
+    print("4. SPIM Microscopes: MesoSPIM, diSPIM, OpenSPIM, iSPIM added")
+    print("5. Antibody Filtering: Filters organisms only as antibody sources")
+    print("6. Environment Variables for API keys:")
     print("   GITHUB_TOKEN - for higher GitHub API rate limits")
     print("   SEMANTIC_SCHOLAR_API_KEY - for Semantic Scholar API")
 
