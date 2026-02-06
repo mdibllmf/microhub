@@ -1169,6 +1169,8 @@ function filterByInstitution(institutionSlug) {
         if (activeFilters.high_impact) params.set('citations_min', 50);
         if (activeFilters.has_github) params.set('has_github', true);
         if (activeFilters.has_figures) params.set('has_figures', true);
+        if (activeFilters.has_repositories) params.set('has_repositories', true);
+        if (activeFilters.has_rrids) params.set('has_rrids', true);
         if (activeFilters.fluorophore) params.set('fluorophore', activeFilters.fluorophore);
         if (activeFilters.sample_prep) params.set('sample_prep', activeFilters.sample_prep);
         if (activeFilters.cell_line) params.set('cell_line', activeFilters.cell_line);

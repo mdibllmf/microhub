@@ -84,6 +84,8 @@ function mh_theme_register_rest_routes() {
             'citations_min' => array('type' => 'integer', 'sanitize_callback' => 'absint'),
             'has_github' => array('type' => 'boolean'),
             'has_figures' => array('type' => 'boolean'),
+            'has_repositories' => array('type' => 'boolean'),
+            'has_rrids' => array('type' => 'boolean'),
             'orderby' => array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field'),
             'order' => array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field'),
             'page' => array('type' => 'integer', 'default' => 1, 'sanitize_callback' => 'absint'),
@@ -195,15 +197,9 @@ function mh_theme_search_protocols($request) {
         $args['order'] = 'DESC';
     }
 
-    // Build meta query - papers need is_protocol=1, protocols are always included
-    $meta_query = array(
-        'relation' => 'OR',
-        array(
-            'relation' => 'AND',
-            array('key' => '_mh_is_protocol', 'value' => '1', 'compare' => '='),
-        ),
-        // mh_protocol posts don't need the is_protocol flag - they ARE protocols by post type
-    );
+    // Build meta query for filters (post type filtering is handled by mh_protocols_where_filter)
+    $meta_query = array('relation' => 'AND');
+    $has_meta_filter = false;
 
     // Taxonomy filters
     $tax_query = array('relation' => 'AND');
@@ -241,11 +237,13 @@ function mh_theme_search_protocols($request) {
     $citations_min = $request->get_param('citations_min');
     if ($citations_min) {
         $meta_query[] = array('key' => '_mh_citation_count', 'value' => $citations_min, 'compare' => '>=', 'type' => 'NUMERIC');
+        $has_meta_filter = true;
     }
 
     $author_filter = $request->get_param('author');
     if (!empty($author_filter)) {
         $meta_query[] = array('key' => '_mh_authors', 'value' => $author_filter, 'compare' => 'LIKE');
+        $has_meta_filter = true;
     }
 
     // Has GitHub filter - check github_url or github_tools JSON
@@ -263,10 +261,53 @@ function mh_theme_search_protocols($request) {
                 'compare' => 'LIKE'
             )
         );
+        $has_meta_filter = true;
     }
 
     if ($request->get_param('has_figures')) {
         $meta_query[] = array('key' => '_mh_figures', 'value' => '[]', 'compare' => '!=');
+        $has_meta_filter = true;
+    }
+
+    // Has data repositories filter
+    if ($request->get_param('has_repositories')) {
+        $meta_query[] = array(
+            'relation' => 'OR',
+            array(
+                'key' => '_mh_has_data',
+                'value' => '1',
+                'compare' => '='
+            ),
+            array(
+                'key' => '_mh_repositories',
+                'value' => '"url"',  // JSON with url field
+                'compare' => 'LIKE'
+            )
+        );
+        $has_meta_filter = true;
+    }
+
+    // Has RRIDs filter
+    if ($request->get_param('has_rrids')) {
+        $meta_query[] = array(
+            'relation' => 'OR',
+            array(
+                'key' => '_mh_has_rrids',
+                'value' => '1',
+                'compare' => '='
+            ),
+            array(
+                'key' => '_mh_rrids',
+                'value' => '"id"',  // JSON with id field
+                'compare' => 'LIKE'
+            )
+        );
+        $has_meta_filter = true;
+    }
+
+    // Apply meta_query if we have filters
+    if ($has_meta_filter) {
+        $args['meta_query'] = $meta_query;
     }
 
     // Use custom filter to handle the complex OR condition for post types
