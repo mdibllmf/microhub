@@ -571,9 +571,9 @@ class MicroHub_API {
         $min_papers = max(1, intval($request->get_param('min_papers') ?: 1));
         $show_archived = $request->get_param('show_archived') ? true : false;
         
-        // Gather all github_tools meta from papers (also get citation_count and authors)
+        // Gather all github_tools meta from papers AND protocols (also get citation_count and authors)
         $rows = $wpdb->get_results("
-            SELECT p.ID as paper_id, p.post_title, pm.meta_value as tools_json,
+            SELECT p.ID as paper_id, p.post_title, p.post_type, pm.meta_value as tools_json,
                    COALESCE((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_mh_citation_count' LIMIT 1), 0) as citation_count,
                    COALESCE((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_mh_authors' LIMIT 1), '') as authors
             FROM {$wpdb->postmeta} pm
@@ -581,7 +581,7 @@ class MicroHub_API {
             WHERE pm.meta_key = '_mh_github_tools'
             AND pm.meta_value != '' AND pm.meta_value != '[]'
             AND p.post_status = 'publish'
-            AND p.post_type = 'mh_paper'
+            AND p.post_type IN ('mh_paper', 'mh_protocol')
         ");
         
         // Aggregate tools across papers
@@ -710,14 +710,14 @@ class MicroHub_API {
         global $wpdb;
 
         $repos_data = $wpdb->get_results("
-            SELECT p.ID, p.post_title, pm.meta_value, p.post_date
+            SELECT p.ID, p.post_title, pm.meta_value, p.post_date, p.post_type
             FROM {$wpdb->postmeta} pm
             JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-            WHERE pm.meta_key = '_mh_repositories' 
+            WHERE pm.meta_key = '_mh_repositories'
             AND pm.meta_value != ''
             AND pm.meta_value != '[]'
             AND p.post_status = 'publish'
-            AND p.post_type = 'mh_paper'
+            AND p.post_type IN ('mh_paper', 'mh_protocol')
             ORDER BY p.post_date DESC
             LIMIT 50
         ");
