@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 """
-MicroHub Paper Cleanup and Re-tagging Script v3.4
+MicroHub Paper Cleanup and Re-tagging Script v3.5
 Cleans up JSON data, extracts missing tags, and normalizes tag variants.
+
+CHANGES in v3.5:
+- CRITICAL FIX: All acronym-based technique patterns now require IMMEDIATE context
+  (the microscopy term must directly follow the acronym, not just appear somewhere in text)
+- STED only matches: "STED microscopy", "STED imaging", "STED nanoscopy",
+  "stimulated emission depletion" - NOT standalone "STED"
+- TEM only matches: "TEM microscopy", "TEM imaging", "TEM grid", "TEM section",
+  "transmission electron microscopy" - NOT standalone "TEM"
+- SIM only matches: "SIM microscopy", "SIM imaging", "structured illumination microscopy"
+- Same strict patterns applied to: STORM, PALM, dSTORM, SEM, AFM, FRET, FRAP, FLIM,
+  FCS, FCCS, CLEM, OCT, and all other abbreviated technique names
+- Removed all lookahead patterns (?=...) that could match false positives
 
 CHANGES in v3.4:
 - CONTEXT-AWARE TAG PATTERNS: All microscopy technique patterns now require
@@ -819,12 +831,43 @@ MICROSCOPY_TECHNIQUES = {
     'Three-Photon': [r'\bthree.?photon\s+(?:microscop|imag|excitat)', r'\b3.?photon\s+(?:microscop|imag)'],
     'Multiphoton': [r'\bmultiphoton\s+(?:microscop|imag|excitat)', r'\bmulti.?photon\s+(?:microscop|imag)'],
 
-    # Super-resolution techniques - require context to avoid false matches
-    'STED': [r'\bsted\s+(?:microscop|imag|nanoscop|super)', r'(?:microscop|imag|super.?resolution).*\bsted\b', r'stimulated\s+emission\s+depletion', r'\bsted\b(?=.*(?:microscop|imag|laser|depletion|nanoscop))'],
-    'PALM': [r'\bpalm\s+(?:microscop|imag|super)', r'(?:microscop|imag).*\bpalm\b(?!.*tree)', r'photoactivated\s+localization\s+microscop'],
-    'STORM': [r'\bstorm\s+(?:microscop|imag|super)', r'(?:microscop|imag|super.?resolution).*\bstorm\b(?!.*weather)', r'stochastic\s+optical\s+reconstruction'],
-    'dSTORM': [r'\bdstorm\b', r'\bd.?storm\s+(?:microscop|imag)', r'direct\s+storm'],
-    'SIM': [r'\bsim\s+(?:microscop|imag|super)', r'(?:microscop|imag).*\bsim\b(?!ulation|ilar|ple)', r'structured\s+illumination\s+microscop'],
+    # Super-resolution techniques - VERY STRICT patterns to avoid false positives
+    # STED: Only match explicit STED microscopy terms or full expansion
+    'STED': [
+        r'\bsted\s+microscop',           # "STED microscopy" or "STED microscope"
+        r'\bsted\s+imaging\b',           # "STED imaging"
+        r'\bsted\s+nanoscop',            # "STED nanoscopy"
+        r'\bsted\s+super.?resolution',   # "STED super-resolution"
+        r'\bsted\s+beam\b',              # "STED beam"
+        r'\bsted\s+laser\b',             # "STED laser"
+        r'stimulated\s+emission\s+depletion',  # Full expansion
+    ],
+    # PALM: Only match explicit PALM microscopy terms
+    'PALM': [
+        r'\bpalm\s+microscop',           # "PALM microscopy"
+        r'\bpalm\s+imaging\b',           # "PALM imaging"
+        r'\bpalm\s+super.?resolution',   # "PALM super-resolution"
+        r'photoactivated\s+localization\s+microscop',  # Full expansion
+    ],
+    # STORM: Only match explicit STORM microscopy terms
+    'STORM': [
+        r'\bstorm\s+microscop',          # "STORM microscopy"
+        r'\bstorm\s+imaging\b',          # "STORM imaging"
+        r'\bstorm\s+super.?resolution',  # "STORM super-resolution"
+        r'stochastic\s+optical\s+reconstruction\s+microscop',  # Full expansion
+    ],
+    'dSTORM': [
+        r'\bdstorm\s+microscop',         # "dSTORM microscopy"
+        r'\bdstorm\s+imaging\b',         # "dSTORM imaging"
+        r'direct\s+stochastic\s+optical\s+reconstruction',  # Full expansion
+    ],
+    # SIM: Only match explicit SIM microscopy terms (NOT simulation, similar, simple)
+    'SIM': [
+        r'\bsim\s+microscop',            # "SIM microscopy"
+        r'\bsim\s+imaging\b',            # "SIM imaging"
+        r'\bsim\s+super.?resolution',    # "SIM super-resolution"
+        r'structured\s+illumination\s+microscop',  # Full expansion
+    ],
     'MINFLUX': [r'\bminflux\b'],
     'RESOLFT': [r'\bresolft\b'],
     'SOFI': [r'\bsofi\s+(?:microscop|imag)', r'super.?resolution\s+optical\s+fluctuation'],
@@ -841,29 +884,92 @@ MICROSCOPY_TECHNIQUES = {
     # TIRF - require context
     'TIRF': [r'\btirf\s+(?:microscop|imag)', r'\btirfm\b', r'total\s+internal\s+reflection\s+(?:fluor|microscop)'],
 
-    # Functional imaging techniques
-    'FRAP': [r'\bfrap\b(?=.*(?:experiment|assay|analysis|recover))', r'fluorescence\s+recovery\s+after\s+photobleaching'],
-    'FLIP': [r'\bflip\b(?=.*(?:experiment|assay|photobleach))', r'fluorescence\s+loss\s+in\s+photobleaching'],
-    'FRET': [r'\bfret\s+(?:experiment|assay|imag|analysis|efficien|signal|pair)', r'(?:experiment|assay|imag).*\bfret\b', r'förster\s+resonance\s+energy', r'forster\s+resonance\s+energy', r'fluorescence\s+resonance\s+energy\s+transfer'],
-    'FLIM': [r'\bflim\s+(?:microscop|imag|measurement)', r'fluorescence\s+lifetime\s+(?:imag|microscop|measurement)'],
-    'FCS': [r'\bfcs\b(?=.*(?:measurement|experiment|analysis|correlat))', r'fluorescence\s+correlation\s+spectroscop'],
-    'FCCS': [r'\bfccs\b', r'fluorescence\s+cross.?correlation'],
+    # Functional imaging techniques - STRICT patterns
+    'FRAP': [
+        r'\bfrap\s+(?:experiment|assay|analysis|recover|curve)',  # FRAP experiment/analysis
+        r'fluorescence\s+recovery\s+after\s+photobleaching',  # Full expansion
+    ],
+    'FLIP': [
+        r'\bflip\s+(?:experiment|assay|analysis)',  # FLIP experiment/analysis
+        r'fluorescence\s+loss\s+in\s+photobleaching',  # Full expansion
+    ],
+    'FRET': [
+        r'\bfret\s+(?:experiment|assay|imag|analysis|efficien|signal|pair|sensor|probe)',  # FRET + context
+        r'förster\s+resonance\s+energy\s+transfer',  # Full expansion (umlaut)
+        r'forster\s+resonance\s+energy\s+transfer',  # Full expansion (no umlaut)
+        r'fluorescence\s+resonance\s+energy\s+transfer',  # Alternative expansion
+    ],
+    'FLIM': [
+        r'\bflim\s+(?:microscop|imag|measurement|analysis)',  # FLIM + context
+        r'fluorescence\s+lifetime\s+(?:imag|microscop|measurement)',  # Full expansion
+    ],
+    'FCS': [
+        r'\bfcs\s+(?:measurement|experiment|analysis|curve)',  # FCS + context
+        r'fluorescence\s+correlation\s+spectroscop',  # Full expansion
+    ],
+    'FCCS': [
+        r'\bfccs\s+(?:measurement|experiment|analysis)',  # FCCS + context
+        r'fluorescence\s+cross.?correlation\s+spectroscop',  # Full expansion
+    ],
 
     # Super-resolution general
     'Super-Resolution': [r'\bsuper.?resolution\s+(?:microscop|imag)', r'\bnanoscopy\b'],
-    'Expansion Microscopy': [r'\bexpansion\s+microscopy\b', r'\bexm\b(?=.*(?:microscop|expand|gel))'],
+    'Expansion Microscopy': [
+        r'\bexpansion\s+microscopy\b',  # Full term
+        r'\bexm\s+(?:microscop|protocol|sample)',  # ExM + context
+    ],
 
-    # Electron microscopy - require context
-    'Cryo-EM': [r'\bcryo.?em\b(?=.*(?:structur|protein|reconstruct|particle|microscop))', r'\bcryo.?electron\s+microscop', r'cryogenic\s+electron\s+microscop'],
-    'Cryo-ET': [r'\bcryo.?et\b', r'cryo.?electron\s+tomograph'],
-    'SEM': [r'\bsem\b(?=.*(?:microscop|imag|electron|scan))', r'scanning\s+electron\s+microscop'],
-    'TEM': [r'\btem\b(?=.*(?:microscop|imag|electron|transmis|grid|section))', r'transmission\s+electron\s+microscop'],
-    'FIB-SEM': [r'\bfib.?sem\b', r'focused\s+ion\s+beam.*(?:sem|scanning)'],
-    'Serial Block-Face SEM': [r'serial\s+block.?face', r'\bsbf.?sem\b', r'\bsbem\b'],
-    'Volume EM': [r'\bvolume\s+em\b', r'\bvem\b(?=.*(?:microscop|electron))'],
-    'AFM': [r'\bafm\b(?=.*(?:microscop|imag|scan|cantilever|force))', r'atomic\s+force\s+microscop'],
-    'CLEM': [r'\bclem\b(?=.*(?:microscop|correlat))', r'correlative\s+light.{1,20}electron'],
-    'Immuno-EM': [r'\bimmuno.?em\b', r'immuno.?electron\s+microscop', r'immunogold'],
+    # Electron microscopy - STRICT patterns
+    'Cryo-EM': [
+        r'\bcryo.?em\s+(?:structur|imag|microscop|analysis)',  # cryo-EM structure/imaging
+        r'\bcryo.?electron\s+microscop',    # cryo-electron microscopy
+        r'cryogenic\s+electron\s+microscop',  # Full expansion
+    ],
+    'Cryo-ET': [
+        r'\bcryo.?et\s+(?:reconstruct|tomogra|imag)',  # cryo-ET reconstruction
+        r'cryo.?electron\s+tomograph',      # cryo-electron tomography
+    ],
+    # SEM: Only match explicit SEM microscopy terms (NOT semantic, semester, etc.)
+    'SEM': [
+        r'\bsem\s+(?:microscop|imag|analysis)',  # "SEM microscopy/imaging/analysis"
+        r'\bsem\s+micrograph',              # "SEM micrograph"
+        r'scanning\s+electron\s+microscop', # Full expansion
+    ],
+    # TEM: Only match explicit TEM microscopy terms (NOT temperature, temporary, etc.)
+    'TEM': [
+        r'\btem\s+(?:microscop|imag|analysis)',  # "TEM microscopy/imaging/analysis"
+        r'\btem\s+micrograph',              # "TEM micrograph"
+        r'\btem\s+grid',                    # "TEM grid"
+        r'\btem\s+section',                 # "TEM section"
+        r'transmission\s+electron\s+microscop',  # Full expansion
+    ],
+    'FIB-SEM': [
+        r'\bfib.?sem\s+(?:microscop|imag|tomograph)',  # FIB-SEM + context
+        r'focused\s+ion\s+beam\s+(?:sem|scanning\s+electron)',  # Full expansion
+    ],
+    'Serial Block-Face SEM': [
+        r'serial\s+block.?face\s+(?:sem|scanning)',  # SBF-SEM
+        r'\bsbf.?sem\b',
+        r'\bsbem\b',
+    ],
+    'Volume EM': [
+        r'\bvolume\s+em\s+(?:microscop|imag|reconstruct)',  # Volume EM + context
+        r'\bvolume\s+electron\s+microscop',  # Full term
+    ],
+    # AFM: Only match explicit AFM microscopy terms
+    'AFM': [
+        r'\bafm\s+(?:microscop|imag|scan|measurement|tip|cantilever)',  # AFM + context
+        r'atomic\s+force\s+microscop',  # Full expansion
+    ],
+    'CLEM': [
+        r'\bclem\s+(?:microscop|imag|workflow)',  # CLEM + context
+        r'correlative\s+light\s+(?:and\s+)?electron\s+microscop',  # Full expansion
+    ],
+    'Immuno-EM': [
+        r'\bimmuno.?em\s+(?:microscop|imag|label)',  # Immuno-EM + context
+        r'immuno.?electron\s+microscop',  # Full expansion
+        r'immunogold\s+(?:label|stain|microscop)',  # Immunogold + context
+    ],
     'Negative Stain EM': [r'negative\s+stain(?:ing)?\s+(?:em|electron)'],
     'Array Tomography': [r'\barray\s+tomograph'],
     'Electron Tomography': [r'\belectron\s+tomograph'],
@@ -891,10 +997,24 @@ MICROSCOPY_TECHNIQUES = {
 
     # Spectroscopy/special techniques
     'Raman': [r'\braman\s+(?:microscop|spectroscop|imag)'],
-    'CARS': [r'\bcars\s+(?:microscop|imag)', r'coherent\s+anti.?stokes\s+raman'],
-    'SRS': [r'\bsrs\s+(?:microscop|imag)', r'stimulated\s+raman\s+scattering'],
-    'SHG': [r'\bshg\s+(?:microscop|imag|signal)', r'second\s+harmonic\s+generation\s+(?:microscop|imag)'],
-    'OCT': [r'\boct\b(?=.*(?:imag|scan|ophthalmol|retin))', r'optical\s+coherence\s+tomograph'],
+    'CARS': [
+        r'\bcars\s+(?:microscop|imag)',  # CARS microscopy/imaging
+        r'coherent\s+anti.?stokes\s+raman\s+(?:microscop|scattering)',  # Full expansion
+    ],
+    'SRS': [
+        r'\bsrs\s+(?:microscop|imag)',  # SRS microscopy/imaging
+        r'stimulated\s+raman\s+scattering\s+(?:microscop|imag)',  # Full expansion
+    ],
+    'SHG': [
+        r'\bshg\s+(?:microscop|imag|signal)',  # SHG + context
+        r'second\s+harmonic\s+generation\s+(?:microscop|imag)',  # Full expansion
+    ],
+    # OCT: Only match explicit OCT imaging terms (NOT October, etc.)
+    'OCT': [
+        r'\boct\s+(?:imag|scan|angiograph)',  # OCT + context
+        r'\boct\s+(?:of\s+the\s+)?(?:retin|eye|cornea|macula)',  # OCT of retina/eye
+        r'optical\s+coherence\s+tomograph',  # Full expansion
+    ],
     'Holographic': [r'\bholograph(?:ic)?\s+(?:microscop|imag)'],
     'Photoacoustic': [r'\bphotoacoustic\s+(?:microscop|imag)'],
 
@@ -3330,8 +3450,8 @@ def main():
         sys.exit(1)
     
     print("=" * 60)
-    print("MICROHUB CLEANUP AND RE-TAGGING v3.4")
-    print("With context-aware tag patterns, SPIM systems, comprehensive validation")
+    print("MICROHUB CLEANUP AND RE-TAGGING v3.5")
+    print("With STRICT acronym patterns - NO false positives for STED/TEM/SIM/etc.")
     print("=" * 60)
     print(f"Script directory: {script_dir}")
     print(f"Found {len(input_files)} JSON file(s)")
@@ -3387,20 +3507,20 @@ def main():
         print(f"{f:<25} {total_before[f]:>8,} {total_after[f]:>8,} {sign}{change:>7,}")
     
     print("\n" + "=" * 60)
-    print("FEATURES IN THIS VERSION (v3.4)")
+    print("FEATURES IN THIS VERSION (v3.5)")
     print("=" * 60)
-    print("1. CONTEXT-AWARE TAG PATTERNS: STED, TEM, SIM, STORM, PALM, etc.")
-    print("   now require microscopy/imaging context to avoid false positives")
-    print("2. SPIM MICROSCOPE SYSTEMS: MesoSPIM, diSPIM, OpenSPIM, iSPIM added")
-    print("   to microscope_brands (these are instruments, not techniques)")
-    print("3. COMPREHENSIVE TAG VALIDATION: All tags validated using:")
-    print("   - Semantic Scholar fields of study (with --validate-apis)")
-    print("   - Text context analysis (always on)")
-    print("   - Research organism indicators (model organism, transgenic, etc.)")
-    print("4. GitHub Tools: Fetches stars, forks, health_score, language, etc.")
+    print("1. STRICT ACRONYM PATTERNS (CRITICAL FIX):")
+    print("   - STED only matches: 'STED microscopy', 'STED imaging', etc.")
+    print("   - TEM only matches: 'TEM microscopy', 'TEM grid', 'TEM section', etc.")
+    print("   - SIM only matches: 'SIM microscopy', 'structured illumination'")
+    print("   - Same for STORM, PALM, SEM, AFM, FRET, FRAP, FLIM, FCS, CLEM, OCT")
+    print("   - Acronyms REQUIRE immediate context - no lookahead matching!")
+    print("2. SPIM MICROSCOPE SYSTEMS: MesoSPIM, diSPIM, OpenSPIM, iSPIM, etc.")
+    print("   added to microscope_brands (instruments, not techniques)")
+    print("3. GitHub Tools: Fetches stars, forks, health_score, language, etc.")
     print("   ENABLED BY DEFAULT - use --no-fetch-github to disable")
-    print("5. Antibody Filtering: Filters organisms only appearing as antibody sources")
-    print("6. Environment Variables for API keys:")
+    print("4. Antibody Filtering: Filters organisms only appearing as antibody sources")
+    print("5. Environment Variables for API keys:")
     print("   GITHUB_TOKEN - for higher GitHub API rate limits")
     print("   SEMANTIC_SCHOLAR_API_KEY - for Semantic Scholar API")
 
