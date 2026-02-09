@@ -1199,39 +1199,22 @@ FLUOROPHORES = {
     'WGA': [r'\bwga\b', r'\bwheat germ agglutinin\b'],
     'BODIPY': [r'\bbodipy\b'],
     # DiI, DiO, DiD, DiR are lipophilic membrane dyes
-    # STRICT PATTERNS: These short names match common words, so we require:
-    # 1. Full chemical names, OR
-    # 2. Explicit dye/staining context, OR
-    # 3. Appearing with other known lipophilic dyes
+    # STRICT: Only match FULL CHEMICAL NAMES - NO acronyms (DiD, DiO match too many false positives)
     'DiI': [
-        r'\b1,1\'-dioctadecyl.*indocarbocyanine\b',  # Full chemical name
-        r'\bdiI\b',  # Case-sensitive DiI (capital I)
-        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiI\b',
-        r'\bDiI\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
-        r'(?:DiO|DiD|DiR)\s*(?:,|and|or|/)\s*DiI\b',  # Listed with other Di-dyes
-        r'\bDiI\s*(?:,|and|or|/)\s*(?:DiO|DiD|DiR)',
+        r'1,1\'-dioctadecyl-3,3,3\',3\'-tetramethylindocarbocyanine',  # Full chemical name
+        r'dioctadecyl[- ]?tetramethyl[- ]?indocarbocyanine',  # Partial chemical name
     ],
     'DiO': [
-        r'\b3,3\'-dioctadecyloxacarbocyanine\b',  # Full chemical name
-        r'\bDiOC\d+',  # DiOC6, DiOC18, etc.
-        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiO\b',
-        r'\bDiO\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
-        r'(?:DiI|DiD|DiR)\s*(?:,|and|or|/)\s*DiO\b',  # Listed with other Di-dyes
-        r'\bDiO\s*(?:,|and|or|/)\s*(?:DiI|DiD|DiR)',
+        r'3,3\'-dioctadecyloxacarbocyanine',  # Full chemical name
+        r'dioctadecyloxacarbocyanine',  # Without position numbers
     ],
     'DiD': [
-        r"\b1,1'-dioctadecyl-3,3,3',3'-tetramethylindodicarbocyanine\b",  # Full chemical name
-        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiD\b',
-        r'\bDiD\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
-        r'(?:DiI|DiO|DiR)\s*(?:,|and|or|/)\s*DiD\b',  # Listed with other Di-dyes
-        r'\bDiD\s*(?:,|and|or|/)\s*(?:DiI|DiO|DiR)',
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindodicarbocyanine",  # Full chemical name
+        r'dioctadecyl[- ]?tetramethyl[- ]?indodicarbocyanine',  # Partial chemical name
     ],
     'DiR': [
-        r"\b1,1'-dioctadecyl-3,3,3',3'-tetramethylindotricarbocyanine\b",  # Full chemical name
-        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiR\b',
-        r'\bDiR\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
-        r'(?:DiI|DiO|DiD)\s*(?:,|and|or|/)\s*DiR\b',  # Listed with other Di-dyes
-        r'\bDiR\s*(?:,|and|or|/)\s*(?:DiI|DiO|DiD)',
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindotricarbocyanine",  # Full chemical name
+        r'dioctadecyl[- ]?tetramethyl[- ]?indotricarbocyanine',  # Partial chemical name
     ],
     'Fluo-4': [r'\bfluo.?4\b'],
     'Fura-2': [r'\bfura.?2\b'],

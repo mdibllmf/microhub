@@ -59,9 +59,10 @@ $meta = mh_get_paper_meta();
                     <?php endif; endforeach; ?>
                 </div>
             </section>
-            <?php endif; 
+            <?php endif;
             }
-            
+            ?>
+
             <!-- Microscope Details -->
             <?php if ($meta['microscope_details']): ?>
             <section class="mh-paper-section">
@@ -120,7 +121,30 @@ $meta = mh_get_paper_meta();
             
             <!-- Microscope Equipment -->
             <?php mh_display_equipment($meta); ?>
-            
+
+            <!-- Reagent Suppliers -->
+            <?php
+            if (!empty($meta['reagent_suppliers'])) {
+                echo '<div class="mh-paper-section">';
+                echo '<h2>🧪 Reagent Suppliers</h2>';
+                mh_display_reagent_suppliers($meta['reagent_suppliers']);
+                echo '</div>';
+            }
+            ?>
+
+            <!-- Software Used -->
+            <?php
+            $has_software = !empty($meta['image_analysis_software']) || !empty($meta['image_acquisition_software']) || !empty($meta['general_software']);
+            if ($has_software) {
+                echo '<div class="mh-paper-section">';
+                echo '<h2>💻 Software</h2>';
+                mh_display_acquisition_software($meta['image_acquisition_software']);
+                mh_display_analysis_software($meta['image_analysis_software']);
+                mh_display_general_software($meta['general_software']);
+                echo '</div>';
+            }
+            ?>
+
             <!-- Methods Section -->
             <?php 
             if (!empty($meta['methods'])) {

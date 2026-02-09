@@ -1175,6 +1175,8 @@ function mh_get_paper_meta($post_id = null) {
         'microscopy_techniques' => json_decode(get_post_meta($post_id, '_mh_microscopy_techniques', true), true) ?: array(),
         'image_analysis_software' => json_decode(get_post_meta($post_id, '_mh_image_analysis_software', true), true) ?: array(),
         'image_acquisition_software' => json_decode(get_post_meta($post_id, '_mh_image_acquisition_software', true), true) ?: array(),
+        'reagent_suppliers' => json_decode(get_post_meta($post_id, '_mh_reagent_suppliers', true), true) ?: array(),
+        'general_software' => json_decode(get_post_meta($post_id, '_mh_general_software', true), true) ?: array(),
         'organisms' => json_decode(get_post_meta($post_id, '_mh_organisms', true), true) ?: array(),
         'antibody_sources' => json_decode(get_post_meta($post_id, '_mh_antibody_sources', true), true) ?: array(),
         'sample_preparation' => json_decode(get_post_meta($post_id, '_mh_sample_preparation', true), true) ?: array(),
@@ -2358,14 +2360,52 @@ function mh_display_analysis_software($software = null) {
     if ($software === null) {
         $software = json_decode(get_post_meta(get_the_ID(), '_mh_image_analysis_software', true), true) ?: array();
     }
-    
+
     if (empty($software)) return;
-    
+
     echo '<div class="mh-software-section">';
     echo '<strong>Analysis:</strong> ';
     foreach ($software as $sw) {
         echo '<span class="mh-software-tag mh-analysis-software">' . esc_html($sw) . '</span>';
     }
+    echo '</div>';
+}
+
+/**
+ * Display general software section (Python, MATLAB, R, etc.)
+ */
+function mh_display_general_software($software = null) {
+    if ($software === null) {
+        $software = json_decode(get_post_meta(get_the_ID(), '_mh_general_software', true), true) ?: array();
+    }
+
+    if (empty($software)) return;
+
+    echo '<div class="mh-software-section">';
+    echo '<strong>General:</strong> ';
+    foreach ($software as $sw) {
+        echo '<span class="mh-software-tag mh-general-software">' . esc_html($sw) . '</span>';
+    }
+    echo '</div>';
+}
+
+/**
+ * Display reagent suppliers section (Thermo Fisher, Sigma-Aldrich, etc.)
+ */
+function mh_display_reagent_suppliers($suppliers = null) {
+    if ($suppliers === null) {
+        $suppliers = json_decode(get_post_meta(get_the_ID(), '_mh_reagent_suppliers', true), true) ?: array();
+    }
+
+    if (empty($suppliers)) return;
+
+    echo '<div class="mh-supplier-section">';
+    echo '<strong>Reagent Suppliers:</strong> ';
+    echo '<span class="mh-tag-cloud">';
+    foreach ($suppliers as $supplier) {
+        echo '<span class="mh-supplier-tag">' . esc_html($supplier) . '</span>';
+    }
+    echo '</span>';
     echo '</div>';
 }
 
