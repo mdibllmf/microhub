@@ -283,10 +283,12 @@ FLUOROPHORE_CANONICAL = {
     'pagfp': 'PA-GFP',
     'dendra': 'Dendra2',
     'dendra2': 'Dendra2',
-    'dio': 'DiO',
-    'dii': 'DiI',
-    'did': 'DiD',
-    'dir': 'DiR',
+    'DiO': 'DiO',
+    'dioc': 'DiO',
+    'DiI': 'DiI',
+    'diI': 'DiI',
+    'DiD': 'DiD',
+    'DiR': 'DiR',
     'wga': 'WGA',
     'wheat germ agglutinin': 'WGA',
     'sytox': 'SYTOX',
@@ -345,17 +347,11 @@ MICROSCOPE_BRAND_CANONICAL = {
     'leica': 'Leica',
     'leica microsystems': 'Leica',
     'nikon': 'Nikon',
-    'thermo fisher': 'Thermo Fisher',
-    'thermofisher': 'Thermo Fisher',
-    'fei': 'Thermo Fisher',
-    'fei company': 'Thermo Fisher',
+    # Note: Thermo Fisher, PerkinElmer, Molecular Devices, Miltenyi are in REAGENT_SUPPLIER_CANONICAL
     'jeol': 'JEOL',
     'bruker': 'Bruker',
     'andor': 'Andor',
     'hamamatsu': 'Hamamatsu',
-    'perkinelmer': 'PerkinElmer',
-    'perkin elmer': 'PerkinElmer',
-    'molecular devices': 'Molecular Devices',
     'yokogawa': 'Yokogawa',
     'visitech': 'Visitech',
     'abberior': 'Abberior',
@@ -388,18 +384,75 @@ MICROSCOPE_BRAND_CANONICAL = {
     'asi': 'ASI',
     'semrock': 'Semrock',
     'chroma': 'Chroma',
+    # Note: Miltenyi is in REAGENT_SUPPLIER_CANONICAL
+}
+
+REAGENT_SUPPLIER_CANONICAL = {
+    'thermo fisher': 'Thermo Fisher',
+    'thermofisher': 'Thermo Fisher',
+    'life technologies': 'Thermo Fisher',
+    'invitrogen': 'Thermo Fisher',
+    'gibco': 'Thermo Fisher',
+    'molecular probes': 'Thermo Fisher',
+    'perkinelmer': 'PerkinElmer',
+    'perkin elmer': 'PerkinElmer',
+    'molecular devices': 'Molecular Devices',
     'miltenyi': 'Miltenyi',
+    'miltenyi biotec': 'Miltenyi',
+    'sigma-aldrich': 'Sigma-Aldrich',
+    'sigma aldrich': 'Sigma-Aldrich',
+    'sigma': 'Sigma-Aldrich',
+    'merck': 'Merck',
+    'emd millipore': 'Merck',
+    'abcam': 'Abcam',
+    'cell signaling technology': 'Cell Signaling Technology',
+    'cst': 'Cell Signaling Technology',
+    'bio-rad': 'Bio-Rad',
+    'bio rad': 'Bio-Rad',
+    'roche': 'Roche',
+    'qiagen': 'Qiagen',
+    'new england biolabs': 'New England Biolabs',
+    'neb': 'New England Biolabs',
+    'takara bio': 'Takara Bio',
+    'clontech': 'Takara Bio',
+    'bd biosciences': 'BD Biosciences',
+    'becton dickinson': 'BD Biosciences',
+    'jackson immunoresearch': 'Jackson ImmunoResearch',
+    'vector laboratories': 'Vector Laboratories',
+    'santa cruz biotechnology': 'Santa Cruz Biotechnology',
+    'enzo life sciences': 'Enzo Life Sciences',
+    'tocris': 'Tocris',
+    'corning': 'Corning',
+}
+
+GENERAL_SOFTWARE_CANONICAL = {
+    'python': 'Python',
+    'matlab': 'MATLAB',
+    'r': 'R',
+    'r statistical': 'R',
+    'julia': 'Julia',
+    'java': 'Java',
+    'c++': 'C++',
+    'cpp': 'C++',
+    'knime': 'KNIME',
+    'orange': 'Orange',
+    'graphpad prism': 'Prism',
+    'prism': 'Prism',
+    'spss': 'SPSS',
+    'sas': 'SAS',
+    'excel': 'Excel',
+    'microsoft excel': 'Excel',
 }
 
 SOFTWARE_CANONICAL = {
+    # Note: Python, MATLAB, R are in GENERAL_SOFTWARE_CANONICAL
     # Fiji/ImageJ
     'fiji': 'Fiji',
     'imagej': 'ImageJ',
     'image j': 'ImageJ',
     'imagej2': 'ImageJ',
-    
-    # Python ecosystem
-    'python': 'Python',
+
+    # Python ecosystem (these are image analysis libraries)
     'scikit-image': 'scikit-image',
     'skimage': 'scikit-image',
     'scipy': 'SciPy',
@@ -470,9 +523,7 @@ SOFTWARE_CANONICAL = {
     'gatan': 'Digital Micrograph',
     
     # Analysis
-    'matlab': 'MATLAB',
-    'r': 'R',
-    'r statistical': 'R',
+    # Note: matlab, r are in GENERAL_SOFTWARE_CANONICAL
     'inform': 'inForm',
     'vaa3d': 'Vaa3D',
     'neurolucida': 'Neurolucida',
@@ -941,9 +992,7 @@ IMAGE_ANALYSIS_SOFTWARE = {
     'Cellpose': [r'\bcellpose\b'],
     'StarDist': [r'\bstardist\b'],
     'DeepCell': [r'\bdeepcell\b'],
-    'Python': [r'\bpython\b'],
-    'MATLAB': [r'\bmatlab\b'],
-    'R': [r'\br\s+(?:software|package|statistical|programming)', r'\br\s+\(', r'using\s+r\b', r'\br\s+version'],
+    # Note: Python, MATLAB, R are in GENERAL_SOFTWARE
     'scikit-image': [r'\bscikit.?image\b', r'\bskimage\b'],
     'U-Net': [r'\bu.?net\b'],
     'RELION': [r'\brelion\b'],
@@ -977,19 +1026,34 @@ IMAGE_ANALYSIS_SOFTWARE = {
     'Dragonfly': [r'\bdragonfly\b'],
 }
 
+# GENERAL_SOFTWARE - Programming languages and general-purpose tools
+# These are not image-analysis-specific software but are used for custom analysis
+GENERAL_SOFTWARE = {
+    'Python': [r'\bpython\b'],
+    'MATLAB': [r'\bmatlab\b'],
+    'R': [r'\br\s+(?:software|package|statistical|programming)', r'\br\s+\(', r'using\s+r\b', r'\br\s+version'],
+    'Julia': [r'\bjulia\b.*(?:language|programming|code)', r'using\s+julia\b'],
+    'Java': [r'\bjava\b.*(?:programming|code|application)'],
+    'C++': [r'\bc\+\+\b', r'\bcpp\b.*(?:programming|code)'],
+    'KNIME': [r'\bknime\b'],
+    'Orange': [r'\borange\b.*(?:data|mining|software)'],
+    'Prism': [r'\bgraphpad\s+prism\b', r'\bprism\b.*(?:graphpad|statistical)'],
+    'SPSS': [r'\bspss\b'],
+    'SAS': [r'\bsas\b.*(?:software|statistical)'],
+    'Excel': [r'\bmicrosoft\s+excel\b', r'\bexcel\b.*(?:spreadsheet|analysis)'],
+}
+
 MICROSCOPE_BRANDS = {
     'Zeiss': [r'\bzeiss\b', r'\bcarl zeiss\b'],
     'Leica': [r'\bleica\b'],
     'Nikon': [r'\bnikon\b'],
     'Olympus': [r'\bolympus\b'],
     'Evident (Olympus)': [r'\bevident\b.*(?:microscop|olympus)'],
-    'Thermo Fisher': [r'\bthermo\s*fisher\b', r'\bfei\s+(?:company|tecnai|talos|titan|helios|quanta|verios|scios)'],
+    # Note: Thermo Fisher, PerkinElmer, Miltenyi, Molecular Devices are in REAGENT_SUPPLIERS
     'JEOL': [r'\bjeol\b'],
     'Bruker': [r'\bbruker\b'],
     'Andor': [r'\bandor\b'],
     'Hamamatsu': [r'\bhamamatsu\b'],
-    'PerkinElmer': [r'\bperkin\s*elmer\b'],
-    'Molecular Devices': [r'\bmolecular\s+devices\b'],
     'Yokogawa': [r'\byokogawa\b'],
     '3i (Intelligent Imaging)': [r'\b3i\b.*(?:imaging|marianas|slidebook)', r'intelligent imaging innovations'],
     'Visitech': [r'\bvisitech\b'],
@@ -1008,7 +1072,7 @@ MICROSCOPE_BRANDS = {
     'ASI': [r'\basi\b.*(?:stage|imaging)', r'applied scientific instrumentation'],
     'Semrock': [r'\bsemrock\b'],
     'Chroma': [r'\bchroma\b.*(?:filter|technology)'],
-    'Miltenyi': [r'\bmiltenyi\b'],
+    # Note: Miltenyi is in REAGENT_SUPPLIERS
     'Edmund Optics': [r'\bedmund\s+optics\b'],
     'Roper': [r'\broper\b.*(?:scientific|camera)'],
     'Till Photonics': [r'\btill photonics\b'],
@@ -1043,6 +1107,31 @@ MICROSCOPE_BRANDS = {
     '3i Lattice Light Sheet': [r'\b3i\s+lattice\b', r'\blattice\s+light\s*sheet\b.*3i'],
     'ctASLM': [r'\bctaslm\b', r'\bclearedtissue\s+aslm\b'],
     'CLARITY SPIM': [r'\bclarity\s+spim\b'],
+}
+
+# REAGENT_SUPPLIERS - Companies that primarily sell reagents, consumables, and life science products
+# These are NOT microscope manufacturers, but are mentioned for reproducibility of experiments
+REAGENT_SUPPLIERS = {
+    'Thermo Fisher': [r'\bthermo\s*fisher\b', r'\bthermofisher\b', r'\blife\s+technologies\b', r'\binvitrogen\b', r'\bgibco\b', r'\bmolecular\s+probes\b'],
+    'PerkinElmer': [r'\bperkin\s*elmer\b'],
+    'Molecular Devices': [r'\bmolecular\s+devices\b'],
+    'Miltenyi': [r'\bmiltenyi\b', r'\bmiltenyi\s+biotec\b'],
+    'Sigma-Aldrich': [r'\bsigma[\s-]*aldrich\b', r'\bsigma\b.*(?:catalog|cat\.?\s*#|product)'],
+    'Merck': [r'\bmerck\b.*(?:millipore|chemicals?|reagent)', r'\bemd\s+millipore\b'],
+    'Abcam': [r'\babcam\b'],
+    'Cell Signaling Technology': [r'\bcell\s+signaling\s+technology\b', r'\bcst\b.*(?:antibod|catalog)'],
+    'Bio-Rad': [r'\bbio[\s-]*rad\b'],
+    'Roche': [r'\broche\b.*(?:diagnos|applied|reagent)'],
+    'Qiagen': [r'\bqiagen\b'],
+    'New England Biolabs': [r'\bnew\s+england\s+biolabs\b', r'\bneb\b.*(?:enzyme|kit|reagent)'],
+    'Takara Bio': [r'\btakara\s+bio\b', r'\bclontech\b'],
+    'BD Biosciences': [r'\bbd\s+biosciences\b', r'\bbecton\s+dickinson\b'],
+    'Jackson ImmunoResearch': [r'\bjackson\s+immuno\s*research\b'],
+    'Vector Laboratories': [r'\bvector\s+laboratories\b'],
+    'Santa Cruz Biotechnology': [r'\bsanta\s+cruz\s+biotechnology\b'],
+    'Enzo Life Sciences': [r'\benzo\s+life\s+sciences\b'],
+    'Tocris': [r'\btocris\b'],
+    'Corning': [r'\bcorning\b.*(?:flask|plate|dish|matrigel)'],
 }
 
 FLUOROPHORES = {
@@ -1110,11 +1199,40 @@ FLUOROPHORES = {
     'WGA': [r'\bwga\b', r'\bwheat germ agglutinin\b'],
     'BODIPY': [r'\bbodipy\b'],
     # DiI, DiO, DiD, DiR are lipophilic membrane dyes
-    # These patterns require context to avoid matching common words
-    'DiI': [r'\bdii\b(?!d|gest|vers)', r'\bdi-?i\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?i\b'],
-    'DiO': [r'\bdio\b(?!d|de)', r'\bdi-?o\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?o\b'],
-    'DiD': [r'\bdi-?d\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?d\b', r'(?:DiI|DiO|DiR).{0,20}\bDiD\b', r'\bDiD\b.{0,20}(?:DiI|DiO|DiR)'],
-    'DiR': [r'\bdi-?r\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?r\b', r'(?:DiI|DiO|DiD).{0,20}\bDiR\b', r'\bDiR\b.{0,20}(?:DiI|DiO|DiD)'],
+    # STRICT PATTERNS: These short names match common words, so we require:
+    # 1. Full chemical names, OR
+    # 2. Explicit dye/staining context, OR
+    # 3. Appearing with other known lipophilic dyes
+    'DiI': [
+        r'\b1,1\'-dioctadecyl.*indocarbocyanine\b',  # Full chemical name
+        r'\bdiI\b',  # Case-sensitive DiI (capital I)
+        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiI\b',
+        r'\bDiI\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
+        r'(?:DiO|DiD|DiR)\s*(?:,|and|or|/)\s*DiI\b',  # Listed with other Di-dyes
+        r'\bDiI\s*(?:,|and|or|/)\s*(?:DiO|DiD|DiR)',
+    ],
+    'DiO': [
+        r'\b3,3\'-dioctadecyloxacarbocyanine\b',  # Full chemical name
+        r'\bDiOC\d+',  # DiOC6, DiOC18, etc.
+        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiO\b',
+        r'\bDiO\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
+        r'(?:DiI|DiD|DiR)\s*(?:,|and|or|/)\s*DiO\b',  # Listed with other Di-dyes
+        r'\bDiO\s*(?:,|and|or|/)\s*(?:DiI|DiD|DiR)',
+    ],
+    'DiD': [
+        r"\b1,1'-dioctadecyl-3,3,3',3'-tetramethylindodicarbocyanine\b",  # Full chemical name
+        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiD\b',
+        r'\bDiD\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
+        r'(?:DiI|DiO|DiR)\s*(?:,|and|or|/)\s*DiD\b',  # Listed with other Di-dyes
+        r'\bDiD\s*(?:,|and|or|/)\s*(?:DiI|DiO|DiR)',
+    ],
+    'DiR': [
+        r"\b1,1'-dioctadecyl-3,3,3',3'-tetramethylindotricarbocyanine\b",  # Full chemical name
+        r'(?:lipophilic|carbocyanine|membrane)\s+(?:dye|stain|tracer)s?\s+(?:\w+\s+)*DiR\b',
+        r'\bDiR\b\s+(?:\w+\s+)*(?:lipophilic|carbocyanine|membrane|dye|stain|tracer|label)',
+        r'(?:DiI|DiO|DiD)\s*(?:,|and|or|/)\s*DiR\b',  # Listed with other Di-dyes
+        r'\bDiR\s*(?:,|and|or|/)\s*(?:DiI|DiO|DiD)',
+    ],
     'Fluo-4': [r'\bfluo.?4\b'],
     'Fura-2': [r'\bfura.?2\b'],
     'GCaMP': [r'\bgcamp\b(?!\d)'],
@@ -3066,7 +3184,9 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
     
     raw_techniques = extract_tags(combined_text, MICROSCOPY_TECHNIQUES)
     raw_software = extract_tags(combined_text, IMAGE_ANALYSIS_SOFTWARE)
+    raw_general_software = extract_tags(combined_text, GENERAL_SOFTWARE)
     raw_brands = extract_tags(combined_text, MICROSCOPE_BRANDS)
+    raw_reagent_suppliers = extract_tags(combined_text, REAGENT_SUPPLIERS)
     raw_fluorophores = extract_tags(combined_text, FLUOROPHORES)
     raw_organisms = extract_tags(combined_text, ORGANISMS)
     raw_cell_lines = extract_tags(combined_text, CELL_LINES)
@@ -3086,7 +3206,17 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
         merge_lists(paper.get('microscope_brands', []), raw_brands),
         MICROSCOPE_BRAND_CANONICAL
     )
-    
+
+    paper['reagent_suppliers'] = normalize_tag_list(
+        merge_lists(paper.get('reagent_suppliers', []), raw_reagent_suppliers),
+        REAGENT_SUPPLIER_CANONICAL
+    )
+
+    paper['general_software'] = normalize_tag_list(
+        merge_lists(paper.get('general_software', []), raw_general_software),
+        GENERAL_SOFTWARE_CANONICAL
+    )
+
     paper['fluorophores'] = normalize_tag_list(
         merge_lists(paper.get('fluorophores', []), raw_fluorophores),
         FLUOROPHORE_CANONICAL
