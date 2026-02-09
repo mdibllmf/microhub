@@ -2377,6 +2377,242 @@ def clean_repositories(repos: List) -> List[Dict]:
 
 
 # ============================================================================
+# LINK VERIFICATION - Verify URLs are accessible and remove dead links
+# ============================================================================
+
+def verify_url_accessible(url: str, timeout: int = 10) -> bool:
+    """
+    Check if a URL is accessible via HEAD request (falls back to GET).
+
+    Args:
+        url: URL to verify
+        timeout: Request timeout in seconds
+
+    Returns:
+        True if URL returns 2xx/3xx status, False otherwise
+    """
+    if not HAS_REQUESTS:
+        return True  # Can't verify without requests, assume valid
+
+    if not url:
+        return False
+
+    try:
+        # Try HEAD first (faster)
+        resp = requests.head(
+            url,
+            timeout=timeout,
+            allow_redirects=True,
+            headers={'User-Agent': 'MicroHub/1.0 LinkChecker'}
+        )
+        if resp.status_code < 400:
+            return True
+
+        # Some servers don't support HEAD, try GET
+        resp = requests.get(
+            url,
+            timeout=timeout,
+            allow_redirects=True,
+            headers={'User-Agent': 'MicroHub/1.0 LinkChecker'},
+            stream=True  # Don't download body
+        )
+        return resp.status_code < 400
+
+    except requests.exceptions.RequestException:
+        return False
+
+
+def verify_biostudies_link(url: str) -> Dict:
+    """
+    Verify BioStudies link and check if data exists.
+
+    BioStudies URLs follow pattern: https://www.ebi.ac.uk/biostudies/studies/S-BSST123
+
+    Args:
+        url: BioStudies URL
+
+    Returns:
+        Dict with 'valid' bool and optional 'redirect_url' or 'error'
+    """
+    if not HAS_REQUESTS:
+        return {'valid': True}  # Can't verify, assume valid
+
+    # Extract accession ID
+    match = re.search(r'biostudies/(?:studies/)?([A-Z]+-[A-Z0-9]+)', url, re.IGNORECASE)
+    if not match:
+        return {'valid': False, 'error': 'Invalid BioStudies URL format'}
+
+    accession = match.group(1).upper()
+
+    # Try the BioStudies API
+    api_url = f'https://www.ebi.ac.uk/biostudies/api/v1/studies/{accession}'
+
+    try:
+        resp = requests.get(
+            api_url,
+            timeout=15,
+            headers={'Accept': 'application/json', 'User-Agent': 'MicroHub/1.0'}
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            # Check if study exists and has data
+            if data.get('accno') or data.get('title'):
+                return {'valid': True, 'accession': accession}
+            return {'valid': False, 'error': 'Study exists but has no data'}
+
+        elif resp.status_code == 404:
+            return {'valid': False, 'error': f'BioStudies {accession} not found'}
+
+        else:
+            return {'valid': False, 'error': f'BioStudies API error: {resp.status_code}'}
+
+    except requests.exceptions.RequestException as e:
+        return {'valid': False, 'error': f'Network error: {str(e)}'}
+
+
+def verify_doi_exists(doi: str) -> Dict:
+    """
+    Verify DOI exists via CrossRef API.
+
+    Args:
+        doi: DOI string (with or without https://doi.org/ prefix)
+
+    Returns:
+        Dict with 'valid' bool and optional metadata or 'error'
+    """
+    if not HAS_REQUESTS:
+        return {'valid': True}  # Can't verify, assume valid
+
+    # Clean DOI
+    doi_clean = doi
+    if doi_clean.startswith('https://doi.org/'):
+        doi_clean = doi_clean[16:]
+    elif doi_clean.startswith('http://doi.org/'):
+        doi_clean = doi_clean[15:]
+    elif doi_clean.startswith('doi:'):
+        doi_clean = doi_clean[4:]
+
+    try:
+        resp = requests.get(
+            f'https://api.crossref.org/works/{doi_clean}',
+            headers={'User-Agent': 'MicroHub/1.0 (mailto:support@microhub.io)'},
+            timeout=15
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get('status') == 'ok' and data.get('message'):
+                return {
+                    'valid': True,
+                    'doi': doi_clean,
+                    'title': data['message'].get('title', [''])[0] if data['message'].get('title') else None
+                }
+            return {'valid': True, 'doi': doi_clean}
+
+        elif resp.status_code == 404:
+            return {'valid': False, 'error': f'DOI {doi_clean} not found in CrossRef'}
+
+        else:
+            return {'valid': False, 'error': f'CrossRef API error: {resp.status_code}'}
+
+    except requests.exceptions.RequestException as e:
+        return {'valid': False, 'error': f'Network error: {str(e)}'}
+
+
+def verify_repository_link(repo: Dict) -> Dict:
+    """
+    Verify a data repository link is accessible.
+
+    Uses specialized checks for known repositories (BioStudies, Zenodo, etc.)
+    and falls back to generic URL checking.
+
+    Args:
+        repo: Repository dict with 'url', 'name', 'accession_id'
+
+    Returns:
+        Updated repo dict with 'verified' status and optional 'error'
+    """
+    url = repo.get('url', '')
+    name = repo.get('name', '').lower()
+
+    result = repo.copy()
+
+    if not url:
+        result['verified'] = False
+        result['error'] = 'No URL'
+        return result
+
+    # BioStudies - use API check
+    if 'biostudies' in url.lower() or 'biostudies' in name:
+        check = verify_biostudies_link(url)
+        result['verified'] = check.get('valid', False)
+        if not check.get('valid'):
+            result['error'] = check.get('error', 'Invalid BioStudies link')
+        return result
+
+    # Zenodo - check URL accessible
+    if 'zenodo' in url.lower():
+        result['verified'] = verify_url_accessible(url)
+        if not result['verified']:
+            result['error'] = 'Zenodo link not accessible'
+        return result
+
+    # Figshare - check URL accessible
+    if 'figshare' in url.lower():
+        result['verified'] = verify_url_accessible(url)
+        if not result['verified']:
+            result['error'] = 'Figshare link not accessible'
+        return result
+
+    # EMPIAR - check URL accessible
+    if 'empiar' in url.lower() or 'ebi.ac.uk/empiar' in url.lower():
+        result['verified'] = verify_url_accessible(url)
+        if not result['verified']:
+            result['error'] = 'EMPIAR link not accessible'
+        return result
+
+    # Generic check for other repositories
+    result['verified'] = verify_url_accessible(url)
+    if not result['verified']:
+        result['error'] = 'Link not accessible'
+
+    return result
+
+
+def clean_and_verify_repositories(repos: List, verify_links: bool = True) -> List[Dict]:
+    """
+    Clean, deduplicate, and optionally verify repository links.
+
+    Args:
+        repos: List of repository entries
+        verify_links: Whether to verify each link (slower but removes dead links)
+
+    Returns:
+        List of verified repository dicts (dead links removed if verify_links=True)
+    """
+    # First clean and deduplicate
+    cleaned = clean_repositories(repos)
+
+    if not verify_links or not cleaned:
+        return cleaned
+
+    verified = []
+    for repo in cleaned:
+        result = verify_repository_link(repo)
+
+        if result.get('verified', True):  # Keep if verified or couldn't check
+            # Remove verification metadata before storing
+            result.pop('verified', None)
+            result.pop('error', None)
+            verified.append(result)
+        else:
+            print(f"    ✗ Removing dead link: {repo.get('url', 'unknown')} ({result.get('error', 'unknown error')})")
+
+    return verified
+
+
+# ============================================================================
 # GITHUB API FUNCTIONS - Fetch metadata for tools missing data
 # ============================================================================
 
@@ -3127,12 +3363,13 @@ def clean_github_tools(paper: Dict, fetch_missing: bool = True) -> List[Dict]:
     return cleaned
 
 
-def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
+def clean_paper(paper: Dict, fetch_github: bool = True, verify_links: bool = True) -> Dict:
     """Clean and re-tag a single paper.
 
     Args:
         paper: Paper dict to clean
         fetch_github: Whether to fetch missing GitHub metadata from API
+        verify_links: Whether to verify repository links and remove dead ones
     """
 
     # Get full_text for tag extraction, but we won't store it
@@ -3231,10 +3468,13 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
         extract_urls(combined_text, PROTOCOL_PATTERNS)
     )
     
-    paper['repositories'] = clean_repositories(merge_lists(
-        paper.get('repositories', []),
-        extract_urls(combined_text, REPOSITORY_PATTERNS)
-    ))
+    paper['repositories'] = clean_and_verify_repositories(
+        merge_lists(
+            paper.get('repositories', []),
+            extract_urls(combined_text, REPOSITORY_PATTERNS)
+        ),
+        verify_links=verify_links
+    )
     
     # ==========================================
     # GITHUB TOOLS - Clean and validate detailed repo data (scraper v5.1+)
@@ -3354,7 +3594,7 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
     return paper
 
 
-def process_file(input_file: str, output_file: str, validate_apis: bool = False, fetch_github: bool = True) -> Dict:
+def process_file(input_file: str, output_file: str, validate_apis: bool = False, fetch_github: bool = True, verify_links: bool = True) -> Dict:
     """Process a single JSON file and return statistics.
 
     Args:
@@ -3362,6 +3602,7 @@ def process_file(input_file: str, output_file: str, validate_apis: bool = False,
         output_file: Path to output JSON file
         validate_apis: Whether to use Semantic Scholar/CrossRef APIs for validation
         fetch_github: Whether to fetch missing GitHub metadata from API
+        verify_links: Whether to verify repository links and remove dead ones
     """
 
     print(f"\nLoading {input_file}...")
@@ -3376,6 +3617,8 @@ def process_file(input_file: str, output_file: str, validate_apis: bool = False,
         print("  API validation enabled (Semantic Scholar, CrossRef)")
     if fetch_github:
         print("  GitHub metadata fetching enabled")
+    if verify_links:
+        print("  Link verification enabled (removes dead BioStudies/repository links)")
 
     fields_to_track = [
         'microscopy_techniques', 'microscope_brands', 'image_analysis_software',
@@ -3387,7 +3630,7 @@ def process_file(input_file: str, output_file: str, validate_apis: bool = False,
     stats_before = {f: sum(1 for p in papers if p.get(f)) for f in fields_to_track}
 
     for i, paper in enumerate(papers):
-        papers[i] = clean_paper(paper, fetch_github=fetch_github)
+        papers[i] = clean_paper(paper, fetch_github=fetch_github, verify_links=verify_links)
         # Apply API validation if enabled
         if validate_apis:
             papers[i] = validate_paper_metadata(papers[i], use_apis=True)
@@ -3429,6 +3672,8 @@ def main():
                         help='Disable Semantic Scholar and CrossRef API validation (enabled by default)')
     parser.add_argument('--no-fetch-github', action='store_true',
                         help='Disable fetching GitHub repository metadata from API (enabled by default)')
+    parser.add_argument('--no-verify-links', action='store_true',
+                        help='Disable repository link verification (enabled by default, removes dead BioStudies/data links)')
 
     args = parser.parse_args()
 
@@ -3436,6 +3681,8 @@ def main():
     args.validate_apis = not args.no_validate_apis
     # GitHub fetching is ON by default, use --no-fetch-github to disable
     args.fetch_github = not args.no_fetch_github
+    # Link verification is ON by default, use --no-verify-links to disable
+    args.verify_links = not args.no_verify_links
 
     if args.input:
         # If input file is specified, make it absolute if it's not already
@@ -3495,7 +3742,8 @@ def main():
             input_file,
             output_file,
             validate_apis=args.validate_apis,
-            fetch_github=args.fetch_github
+            fetch_github=args.fetch_github,
+            verify_links=args.verify_links
         )
         total_papers += result['papers']
         for f in fields_to_track:
@@ -3528,7 +3776,8 @@ def main():
     print("   - This eliminates antibody source false positives")
     print("3. API Validation: Semantic Scholar + CrossRef (always on)")
     print("4. GitHub Tools: Fetches stars, forks, health_score (always on)")
-    print("5. Environment Variables:")
+    print("5. Link Verification: Removes dead BioStudies/repository links (always on)")
+    print("6. Environment Variables:")
     print("   GITHUB_TOKEN, SEMANTIC_SCHOLAR_API_KEY")
 
     print("\nDone!")
