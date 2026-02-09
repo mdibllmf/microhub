@@ -1115,6 +1115,22 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         update_post_meta($post_id, '_mh_image_acquisition_software', wp_json_encode($data['image_acquisition_software']));
     }
 
+    // v3 scraper fields - reagent suppliers (separated from microscope brands)
+    if (!empty($data['reagent_suppliers']) && is_array($data['reagent_suppliers'])) {
+        wp_set_object_terms($post_id, $data['reagent_suppliers'], 'mh_reagent_supplier');
+        // Also save as JSON meta for theme compatibility
+        update_post_meta($post_id, '_mh_reagent_suppliers', wp_json_encode($data['reagent_suppliers']));
+    }
+
+    // v3 scraper fields - general software (separated from image analysis software)
+    if (!empty($data['general_software']) && is_array($data['general_software'])) {
+        wp_set_object_terms($post_id, $data['general_software'], 'mh_general_software');
+        // Also add to general software taxonomy for backwards compatibility
+        wp_set_object_terms($post_id, $data['general_software'], 'mh_software', true);
+        // Also save as JSON meta for theme compatibility
+        update_post_meta($post_id, '_mh_general_software', wp_json_encode($data['general_software']));
+    }
+
     // v3 scraper fields - sample preparation
     if (!empty($data['sample_preparation']) && is_array($data['sample_preparation'])) {
         wp_set_object_terms($post_id, $data['sample_preparation'], 'mh_sample_prep');

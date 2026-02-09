@@ -58,6 +58,9 @@ while (have_posts()) : the_post();
     $sample_preparation = json_decode(get_post_meta($post_id, '_mh_sample_preparation', true), true) ?: array();
     $cell_lines = json_decode(get_post_meta($post_id, '_mh_cell_lines', true), true) ?: array();
     $microscope_brands = json_decode(get_post_meta($post_id, '_mh_microscope_brands', true), true) ?: array();
+    $reagent_suppliers = json_decode(get_post_meta($post_id, '_mh_reagent_suppliers', true), true) ?: array();
+    $general_software = json_decode(get_post_meta($post_id, '_mh_general_software', true), true) ?: array();
+    $image_analysis_software = json_decode(get_post_meta($post_id, '_mh_image_analysis_software', true), true) ?: array();
     $fluorophores_meta = json_decode(get_post_meta($post_id, '_mh_fluorophores', true), true) ?: array();
     $methods = get_post_meta($post_id, '_mh_methods', true);
     $facility = get_post_meta($post_id, '_mh_facility', true);
@@ -317,6 +320,43 @@ while (have_posts()) : the_post();
                         <span class="mh-tag brand"><?php echo esc_html($brand); ?></span>
                     <?php endforeach; ?>
                 </div>
+            </section>
+        <?php endif; ?>
+
+        <?php if (!empty($reagent_suppliers)): ?>
+            <section class="mh-protocol-section">
+                <h2>🧪 Reagent Suppliers</h2>
+                <div class="mh-tag-list">
+                    <?php foreach ($reagent_suppliers as $supplier): ?>
+                        <span class="mh-tag supplier"><?php echo esc_html($supplier); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
+
+        <?php if (!empty($image_analysis_software) || !empty($general_software)): ?>
+            <section class="mh-protocol-section">
+                <h2>💻 Software</h2>
+                <?php if (!empty($image_analysis_software)): ?>
+                    <div class="mh-software-subsection">
+                        <strong>Image Analysis:</strong>
+                        <div class="mh-tag-list">
+                            <?php foreach ($image_analysis_software as $sw): ?>
+                                <span class="mh-tag software"><?php echo esc_html($sw); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($general_software)): ?>
+                    <div class="mh-software-subsection">
+                        <strong>General:</strong>
+                        <div class="mh-tag-list">
+                            <?php foreach ($general_software as $sw): ?>
+                                <span class="mh-tag general-software"><?php echo esc_html($sw); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </section>
         <?php endif; ?>
 
@@ -677,8 +717,22 @@ while (have_posts()) : the_post();
 .mh-tag.sample-prep { background: #2d3d1f; color: #a5d6a7; }
 .mh-tag.cell-line { background: #3d3d1f; color: #d4a72c; }
 .mh-tag.brand { background: #475569; color: #e2e8f0; }
+.mh-tag.supplier { background: #4a3728; color: #ffb86c; }
+.mh-tag.general-software { background: #2d2d3d; color: #bd93f9; }
 .mh-tag:hover {
     filter: brightness(1.2);
+}
+.mh-software-subsection {
+    margin-bottom: 0.75rem;
+}
+.mh-software-subsection:last-child {
+    margin-bottom: 0;
+}
+.mh-software-subsection strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted, #8b949e);
+    font-size: 0.85rem;
 }
 
 /* Section Notes */
