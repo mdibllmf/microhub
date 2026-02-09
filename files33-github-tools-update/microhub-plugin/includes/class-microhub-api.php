@@ -567,8 +567,8 @@ class MicroHub_API {
         global $wpdb;
         
         $sort = sanitize_text_field($request->get_param('sort') ?: 'paper_count');
-        $limit_param = intval($request->get_param('limit') ?: 100);
-        $limit = ($limit_param <= 0) ? 0 : $limit_param; // 0 means no limit
+        $limit_raw = $request->get_param('limit');
+        $limit = ($limit_raw !== null && $limit_raw !== '') ? intval($limit_raw) : 100; // 0 means no limit
         $min_papers = max(1, intval($request->get_param('min_papers') ?: 1));
         $show_archived = $request->get_param('show_archived') ? true : false;
         
