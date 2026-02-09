@@ -395,7 +395,7 @@ function searchByAuthor(authorName) {
 
         const minPapers = document.getElementById('filter-min-papers')?.value || 1;
 
-        fetch(apiBase + '/github-tools?limit=1000&min_papers=' + minPapers + '&show_archived=1')
+        fetch(apiBase + '/github-tools?limit=0&min_papers=' + minPapers + '&show_archived=1')
             .then(res => res.json())
             .then(data => {
                 allTools = data.tools || [];
