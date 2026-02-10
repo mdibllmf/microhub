@@ -456,13 +456,18 @@ REPOSITORY_PATTERNS = {
     'IDR Dataset': (r'idr\.openmicroscopy\.org/webclient/\?show=dataset-(\d+)', 'https://idr.openmicroscopy.org/webclient/?show=dataset-{}'),
     'IDR Project': (r'idr\.openmicroscopy\.org/webclient/\?show=project-(\d+)', 'https://idr.openmicroscopy.org/webclient/?show=project-{}'),
     
+    # BioImage Archive - imaging data (S-BIAD, S-BSST prefixes)
     'BioImage Archive': (r'(S-B(?:IAD|SST)\d+)', 'https://www.ebi.ac.uk/biostudies/bioimages/studies/{}'),
+
+    # BioStudies - more specific patterns to avoid false positives
+    # Matches: S-BSST, S-BIAD, S-EPMC, S-HECA, S-SCDT, S-DIXA, S-ECPF accessions
+    'BioStudies': (r'(S-(?:BSST|BIAD|EPMC|HECA|SCDT|DIXA|ECPF|EXMT|IHECRE|JCVI|MAGE)\d+)', 'https://www.ebi.ac.uk/biostudies/studies/{}'),
+
     'EMPIAR': (r'(EMPIAR-\d+)', 'https://www.ebi.ac.uk/empiar/{}'),
     'EMDB': (r'(EMD-\d+)', 'https://www.ebi.ac.uk/emdb/{}'),
     'PDB': (r'(?:rcsb\.org/structure/|pdb id:?\s*)(\w{4})', 'https://www.rcsb.org/structure/{}'),
     'Code Ocean': (r'codeocean\.com/capsule/([\w]+)', 'https://codeocean.com/capsule/{}'),
     'Mendeley Data': (r'(?:data\.mendeley\.com/datasets/|10\.17632/)([\w]+)', 'https://data.mendeley.com/datasets/{}'),
-    'BioStudies': (r'(S-[\w]+-?\d+)', 'https://www.ebi.ac.uk/biostudies/studies/{}'),
     'SRA': (r'(SRR\d{6,}|SRP\d{6,}|PRJNA\d+)', 'https://www.ncbi.nlm.nih.gov/sra/{}'),
     'GEO': (r'(GSE\d+|GSM\d+)', 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={}'),
     'ArrayExpress': (r'(E-MTAB-\d+)', 'https://www.ebi.ac.uk/arrayexpress/experiments/{}'),
@@ -3085,10 +3090,16 @@ Use empty arrays [] for categories with no applicable tags."""
                         elif 'osf.io' in repo_url.lower():
                             repo_type = 'OSF'
                         elif 'ebi.ac.uk' in repo_url.lower():
-                            if 'biostudies' in repo_url.lower():
+                            if 'bioimages' in repo_url.lower() or 'bioimage-archive' in repo_url.lower():
+                                repo_type = 'BioImage Archive'
+                            elif 'biostudies' in repo_url.lower():
                                 repo_type = 'BioStudies'
                             elif 'empiar' in repo_url.lower():
                                 repo_type = 'EMPIAR'
+                            elif 'arrayexpress' in repo_url.lower():
+                                repo_type = 'ArrayExpress'
+                        elif 'idr.openmicroscopy' in repo_url.lower():
+                            repo_type = 'IDR'
                         repositories.append({'name': repo_type, 'url': repo_url})
                         logger.debug(f"Added CrossRef repository: {repo_url}")
 

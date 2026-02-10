@@ -1773,9 +1773,13 @@ REPOSITORY_PATTERNS = {
     'Dryad': r'(https?://(?:www\.)?datadryad\.org/[\w/.-]+)',
     'OSF': r'(https?://osf\.io/[\w]+)',
     'EMPIAR': r'(https?://(?:www\.)?ebi\.ac\.uk/empiar/[\w/.-]+)',
-    'BioStudies': r'(https?://(?:www\.)?ebi\.ac\.uk/biostudies/[\w/.-]+)',
+    # BioStudies - both direct URLs and bioimages subdomain
+    'BioStudies': r'(https?://(?:www\.)?ebi\.ac\.uk/biostudies/(?:studies/)?[\w/.-]+)',
+    'BioImage Archive': r'(https?://(?:www\.)?ebi\.ac\.uk/biostudies/bioimages/[\w/.-]+)',
+    'BioImage Archive Alt': r'(https?://(?:www\.)?ebi\.ac\.uk/bioimage-archive/[\w/.-]+)',
     'IDR': r'(https?://idr\.openmicroscopy\.org/[\w/.-]+)',
-    'BioImage Archive': r'(https?://(?:www\.)?ebi\.ac\.uk/bioimage-archive/[\w/.-]+)',
+    'ArrayExpress': r'(https?://(?:www\.)?ebi\.ac\.uk/arrayexpress/[\w/.-]+)',
+    'GEO': r'(https?://(?:www\.)?ncbi\.nlm\.nih\.gov/geo/query/acc\.cgi\?acc=[\w]+)',
 }
 
 RRID_PATTERNS = [
@@ -2422,14 +2426,176 @@ def verify_url_accessible(url: str, timeout: int = 10) -> bool:
         return False
 
 
-def verify_biostudies_link(url: str) -> Dict:
+def check_bioimage_archive(accession: str) -> Dict:
+    """
+    Check if an accession exists in BioImage Archive.
+
+    BioImage Archive is where many BioStudies imaging datasets have been migrated.
+
+    Args:
+        accession: Study accession ID (e.g., S-BIAD123, S-BSST456)
+
+    Returns:
+        Dict with 'valid' bool and 'url' if found
+    """
+    if not HAS_REQUESTS:
+        return {'valid': False}
+
+    # BioImage Archive API endpoint
+    api_url = f'https://www.ebi.ac.uk/biostudies/api/v1/studies/{accession}'
+
+    # Also try the bioimages-specific endpoint
+    bioimage_api = f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}/info'
+
+    try:
+        # First try the general studies endpoint
+        resp = requests.get(
+            api_url,
+            timeout=15,
+            headers={'Accept': 'application/json', 'User-Agent': 'MicroHub/1.0'}
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get('accno') or data.get('title'):
+                # Check if it's in BioImage Archive collection
+                collection = data.get('collection', '')
+                if 'bioimag' in collection.lower() or accession.startswith('S-BIAD'):
+                    return {
+                        'valid': True,
+                        'url': f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}',
+                        'collection': 'BioImage Archive'
+                    }
+                return {
+                    'valid': True,
+                    'url': f'https://www.ebi.ac.uk/biostudies/studies/{accession}',
+                    'collection': data.get('collection', 'BioStudies')
+                }
+
+        # Try bioimages endpoint directly
+        resp2 = requests.get(
+            bioimage_api,
+            timeout=15,
+            headers={'Accept': 'application/json', 'User-Agent': 'MicroHub/1.0'}
+        )
+
+        if resp2.status_code == 200:
+            return {
+                'valid': True,
+                'url': f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}',
+                'collection': 'BioImage Archive'
+            }
+
+        return {'valid': False}
+
+    except requests.exceptions.RequestException:
+        return {'valid': False}
+
+
+def find_data_via_crossref(doi: str) -> List[Dict]:
+    """
+    Use CrossRef API to find data repository links for a paper.
+
+    When BioStudies links are dead, the data may be referenced in CrossRef
+    metadata with an updated URL.
+
+    Args:
+        doi: Paper's DOI
+
+    Returns:
+        List of data repository dicts with 'url', 'name', 'source'
+    """
+    if not HAS_REQUESTS or not doi:
+        return []
+
+    # Clean DOI
+    doi_clean = doi
+    for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
+        if doi_clean.startswith(prefix):
+            doi_clean = doi_clean[len(prefix):]
+            break
+
+    try:
+        from urllib.parse import quote
+        resp = requests.get(
+            f'https://api.crossref.org/works/{quote(doi_clean, safe="")}',
+            headers={'User-Agent': 'MicroHub/1.0 (mailto:support@microhub.io)'},
+            timeout=15
+        )
+
+        if resp.status_code != 200:
+            return []
+
+        data = resp.json()
+        message = data.get('message', {})
+
+        repos = []
+
+        # Check 'link' field for data repositories
+        for link in message.get('link', []):
+            link_url = link.get('URL', '')
+            if link_url:
+                data_domains = [
+                    'zenodo.org', 'figshare.com', 'dryad', 'osf.io',
+                    'dataverse', 'mendeley', 'ebi.ac.uk', 'ncbi.nlm.nih.gov/geo',
+                    'biostudies', 'bioimages', 'empiar', 'idr.openmicroscopy'
+                ]
+                if any(d in link_url.lower() for d in data_domains):
+                    name = 'Data Repository'
+                    if 'zenodo' in link_url.lower():
+                        name = 'Zenodo'
+                    elif 'figshare' in link_url.lower():
+                        name = 'Figshare'
+                    elif 'bioimages' in link_url.lower() or 'bioimage-archive' in link_url.lower():
+                        name = 'BioImage Archive'
+                    elif 'biostudies' in link_url.lower():
+                        name = 'BioStudies'
+                    elif 'empiar' in link_url.lower():
+                        name = 'EMPIAR'
+                    repos.append({
+                        'url': link_url,
+                        'name': name,
+                        'source': 'crossref'
+                    })
+
+        # Check 'relation' field for related datasets
+        relations = message.get('relation', {})
+        for rel_type, items in relations.items():
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        item_id = item.get('id', '')
+                        id_type = item.get('id-type', '')
+
+                        # DataCite DOIs often point to datasets
+                        if id_type == 'doi' and item_id:
+                            if not item_id.startswith('http'):
+                                item_id = f'https://doi.org/{item_id}'
+                            repos.append({
+                                'url': item_id,
+                                'name': 'Dataset (DOI)',
+                                'source': 'crossref-relation'
+                            })
+
+        return repos
+
+    except Exception:
+        return []
+
+
+def verify_biostudies_link(url: str, paper_doi: str = None) -> Dict:
     """
     Verify BioStudies link and check if data exists.
+
+    If data is not found in BioStudies, checks:
+    1. BioImage Archive (where imaging data is often migrated)
+    2. CrossRef for updated data repository links
 
     BioStudies URLs follow pattern: https://www.ebi.ac.uk/biostudies/studies/S-BSST123
 
     Args:
         url: BioStudies URL
+        paper_doi: Optional paper DOI for CrossRef lookup
 
     Returns:
         Dict with 'valid' bool and optional 'redirect_url' or 'error'
@@ -2437,14 +2603,18 @@ def verify_biostudies_link(url: str) -> Dict:
     if not HAS_REQUESTS:
         return {'valid': True}  # Can't verify, assume valid
 
-    # Extract accession ID
-    match = re.search(r'biostudies/(?:studies/)?([A-Z]+-[A-Z0-9]+)', url, re.IGNORECASE)
+    # Extract accession ID - handle various formats
+    match = re.search(r'(?:biostudies|bioimages)/(?:studies/)?([A-Z]+-[A-Z0-9]+)', url, re.IGNORECASE)
+    if not match:
+        # Try to extract just the accession pattern
+        match = re.search(r'(S-[A-Z]+\d+)', url, re.IGNORECASE)
+
     if not match:
         return {'valid': False, 'error': 'Invalid BioStudies URL format'}
 
     accession = match.group(1).upper()
 
-    # Try the BioStudies API
+    # Try the BioStudies API first
     api_url = f'https://www.ebi.ac.uk/biostudies/api/v1/studies/{accession}'
 
     try:
@@ -2458,11 +2628,58 @@ def verify_biostudies_link(url: str) -> Dict:
             data = resp.json()
             # Check if study exists and has data
             if data.get('accno') or data.get('title'):
-                return {'valid': True, 'accession': accession}
+                # Check collection - might be in BioImage Archive
+                collection = data.get('collection', '')
+                if 'bioimag' in collection.lower() or accession.startswith('S-BIAD'):
+                    return {
+                        'valid': True,
+                        'accession': accession,
+                        'redirect_url': f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}',
+                        'collection': 'BioImage Archive'
+                    }
+                return {'valid': True, 'accession': accession, 'collection': collection or 'BioStudies'}
             return {'valid': False, 'error': 'Study exists but has no data'}
 
         elif resp.status_code == 404:
-            return {'valid': False, 'error': f'BioStudies {accession} not found'}
+            # Study not found in BioStudies - check BioImage Archive
+            print(f"      → BioStudies 404, checking BioImage Archive for {accession}...")
+
+            bioimage_check = check_bioimage_archive(accession)
+            if bioimage_check.get('valid'):
+                print(f"      ✓ Found in {bioimage_check.get('collection', 'BioImage Archive')}")
+                return {
+                    'valid': True,
+                    'accession': accession,
+                    'redirect_url': bioimage_check.get('url'),
+                    'collection': bioimage_check.get('collection', 'BioImage Archive')
+                }
+
+            # Still not found - try CrossRef to find relocated data
+            if paper_doi:
+                print(f"      → Not in BioImage Archive, checking CrossRef for {paper_doi}...")
+                crossref_repos = find_data_via_crossref(paper_doi)
+                if crossref_repos:
+                    # Found data via CrossRef
+                    for repo in crossref_repos:
+                        if accession.lower() in repo.get('url', '').lower():
+                            print(f"      ✓ Found updated URL via CrossRef: {repo['url']}")
+                            return {
+                                'valid': True,
+                                'accession': accession,
+                                'redirect_url': repo['url'],
+                                'source': 'crossref'
+                            }
+                    # Return first data repo as alternative
+                    print(f"      ✓ Found alternative data via CrossRef: {crossref_repos[0]['url']}")
+                    return {
+                        'valid': True,
+                        'accession': accession,
+                        'redirect_url': crossref_repos[0]['url'],
+                        'alternative': True,
+                        'source': 'crossref'
+                    }
+
+            return {'valid': False, 'error': f'BioStudies {accession} not found (checked BioStudies, BioImage Archive)'}
 
         else:
             return {'valid': False, 'error': f'BioStudies API error: {resp.status_code}'}
@@ -2520,7 +2737,7 @@ def verify_doi_exists(doi: str) -> Dict:
         return {'valid': False, 'error': f'Network error: {str(e)}'}
 
 
-def verify_repository_link(repo: Dict) -> Dict:
+def verify_repository_link(repo: Dict, paper_doi: str = None) -> Dict:
     """
     Verify a data repository link is accessible.
 
@@ -2529,6 +2746,7 @@ def verify_repository_link(repo: Dict) -> Dict:
 
     Args:
         repo: Repository dict with 'url', 'name', 'accession_id'
+        paper_doi: Optional paper DOI for finding relocated data via CrossRef
 
     Returns:
         Updated repo dict with 'verified' status and optional 'error'
@@ -2543,11 +2761,16 @@ def verify_repository_link(repo: Dict) -> Dict:
         result['error'] = 'No URL'
         return result
 
-    # BioStudies - use API check
-    if 'biostudies' in url.lower() or 'biostudies' in name:
-        check = verify_biostudies_link(url)
+    # BioStudies / BioImage Archive - use API check with fallback
+    if 'biostudies' in url.lower() or 'bioimages' in url.lower() or 'biostudies' in name:
+        check = verify_biostudies_link(url, paper_doi=paper_doi)
         result['verified'] = check.get('valid', False)
-        if not check.get('valid'):
+        if check.get('valid'):
+            # Update URL if redirected to new location
+            if check.get('redirect_url'):
+                result['url'] = check['redirect_url']
+                result['name'] = check.get('collection', result.get('name', 'BioStudies'))
+        else:
             result['error'] = check.get('error', 'Invalid BioStudies link')
         return result
 
@@ -2580,13 +2803,14 @@ def verify_repository_link(repo: Dict) -> Dict:
     return result
 
 
-def clean_and_verify_repositories(repos: List, verify_links: bool = True) -> List[Dict]:
+def clean_and_verify_repositories(repos: List, verify_links: bool = True, paper_doi: str = None) -> List[Dict]:
     """
     Clean, deduplicate, and optionally verify repository links.
 
     Args:
         repos: List of repository entries
         verify_links: Whether to verify each link (slower but removes dead links)
+        paper_doi: Optional paper DOI for finding relocated data via CrossRef
 
     Returns:
         List of verified repository dicts (dead links removed if verify_links=True)
@@ -2599,7 +2823,7 @@ def clean_and_verify_repositories(repos: List, verify_links: bool = True) -> Lis
 
     verified = []
     for repo in cleaned:
-        result = verify_repository_link(repo)
+        result = verify_repository_link(repo, paper_doi=paper_doi)
 
         if result.get('verified', True):  # Keep if verified or couldn't check
             # Remove verification metadata before storing
@@ -3468,12 +3692,16 @@ def clean_paper(paper: Dict, fetch_github: bool = True, verify_links: bool = Tru
         extract_urls(combined_text, PROTOCOL_PATTERNS)
     )
     
+    # Get paper DOI for CrossRef lookup when verifying dead links
+    paper_doi = paper.get('doi', '')
+
     paper['repositories'] = clean_and_verify_repositories(
         merge_lists(
             paper.get('repositories', []),
             extract_urls(combined_text, REPOSITORY_PATTERNS)
         ),
-        verify_links=verify_links
+        verify_links=verify_links,
+        paper_doi=paper_doi
     )
     
     # ==========================================
