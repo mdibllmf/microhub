@@ -2942,12 +2942,58 @@ def fetch_github_metadata(full_name: str, token: str = None) -> Optional[Dict]:
         return None
 
 
+def _s2_request_with_retry(url: str, params: Dict, headers: Dict, max_retries: int = 3) -> Optional[requests.Response]:
+    """
+    Make a Semantic Scholar API request with retry on 429 rate limiting.
+
+    Uses exponential backoff: 2s, 4s, 8s between retries.
+
+    Returns:
+        Response object if successful (status 200), or None if all retries exhausted.
+    """
+    for attempt in range(max_retries + 1):
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=15)
+            if resp.status_code == 200:
+                return resp
+            elif resp.status_code == 429:
+                if attempt < max_retries:
+                    delay = 2 ** (attempt + 1)  # 2s, 4s, 8s
+                    print(f"  ⚠ Semantic Scholar rate limited (429), retrying in {delay}s... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                else:
+                    print(f"  ⚠ Semantic Scholar rate limited (429), all {max_retries} retries exhausted")
+                    return None
+            elif resp.status_code == 404:
+                return None  # Paper not found, no need to retry
+            else:
+                print(f"  ⚠ Semantic Scholar returned status {resp.status_code}")
+                return None
+        except requests.exceptions.Timeout:
+            if attempt < max_retries:
+                delay = 2 ** (attempt + 1)
+                print(f"  ⚠ Semantic Scholar timeout, retrying in {delay}s...")
+                time.sleep(delay)
+            else:
+                return None
+        except requests.exceptions.ConnectionError:
+            if attempt < max_retries:
+                delay = 2 ** (attempt + 1)
+                print(f"  ⚠ Semantic Scholar connection error, retrying in {delay}s...")
+                time.sleep(delay)
+            else:
+                return None
+    return None
+
+
 def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: str = None) -> Optional[Dict]:
     """
     Fetch paper metadata from Semantic Scholar API.
 
     Can look up by DOI, PMID, or title. Returns standardized metadata including
     fields of study (useful for validating microscopy technique tags).
+
+    Includes retry logic with exponential backoff for 429 rate limiting.
 
     Args:
         doi: Digital Object Identifier
@@ -2964,7 +3010,7 @@ def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: st
         return None
 
     base_url = 'https://api.semanticscholar.org/graph/v1'
-    fields = 'paperId,title,authors,year,citationCount,fieldsOfStudy,publicationTypes,tldr'
+    fields = 'paperId,title,authors,year,citationCount,fieldsOfStudy,s2FieldsOfStudy,publicationTypes,tldr'
 
     # Set up headers with API key if available (for higher rate limits)
     headers = {}
@@ -2979,36 +3025,33 @@ def fetch_semantic_scholar_metadata(doi: str = None, pmid: str = None, title: st
             for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
                 if doi_clean.lower().startswith(prefix.lower()):
                     doi_clean = doi_clean[len(prefix):]
-            resp = requests.get(
+            resp = _s2_request_with_retry(
                 f'{base_url}/paper/DOI:{doi_clean}',
                 params={'fields': fields},
                 headers=headers,
-                timeout=15
             )
-            if resp.status_code == 200:
+            if resp is not None:
                 return _parse_semantic_scholar_response(resp.json())
 
         # Try PMID
         if pmid:
             pmid_clean = str(pmid).strip()
-            resp = requests.get(
+            resp = _s2_request_with_retry(
                 f'{base_url}/paper/PMID:{pmid_clean}',
                 params={'fields': fields},
                 headers=headers,
-                timeout=15
             )
-            if resp.status_code == 200:
+            if resp is not None:
                 return _parse_semantic_scholar_response(resp.json())
 
         # Fallback to title search
         if title:
-            resp = requests.get(
+            resp = _s2_request_with_retry(
                 f'{base_url}/paper/search',
                 params={'query': title[:200], 'fields': fields, 'limit': 1},
                 headers=headers,
-                timeout=15
             )
-            if resp.status_code == 200:
+            if resp is not None:
                 data = resp.json()
                 if data.get('data') and len(data['data']) > 0:
                     return _parse_semantic_scholar_response(data['data'][0])
@@ -3032,13 +3075,26 @@ def _parse_semantic_scholar_response(data: Dict) -> Dict:
         elif isinstance(author, str):
             authors.append(author)
 
+    # Use s2FieldsOfStudy (richer, with source info) when available,
+    # fall back to fieldsOfStudy (deprecated but still returned)
+    fields_of_study = data.get('fieldsOfStudy', []) or []
+    s2_fields = data.get('s2FieldsOfStudy', []) or []
+    if s2_fields:
+        # Extract unique category names from s2FieldsOfStudy
+        s2_categories = list(dict.fromkeys(
+            item['category'] for item in s2_fields
+            if isinstance(item, dict) and item.get('category')
+        ))
+        if s2_categories:
+            fields_of_study = s2_categories
+
     return {
         'paper_id': data.get('paperId', ''),
         'title': data.get('title', ''),
         'authors': authors,
         'year': data.get('year'),
         'citation_count': data.get('citationCount', 0),
-        'fields_of_study': data.get('fieldsOfStudy', []),
+        'fields_of_study': fields_of_study,
         'publication_types': data.get('publicationTypes', []),
         'tldr': data.get('tldr', {}).get('text', '') if data.get('tldr') else '',
     }
@@ -3636,40 +3692,38 @@ def clean_paper(paper: Dict, fetch_github: bool = True, verify_links: bool = Tru
     raw_cell_lines = extract_tags(combined_text, CELL_LINES)
     raw_sample_prep = extract_tags(combined_text, SAMPLE_PREPARATION)
     
+    # REPLACE tags with freshly extracted ones using current v3.7 strict patterns.
+    # Previous versions used merge_lists() which preserved stale tags from older,
+    # less accurate pattern sets (e.g., STED matching abbreviations instead of only
+    # "stimulated emission depletion"). Replacing ensures clean, accurate tagging
+    # and proper separation of categories (brands vs software vs suppliers).
     paper['microscopy_techniques'] = normalize_tag_list(
-        merge_lists(paper.get('microscopy_techniques', []), raw_techniques),
-        TECHNIQUE_CANONICAL
+        raw_techniques, TECHNIQUE_CANONICAL
     )
-    
+
     paper['image_analysis_software'] = normalize_tag_list(
-        merge_lists(paper.get('image_analysis_software', []), raw_software),
-        SOFTWARE_CANONICAL
+        raw_software, SOFTWARE_CANONICAL
     )
-    
+
     paper['microscope_brands'] = normalize_tag_list(
-        merge_lists(paper.get('microscope_brands', []), raw_brands),
-        MICROSCOPE_BRAND_CANONICAL
+        raw_brands, MICROSCOPE_BRAND_CANONICAL
     )
 
     paper['reagent_suppliers'] = normalize_tag_list(
-        merge_lists(paper.get('reagent_suppliers', []), raw_reagent_suppliers),
-        REAGENT_SUPPLIER_CANONICAL
+        raw_reagent_suppliers, REAGENT_SUPPLIER_CANONICAL
     )
 
     paper['general_software'] = normalize_tag_list(
-        merge_lists(paper.get('general_software', []), raw_general_software),
-        GENERAL_SOFTWARE_CANONICAL
+        raw_general_software, GENERAL_SOFTWARE_CANONICAL
     )
 
     paper['fluorophores'] = normalize_tag_list(
-        merge_lists(paper.get('fluorophores', []), raw_fluorophores),
-        FLUOROPHORE_CANONICAL
+        raw_fluorophores, FLUOROPHORE_CANONICAL
     )
-    
-    # Normalize organisms first
+
+    # Normalize organisms using fresh extraction only
     raw_organisms_normalized = normalize_tag_list(
-        merge_lists(paper.get('organisms', []), raw_organisms),
-        ORGANISM_CANONICAL
+        raw_organisms, ORGANISM_CANONICAL
     )
 
     # Filter out species that only appear as antibody sources (e.g., "rabbit anti-X")
@@ -3678,13 +3732,11 @@ def clean_paper(paper: Dict, fetch_github: bool = True, verify_links: bool = Tru
     paper['organisms'] = filter_antibody_source_organisms(combined_text, raw_organisms_normalized)
 
     paper['cell_lines'] = normalize_tag_list(
-        merge_lists(paper.get('cell_lines', []), raw_cell_lines),
-        CELL_LINE_CANONICAL
+        raw_cell_lines, CELL_LINE_CANONICAL
     )
-    
+
     paper['sample_preparation'] = normalize_tag_list(
-        merge_lists(paper.get('sample_preparation', []), raw_sample_prep),
-        SAMPLE_PREP_CANONICAL
+        raw_sample_prep, SAMPLE_PREP_CANONICAL
     )
     
     paper['protocols'] = merge_lists(
