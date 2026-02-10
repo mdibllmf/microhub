@@ -283,10 +283,12 @@ FLUOROPHORE_CANONICAL = {
     'pagfp': 'PA-GFP',
     'dendra': 'Dendra2',
     'dendra2': 'Dendra2',
-    'dio': 'DiO',
-    'dii': 'DiI',
-    'did': 'DiD',
-    'dir': 'DiR',
+    'DiO': 'DiO',
+    'dioc': 'DiO',
+    'DiI': 'DiI',
+    'diI': 'DiI',
+    'DiD': 'DiD',
+    'DiR': 'DiR',
     'wga': 'WGA',
     'wheat germ agglutinin': 'WGA',
     'sytox': 'SYTOX',
@@ -345,17 +347,11 @@ MICROSCOPE_BRAND_CANONICAL = {
     'leica': 'Leica',
     'leica microsystems': 'Leica',
     'nikon': 'Nikon',
-    'thermo fisher': 'Thermo Fisher',
-    'thermofisher': 'Thermo Fisher',
-    'fei': 'Thermo Fisher',
-    'fei company': 'Thermo Fisher',
+    # Note: Thermo Fisher, PerkinElmer, Molecular Devices, Miltenyi are in REAGENT_SUPPLIER_CANONICAL
     'jeol': 'JEOL',
     'bruker': 'Bruker',
     'andor': 'Andor',
     'hamamatsu': 'Hamamatsu',
-    'perkinelmer': 'PerkinElmer',
-    'perkin elmer': 'PerkinElmer',
-    'molecular devices': 'Molecular Devices',
     'yokogawa': 'Yokogawa',
     'visitech': 'Visitech',
     'abberior': 'Abberior',
@@ -388,18 +384,75 @@ MICROSCOPE_BRAND_CANONICAL = {
     'asi': 'ASI',
     'semrock': 'Semrock',
     'chroma': 'Chroma',
+    # Note: Miltenyi is in REAGENT_SUPPLIER_CANONICAL
+}
+
+REAGENT_SUPPLIER_CANONICAL = {
+    'thermo fisher': 'Thermo Fisher',
+    'thermofisher': 'Thermo Fisher',
+    'life technologies': 'Thermo Fisher',
+    'invitrogen': 'Thermo Fisher',
+    'gibco': 'Thermo Fisher',
+    'molecular probes': 'Thermo Fisher',
+    'perkinelmer': 'PerkinElmer',
+    'perkin elmer': 'PerkinElmer',
+    'molecular devices': 'Molecular Devices',
     'miltenyi': 'Miltenyi',
+    'miltenyi biotec': 'Miltenyi',
+    'sigma-aldrich': 'Sigma-Aldrich',
+    'sigma aldrich': 'Sigma-Aldrich',
+    'sigma': 'Sigma-Aldrich',
+    'merck': 'Merck',
+    'emd millipore': 'Merck',
+    'abcam': 'Abcam',
+    'cell signaling technology': 'Cell Signaling Technology',
+    'cst': 'Cell Signaling Technology',
+    'bio-rad': 'Bio-Rad',
+    'bio rad': 'Bio-Rad',
+    'roche': 'Roche',
+    'qiagen': 'Qiagen',
+    'new england biolabs': 'New England Biolabs',
+    'neb': 'New England Biolabs',
+    'takara bio': 'Takara Bio',
+    'clontech': 'Takara Bio',
+    'bd biosciences': 'BD Biosciences',
+    'becton dickinson': 'BD Biosciences',
+    'jackson immunoresearch': 'Jackson ImmunoResearch',
+    'vector laboratories': 'Vector Laboratories',
+    'santa cruz biotechnology': 'Santa Cruz Biotechnology',
+    'enzo life sciences': 'Enzo Life Sciences',
+    'tocris': 'Tocris',
+    'corning': 'Corning',
+}
+
+GENERAL_SOFTWARE_CANONICAL = {
+    'python': 'Python',
+    'matlab': 'MATLAB',
+    'r': 'R',
+    'r statistical': 'R',
+    'julia': 'Julia',
+    'java': 'Java',
+    'c++': 'C++',
+    'cpp': 'C++',
+    'knime': 'KNIME',
+    'orange': 'Orange',
+    'graphpad prism': 'Prism',
+    'prism': 'Prism',
+    'spss': 'SPSS',
+    'sas': 'SAS',
+    'excel': 'Excel',
+    'microsoft excel': 'Excel',
 }
 
 SOFTWARE_CANONICAL = {
+    # Note: Python, MATLAB, R are in GENERAL_SOFTWARE_CANONICAL
     # Fiji/ImageJ
     'fiji': 'Fiji',
     'imagej': 'ImageJ',
     'image j': 'ImageJ',
     'imagej2': 'ImageJ',
-    
-    # Python ecosystem
-    'python': 'Python',
+
+    # Python ecosystem (these are image analysis libraries)
     'scikit-image': 'scikit-image',
     'skimage': 'scikit-image',
     'scipy': 'SciPy',
@@ -470,9 +523,7 @@ SOFTWARE_CANONICAL = {
     'gatan': 'Digital Micrograph',
     
     # Analysis
-    'matlab': 'MATLAB',
-    'r': 'R',
-    'r statistical': 'R',
+    # Note: matlab, r are in GENERAL_SOFTWARE_CANONICAL
     'inform': 'inForm',
     'vaa3d': 'Vaa3D',
     'neurolucida': 'Neurolucida',
@@ -941,9 +992,7 @@ IMAGE_ANALYSIS_SOFTWARE = {
     'Cellpose': [r'\bcellpose\b'],
     'StarDist': [r'\bstardist\b'],
     'DeepCell': [r'\bdeepcell\b'],
-    'Python': [r'\bpython\b'],
-    'MATLAB': [r'\bmatlab\b'],
-    'R': [r'\br\s+(?:software|package|statistical|programming)', r'\br\s+\(', r'using\s+r\b', r'\br\s+version'],
+    # Note: Python, MATLAB, R are in GENERAL_SOFTWARE
     'scikit-image': [r'\bscikit.?image\b', r'\bskimage\b'],
     'U-Net': [r'\bu.?net\b'],
     'RELION': [r'\brelion\b'],
@@ -977,19 +1026,34 @@ IMAGE_ANALYSIS_SOFTWARE = {
     'Dragonfly': [r'\bdragonfly\b'],
 }
 
+# GENERAL_SOFTWARE - Programming languages and general-purpose tools
+# These are not image-analysis-specific software but are used for custom analysis
+GENERAL_SOFTWARE = {
+    'Python': [r'\bpython\b'],
+    'MATLAB': [r'\bmatlab\b'],
+    'R': [r'\br\s+(?:software|package|statistical|programming)', r'\br\s+\(', r'using\s+r\b', r'\br\s+version'],
+    'Julia': [r'\bjulia\b.*(?:language|programming|code)', r'using\s+julia\b'],
+    'Java': [r'\bjava\b.*(?:programming|code|application)'],
+    'C++': [r'\bc\+\+\b', r'\bcpp\b.*(?:programming|code)'],
+    'KNIME': [r'\bknime\b'],
+    'Orange': [r'\borange\b.*(?:data|mining|software)'],
+    'Prism': [r'\bgraphpad\s+prism\b', r'\bprism\b.*(?:graphpad|statistical)'],
+    'SPSS': [r'\bspss\b'],
+    'SAS': [r'\bsas\b.*(?:software|statistical)'],
+    'Excel': [r'\bmicrosoft\s+excel\b', r'\bexcel\b.*(?:spreadsheet|analysis)'],
+}
+
 MICROSCOPE_BRANDS = {
     'Zeiss': [r'\bzeiss\b', r'\bcarl zeiss\b'],
     'Leica': [r'\bleica\b'],
     'Nikon': [r'\bnikon\b'],
     'Olympus': [r'\bolympus\b'],
     'Evident (Olympus)': [r'\bevident\b.*(?:microscop|olympus)'],
-    'Thermo Fisher': [r'\bthermo\s*fisher\b', r'\bfei\s+(?:company|tecnai|talos|titan|helios|quanta|verios|scios)'],
+    # Note: Thermo Fisher, PerkinElmer, Miltenyi, Molecular Devices are in REAGENT_SUPPLIERS
     'JEOL': [r'\bjeol\b'],
     'Bruker': [r'\bbruker\b'],
     'Andor': [r'\bandor\b'],
     'Hamamatsu': [r'\bhamamatsu\b'],
-    'PerkinElmer': [r'\bperkin\s*elmer\b'],
-    'Molecular Devices': [r'\bmolecular\s+devices\b'],
     'Yokogawa': [r'\byokogawa\b'],
     '3i (Intelligent Imaging)': [r'\b3i\b.*(?:imaging|marianas|slidebook)', r'intelligent imaging innovations'],
     'Visitech': [r'\bvisitech\b'],
@@ -1008,7 +1072,7 @@ MICROSCOPE_BRANDS = {
     'ASI': [r'\basi\b.*(?:stage|imaging)', r'applied scientific instrumentation'],
     'Semrock': [r'\bsemrock\b'],
     'Chroma': [r'\bchroma\b.*(?:filter|technology)'],
-    'Miltenyi': [r'\bmiltenyi\b'],
+    # Note: Miltenyi is in REAGENT_SUPPLIERS
     'Edmund Optics': [r'\bedmund\s+optics\b'],
     'Roper': [r'\broper\b.*(?:scientific|camera)'],
     'Till Photonics': [r'\btill photonics\b'],
@@ -1043,6 +1107,31 @@ MICROSCOPE_BRANDS = {
     '3i Lattice Light Sheet': [r'\b3i\s+lattice\b', r'\blattice\s+light\s*sheet\b.*3i'],
     'ctASLM': [r'\bctaslm\b', r'\bclearedtissue\s+aslm\b'],
     'CLARITY SPIM': [r'\bclarity\s+spim\b'],
+}
+
+# REAGENT_SUPPLIERS - Companies that primarily sell reagents, consumables, and life science products
+# These are NOT microscope manufacturers, but are mentioned for reproducibility of experiments
+REAGENT_SUPPLIERS = {
+    'Thermo Fisher': [r'\bthermo\s*fisher\b', r'\bthermofisher\b', r'\blife\s+technologies\b', r'\binvitrogen\b', r'\bgibco\b', r'\bmolecular\s+probes\b'],
+    'PerkinElmer': [r'\bperkin\s*elmer\b'],
+    'Molecular Devices': [r'\bmolecular\s+devices\b'],
+    'Miltenyi': [r'\bmiltenyi\b', r'\bmiltenyi\s+biotec\b'],
+    'Sigma-Aldrich': [r'\bsigma[\s-]*aldrich\b', r'\bsigma\b.*(?:catalog|cat\.?\s*#|product)'],
+    'Merck': [r'\bmerck\b.*(?:millipore|chemicals?|reagent)', r'\bemd\s+millipore\b'],
+    'Abcam': [r'\babcam\b'],
+    'Cell Signaling Technology': [r'\bcell\s+signaling\s+technology\b', r'\bcst\b.*(?:antibod|catalog)'],
+    'Bio-Rad': [r'\bbio[\s-]*rad\b'],
+    'Roche': [r'\broche\b.*(?:diagnos|applied|reagent)'],
+    'Qiagen': [r'\bqiagen\b'],
+    'New England Biolabs': [r'\bnew\s+england\s+biolabs\b', r'\bneb\b.*(?:enzyme|kit|reagent)'],
+    'Takara Bio': [r'\btakara\s+bio\b', r'\bclontech\b'],
+    'BD Biosciences': [r'\bbd\s+biosciences\b', r'\bbecton\s+dickinson\b'],
+    'Jackson ImmunoResearch': [r'\bjackson\s+immuno\s*research\b'],
+    'Vector Laboratories': [r'\bvector\s+laboratories\b'],
+    'Santa Cruz Biotechnology': [r'\bsanta\s+cruz\s+biotechnology\b'],
+    'Enzo Life Sciences': [r'\benzo\s+life\s+sciences\b'],
+    'Tocris': [r'\btocris\b'],
+    'Corning': [r'\bcorning\b.*(?:flask|plate|dish|matrigel)'],
 }
 
 FLUOROPHORES = {
@@ -1110,11 +1199,23 @@ FLUOROPHORES = {
     'WGA': [r'\bwga\b', r'\bwheat germ agglutinin\b'],
     'BODIPY': [r'\bbodipy\b'],
     # DiI, DiO, DiD, DiR are lipophilic membrane dyes
-    # These patterns require context to avoid matching common words
-    'DiI': [r'\bdii\b(?!d|gest|vers)', r'\bdi-?i\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?i\b'],
-    'DiO': [r'\bdio\b(?!d|de)', r'\bdi-?o\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?o\b'],
-    'DiD': [r'\bdi-?d\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?d\b', r'(?:DiI|DiO|DiR).{0,20}\bDiD\b', r'\bDiD\b.{0,20}(?:DiI|DiO|DiR)'],
-    'DiR': [r'\bdi-?r\b.*(?:dye|stain|label|membrane)', r'(?:label|stain|dye).*\bdi-?r\b', r'(?:DiI|DiO|DiD).{0,20}\bDiR\b', r'\bDiR\b.{0,20}(?:DiI|DiO|DiD)'],
+    # STRICT: Only match FULL CHEMICAL NAMES - NO acronyms (DiD, DiO match too many false positives)
+    'DiI': [
+        r'1,1\'-dioctadecyl-3,3,3\',3\'-tetramethylindocarbocyanine',  # Full chemical name
+        r'dioctadecyl[- ]?tetramethyl[- ]?indocarbocyanine',  # Partial chemical name
+    ],
+    'DiO': [
+        r'3,3\'-dioctadecyloxacarbocyanine',  # Full chemical name
+        r'dioctadecyloxacarbocyanine',  # Without position numbers
+    ],
+    'DiD': [
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindodicarbocyanine",  # Full chemical name
+        r'dioctadecyl[- ]?tetramethyl[- ]?indodicarbocyanine',  # Partial chemical name
+    ],
+    'DiR': [
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindotricarbocyanine",  # Full chemical name
+        r'dioctadecyl[- ]?tetramethyl[- ]?indotricarbocyanine',  # Partial chemical name
+    ],
     'Fluo-4': [r'\bfluo.?4\b'],
     'Fura-2': [r'\bfura.?2\b'],
     'GCaMP': [r'\bgcamp\b(?!\d)'],
@@ -1672,9 +1773,13 @@ REPOSITORY_PATTERNS = {
     'Dryad': r'(https?://(?:www\.)?datadryad\.org/[\w/.-]+)',
     'OSF': r'(https?://osf\.io/[\w]+)',
     'EMPIAR': r'(https?://(?:www\.)?ebi\.ac\.uk/empiar/[\w/.-]+)',
-    'BioStudies': r'(https?://(?:www\.)?ebi\.ac\.uk/biostudies/[\w/.-]+)',
+    # BioStudies - both direct URLs and bioimages subdomain
+    'BioStudies': r'(https?://(?:www\.)?ebi\.ac\.uk/biostudies/(?:studies/)?[\w/.-]+)',
+    'BioImage Archive': r'(https?://(?:www\.)?ebi\.ac\.uk/biostudies/bioimages/[\w/.-]+)',
+    'BioImage Archive Alt': r'(https?://(?:www\.)?ebi\.ac\.uk/bioimage-archive/[\w/.-]+)',
     'IDR': r'(https?://idr\.openmicroscopy\.org/[\w/.-]+)',
-    'BioImage Archive': r'(https?://(?:www\.)?ebi\.ac\.uk/bioimage-archive/[\w/.-]+)',
+    'ArrayExpress': r'(https?://(?:www\.)?ebi\.ac\.uk/arrayexpress/[\w/.-]+)',
+    'GEO': r'(https?://(?:www\.)?ncbi\.nlm\.nih\.gov/geo/query/acc\.cgi\?acc=[\w]+)',
 }
 
 RRID_PATTERNS = [
@@ -2273,6 +2378,462 @@ def clean_repositories(repos: List) -> List[Dict]:
         })
 
     return cleaned
+
+
+# ============================================================================
+# LINK VERIFICATION - Verify URLs are accessible and remove dead links
+# ============================================================================
+
+def verify_url_accessible(url: str, timeout: int = 10) -> bool:
+    """
+    Check if a URL is accessible via HEAD request (falls back to GET).
+
+    Args:
+        url: URL to verify
+        timeout: Request timeout in seconds
+
+    Returns:
+        True if URL returns 2xx/3xx status, False otherwise
+    """
+    if not HAS_REQUESTS:
+        return True  # Can't verify without requests, assume valid
+
+    if not url:
+        return False
+
+    try:
+        # Try HEAD first (faster)
+        resp = requests.head(
+            url,
+            timeout=timeout,
+            allow_redirects=True,
+            headers={'User-Agent': 'MicroHub/1.0 LinkChecker'}
+        )
+        if resp.status_code < 400:
+            return True
+
+        # Some servers don't support HEAD, try GET
+        resp = requests.get(
+            url,
+            timeout=timeout,
+            allow_redirects=True,
+            headers={'User-Agent': 'MicroHub/1.0 LinkChecker'},
+            stream=True  # Don't download body
+        )
+        return resp.status_code < 400
+
+    except requests.exceptions.RequestException:
+        return False
+
+
+def check_bioimage_archive(accession: str) -> Dict:
+    """
+    Check if an accession exists in BioImage Archive.
+
+    BioImage Archive is where many BioStudies imaging datasets have been migrated.
+
+    Args:
+        accession: Study accession ID (e.g., S-BIAD123, S-BSST456)
+
+    Returns:
+        Dict with 'valid' bool and 'url' if found
+    """
+    if not HAS_REQUESTS:
+        return {'valid': False}
+
+    # BioImage Archive API endpoint
+    api_url = f'https://www.ebi.ac.uk/biostudies/api/v1/studies/{accession}'
+
+    # Also try the bioimages-specific endpoint
+    bioimage_api = f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}/info'
+
+    try:
+        # First try the general studies endpoint
+        resp = requests.get(
+            api_url,
+            timeout=15,
+            headers={'Accept': 'application/json', 'User-Agent': 'MicroHub/1.0'}
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get('accno') or data.get('title'):
+                # Check if it's in BioImage Archive collection
+                collection = data.get('collection', '')
+                if 'bioimag' in collection.lower() or accession.startswith('S-BIAD'):
+                    return {
+                        'valid': True,
+                        'url': f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}',
+                        'collection': 'BioImage Archive'
+                    }
+                return {
+                    'valid': True,
+                    'url': f'https://www.ebi.ac.uk/biostudies/studies/{accession}',
+                    'collection': data.get('collection', 'BioStudies')
+                }
+
+        # Try bioimages endpoint directly
+        resp2 = requests.get(
+            bioimage_api,
+            timeout=15,
+            headers={'Accept': 'application/json', 'User-Agent': 'MicroHub/1.0'}
+        )
+
+        if resp2.status_code == 200:
+            return {
+                'valid': True,
+                'url': f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}',
+                'collection': 'BioImage Archive'
+            }
+
+        return {'valid': False}
+
+    except requests.exceptions.RequestException:
+        return {'valid': False}
+
+
+def find_data_via_crossref(doi: str) -> List[Dict]:
+    """
+    Use CrossRef API to find data repository links for a paper.
+
+    When BioStudies links are dead, the data may be referenced in CrossRef
+    metadata with an updated URL.
+
+    Args:
+        doi: Paper's DOI
+
+    Returns:
+        List of data repository dicts with 'url', 'name', 'source'
+    """
+    if not HAS_REQUESTS or not doi:
+        return []
+
+    # Clean DOI
+    doi_clean = doi
+    for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
+        if doi_clean.startswith(prefix):
+            doi_clean = doi_clean[len(prefix):]
+            break
+
+    try:
+        from urllib.parse import quote
+        resp = requests.get(
+            f'https://api.crossref.org/works/{quote(doi_clean, safe="")}',
+            headers={'User-Agent': 'MicroHub/1.0 (mailto:support@microhub.io)'},
+            timeout=15
+        )
+
+        if resp.status_code != 200:
+            return []
+
+        data = resp.json()
+        message = data.get('message', {})
+
+        repos = []
+
+        # Check 'link' field for data repositories
+        for link in message.get('link', []):
+            link_url = link.get('URL', '')
+            if link_url:
+                data_domains = [
+                    'zenodo.org', 'figshare.com', 'dryad', 'osf.io',
+                    'dataverse', 'mendeley', 'ebi.ac.uk', 'ncbi.nlm.nih.gov/geo',
+                    'biostudies', 'bioimages', 'empiar', 'idr.openmicroscopy'
+                ]
+                if any(d in link_url.lower() for d in data_domains):
+                    name = 'Data Repository'
+                    if 'zenodo' in link_url.lower():
+                        name = 'Zenodo'
+                    elif 'figshare' in link_url.lower():
+                        name = 'Figshare'
+                    elif 'bioimages' in link_url.lower() or 'bioimage-archive' in link_url.lower():
+                        name = 'BioImage Archive'
+                    elif 'biostudies' in link_url.lower():
+                        name = 'BioStudies'
+                    elif 'empiar' in link_url.lower():
+                        name = 'EMPIAR'
+                    repos.append({
+                        'url': link_url,
+                        'name': name,
+                        'source': 'crossref'
+                    })
+
+        # Check 'relation' field for related datasets
+        relations = message.get('relation', {})
+        for rel_type, items in relations.items():
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        item_id = item.get('id', '')
+                        id_type = item.get('id-type', '')
+
+                        # DataCite DOIs often point to datasets
+                        if id_type == 'doi' and item_id:
+                            if not item_id.startswith('http'):
+                                item_id = f'https://doi.org/{item_id}'
+                            repos.append({
+                                'url': item_id,
+                                'name': 'Dataset (DOI)',
+                                'source': 'crossref-relation'
+                            })
+
+        return repos
+
+    except Exception:
+        return []
+
+
+def verify_biostudies_link(url: str, paper_doi: str = None) -> Dict:
+    """
+    Verify BioStudies link and check if data exists.
+
+    If data is not found in BioStudies, checks:
+    1. BioImage Archive (where imaging data is often migrated)
+    2. CrossRef for updated data repository links
+
+    BioStudies URLs follow pattern: https://www.ebi.ac.uk/biostudies/studies/S-BSST123
+
+    Args:
+        url: BioStudies URL
+        paper_doi: Optional paper DOI for CrossRef lookup
+
+    Returns:
+        Dict with 'valid' bool and optional 'redirect_url' or 'error'
+    """
+    if not HAS_REQUESTS:
+        return {'valid': True}  # Can't verify, assume valid
+
+    # Extract accession ID - handle various formats
+    match = re.search(r'(?:biostudies|bioimages)/(?:studies/)?([A-Z]+-[A-Z0-9]+)', url, re.IGNORECASE)
+    if not match:
+        # Try to extract just the accession pattern
+        match = re.search(r'(S-[A-Z]+\d+)', url, re.IGNORECASE)
+
+    if not match:
+        return {'valid': False, 'error': 'Invalid BioStudies URL format'}
+
+    accession = match.group(1).upper()
+
+    # Try the BioStudies API first
+    api_url = f'https://www.ebi.ac.uk/biostudies/api/v1/studies/{accession}'
+
+    try:
+        resp = requests.get(
+            api_url,
+            timeout=15,
+            headers={'Accept': 'application/json', 'User-Agent': 'MicroHub/1.0'}
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            # Check if study exists and has data
+            if data.get('accno') or data.get('title'):
+                # Check collection - might be in BioImage Archive
+                collection = data.get('collection', '')
+                if 'bioimag' in collection.lower() or accession.startswith('S-BIAD'):
+                    return {
+                        'valid': True,
+                        'accession': accession,
+                        'redirect_url': f'https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession}',
+                        'collection': 'BioImage Archive'
+                    }
+                return {'valid': True, 'accession': accession, 'collection': collection or 'BioStudies'}
+            return {'valid': False, 'error': 'Study exists but has no data'}
+
+        elif resp.status_code == 404:
+            # Study not found in BioStudies - check BioImage Archive
+            print(f"      → BioStudies 404, checking BioImage Archive for {accession}...")
+
+            bioimage_check = check_bioimage_archive(accession)
+            if bioimage_check.get('valid'):
+                print(f"      ✓ Found in {bioimage_check.get('collection', 'BioImage Archive')}")
+                return {
+                    'valid': True,
+                    'accession': accession,
+                    'redirect_url': bioimage_check.get('url'),
+                    'collection': bioimage_check.get('collection', 'BioImage Archive')
+                }
+
+            # Still not found - try CrossRef to find relocated data
+            if paper_doi:
+                print(f"      → Not in BioImage Archive, checking CrossRef for {paper_doi}...")
+                crossref_repos = find_data_via_crossref(paper_doi)
+                if crossref_repos:
+                    # Found data via CrossRef
+                    for repo in crossref_repos:
+                        if accession.lower() in repo.get('url', '').lower():
+                            print(f"      ✓ Found updated URL via CrossRef: {repo['url']}")
+                            return {
+                                'valid': True,
+                                'accession': accession,
+                                'redirect_url': repo['url'],
+                                'source': 'crossref'
+                            }
+                    # Return first data repo as alternative
+                    print(f"      ✓ Found alternative data via CrossRef: {crossref_repos[0]['url']}")
+                    return {
+                        'valid': True,
+                        'accession': accession,
+                        'redirect_url': crossref_repos[0]['url'],
+                        'alternative': True,
+                        'source': 'crossref'
+                    }
+
+            return {'valid': False, 'error': f'BioStudies {accession} not found (checked BioStudies, BioImage Archive)'}
+
+        else:
+            return {'valid': False, 'error': f'BioStudies API error: {resp.status_code}'}
+
+    except requests.exceptions.RequestException as e:
+        return {'valid': False, 'error': f'Network error: {str(e)}'}
+
+
+def verify_doi_exists(doi: str) -> Dict:
+    """
+    Verify DOI exists via CrossRef API.
+
+    Args:
+        doi: DOI string (with or without https://doi.org/ prefix)
+
+    Returns:
+        Dict with 'valid' bool and optional metadata or 'error'
+    """
+    if not HAS_REQUESTS:
+        return {'valid': True}  # Can't verify, assume valid
+
+    # Clean DOI
+    doi_clean = doi
+    if doi_clean.startswith('https://doi.org/'):
+        doi_clean = doi_clean[16:]
+    elif doi_clean.startswith('http://doi.org/'):
+        doi_clean = doi_clean[15:]
+    elif doi_clean.startswith('doi:'):
+        doi_clean = doi_clean[4:]
+
+    try:
+        resp = requests.get(
+            f'https://api.crossref.org/works/{doi_clean}',
+            headers={'User-Agent': 'MicroHub/1.0 (mailto:support@microhub.io)'},
+            timeout=15
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get('status') == 'ok' and data.get('message'):
+                return {
+                    'valid': True,
+                    'doi': doi_clean,
+                    'title': data['message'].get('title', [''])[0] if data['message'].get('title') else None
+                }
+            return {'valid': True, 'doi': doi_clean}
+
+        elif resp.status_code == 404:
+            return {'valid': False, 'error': f'DOI {doi_clean} not found in CrossRef'}
+
+        else:
+            return {'valid': False, 'error': f'CrossRef API error: {resp.status_code}'}
+
+    except requests.exceptions.RequestException as e:
+        return {'valid': False, 'error': f'Network error: {str(e)}'}
+
+
+def verify_repository_link(repo: Dict, paper_doi: str = None) -> Dict:
+    """
+    Verify a data repository link is accessible.
+
+    Uses specialized checks for known repositories (BioStudies, Zenodo, etc.)
+    and falls back to generic URL checking.
+
+    Args:
+        repo: Repository dict with 'url', 'name', 'accession_id'
+        paper_doi: Optional paper DOI for finding relocated data via CrossRef
+
+    Returns:
+        Updated repo dict with 'verified' status and optional 'error'
+    """
+    url = repo.get('url', '')
+    name = repo.get('name', '').lower()
+
+    result = repo.copy()
+
+    if not url:
+        result['verified'] = False
+        result['error'] = 'No URL'
+        return result
+
+    # BioStudies / BioImage Archive - use API check with fallback
+    if 'biostudies' in url.lower() or 'bioimages' in url.lower() or 'biostudies' in name:
+        check = verify_biostudies_link(url, paper_doi=paper_doi)
+        result['verified'] = check.get('valid', False)
+        if check.get('valid'):
+            # Update URL if redirected to new location
+            if check.get('redirect_url'):
+                result['url'] = check['redirect_url']
+                result['name'] = check.get('collection', result.get('name', 'BioStudies'))
+        else:
+            result['error'] = check.get('error', 'Invalid BioStudies link')
+        return result
+
+    # Zenodo - check URL accessible
+    if 'zenodo' in url.lower():
+        result['verified'] = verify_url_accessible(url)
+        if not result['verified']:
+            result['error'] = 'Zenodo link not accessible'
+        return result
+
+    # Figshare - check URL accessible
+    if 'figshare' in url.lower():
+        result['verified'] = verify_url_accessible(url)
+        if not result['verified']:
+            result['error'] = 'Figshare link not accessible'
+        return result
+
+    # EMPIAR - check URL accessible
+    if 'empiar' in url.lower() or 'ebi.ac.uk/empiar' in url.lower():
+        result['verified'] = verify_url_accessible(url)
+        if not result['verified']:
+            result['error'] = 'EMPIAR link not accessible'
+        return result
+
+    # Generic check for other repositories
+    result['verified'] = verify_url_accessible(url)
+    if not result['verified']:
+        result['error'] = 'Link not accessible'
+
+    return result
+
+
+def clean_and_verify_repositories(repos: List, verify_links: bool = True, paper_doi: str = None) -> List[Dict]:
+    """
+    Clean, deduplicate, and optionally verify repository links.
+
+    Args:
+        repos: List of repository entries
+        verify_links: Whether to verify each link (slower but removes dead links)
+        paper_doi: Optional paper DOI for finding relocated data via CrossRef
+
+    Returns:
+        List of verified repository dicts (dead links removed if verify_links=True)
+    """
+    # First clean and deduplicate
+    cleaned = clean_repositories(repos)
+
+    if not verify_links or not cleaned:
+        return cleaned
+
+    verified = []
+    for repo in cleaned:
+        result = verify_repository_link(repo, paper_doi=paper_doi)
+
+        if result.get('verified', True):  # Keep if verified or couldn't check
+            # Remove verification metadata before storing
+            result.pop('verified', None)
+            result.pop('error', None)
+            verified.append(result)
+        else:
+            print(f"    ✗ Removing dead link: {repo.get('url', 'unknown')} ({result.get('error', 'unknown error')})")
+
+    return verified
 
 
 # ============================================================================
@@ -3026,12 +3587,13 @@ def clean_github_tools(paper: Dict, fetch_missing: bool = True) -> List[Dict]:
     return cleaned
 
 
-def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
+def clean_paper(paper: Dict, fetch_github: bool = True, verify_links: bool = True) -> Dict:
     """Clean and re-tag a single paper.
 
     Args:
         paper: Paper dict to clean
         fetch_github: Whether to fetch missing GitHub metadata from API
+        verify_links: Whether to verify repository links and remove dead ones
     """
 
     # Get full_text for tag extraction, but we won't store it
@@ -3066,7 +3628,9 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
     
     raw_techniques = extract_tags(combined_text, MICROSCOPY_TECHNIQUES)
     raw_software = extract_tags(combined_text, IMAGE_ANALYSIS_SOFTWARE)
+    raw_general_software = extract_tags(combined_text, GENERAL_SOFTWARE)
     raw_brands = extract_tags(combined_text, MICROSCOPE_BRANDS)
+    raw_reagent_suppliers = extract_tags(combined_text, REAGENT_SUPPLIERS)
     raw_fluorophores = extract_tags(combined_text, FLUOROPHORES)
     raw_organisms = extract_tags(combined_text, ORGANISMS)
     raw_cell_lines = extract_tags(combined_text, CELL_LINES)
@@ -3086,7 +3650,17 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
         merge_lists(paper.get('microscope_brands', []), raw_brands),
         MICROSCOPE_BRAND_CANONICAL
     )
-    
+
+    paper['reagent_suppliers'] = normalize_tag_list(
+        merge_lists(paper.get('reagent_suppliers', []), raw_reagent_suppliers),
+        REAGENT_SUPPLIER_CANONICAL
+    )
+
+    paper['general_software'] = normalize_tag_list(
+        merge_lists(paper.get('general_software', []), raw_general_software),
+        GENERAL_SOFTWARE_CANONICAL
+    )
+
     paper['fluorophores'] = normalize_tag_list(
         merge_lists(paper.get('fluorophores', []), raw_fluorophores),
         FLUOROPHORE_CANONICAL
@@ -3118,10 +3692,17 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
         extract_urls(combined_text, PROTOCOL_PATTERNS)
     )
     
-    paper['repositories'] = clean_repositories(merge_lists(
-        paper.get('repositories', []),
-        extract_urls(combined_text, REPOSITORY_PATTERNS)
-    ))
+    # Get paper DOI for CrossRef lookup when verifying dead links
+    paper_doi = paper.get('doi', '')
+
+    paper['repositories'] = clean_and_verify_repositories(
+        merge_lists(
+            paper.get('repositories', []),
+            extract_urls(combined_text, REPOSITORY_PATTERNS)
+        ),
+        verify_links=verify_links,
+        paper_doi=paper_doi
+    )
     
     # ==========================================
     # GITHUB TOOLS - Clean and validate detailed repo data (scraper v5.1+)
@@ -3241,7 +3822,7 @@ def clean_paper(paper: Dict, fetch_github: bool = True) -> Dict:
     return paper
 
 
-def process_file(input_file: str, output_file: str, validate_apis: bool = False, fetch_github: bool = True) -> Dict:
+def process_file(input_file: str, output_file: str, validate_apis: bool = False, fetch_github: bool = True, verify_links: bool = True) -> Dict:
     """Process a single JSON file and return statistics.
 
     Args:
@@ -3249,6 +3830,7 @@ def process_file(input_file: str, output_file: str, validate_apis: bool = False,
         output_file: Path to output JSON file
         validate_apis: Whether to use Semantic Scholar/CrossRef APIs for validation
         fetch_github: Whether to fetch missing GitHub metadata from API
+        verify_links: Whether to verify repository links and remove dead ones
     """
 
     print(f"\nLoading {input_file}...")
@@ -3263,6 +3845,8 @@ def process_file(input_file: str, output_file: str, validate_apis: bool = False,
         print("  API validation enabled (Semantic Scholar, CrossRef)")
     if fetch_github:
         print("  GitHub metadata fetching enabled")
+    if verify_links:
+        print("  Link verification enabled (removes dead BioStudies/repository links)")
 
     fields_to_track = [
         'microscopy_techniques', 'microscope_brands', 'image_analysis_software',
@@ -3274,7 +3858,7 @@ def process_file(input_file: str, output_file: str, validate_apis: bool = False,
     stats_before = {f: sum(1 for p in papers if p.get(f)) for f in fields_to_track}
 
     for i, paper in enumerate(papers):
-        papers[i] = clean_paper(paper, fetch_github=fetch_github)
+        papers[i] = clean_paper(paper, fetch_github=fetch_github, verify_links=verify_links)
         # Apply API validation if enabled
         if validate_apis:
             papers[i] = validate_paper_metadata(papers[i], use_apis=True)
@@ -3316,6 +3900,8 @@ def main():
                         help='Disable Semantic Scholar and CrossRef API validation (enabled by default)')
     parser.add_argument('--no-fetch-github', action='store_true',
                         help='Disable fetching GitHub repository metadata from API (enabled by default)')
+    parser.add_argument('--no-verify-links', action='store_true',
+                        help='Disable repository link verification (enabled by default, removes dead BioStudies/data links)')
 
     args = parser.parse_args()
 
@@ -3323,6 +3909,8 @@ def main():
     args.validate_apis = not args.no_validate_apis
     # GitHub fetching is ON by default, use --no-fetch-github to disable
     args.fetch_github = not args.no_fetch_github
+    # Link verification is ON by default, use --no-verify-links to disable
+    args.verify_links = not args.no_verify_links
 
     if args.input:
         # If input file is specified, make it absolute if it's not already
@@ -3382,7 +3970,8 @@ def main():
             input_file,
             output_file,
             validate_apis=args.validate_apis,
-            fetch_github=args.fetch_github
+            fetch_github=args.fetch_github,
+            verify_links=args.verify_links
         )
         total_papers += result['papers']
         for f in fields_to_track:
@@ -3415,7 +4004,8 @@ def main():
     print("   - This eliminates antibody source false positives")
     print("3. API Validation: Semantic Scholar + CrossRef (always on)")
     print("4. GitHub Tools: Fetches stars, forks, health_score (always on)")
-    print("5. Environment Variables:")
+    print("5. Link Verification: Removes dead BioStudies/repository links (always on)")
+    print("6. Environment Variables:")
     print("   GITHUB_TOKEN, SEMANTIC_SCHOLAR_API_KEY")
 
     print("\nDone!")
