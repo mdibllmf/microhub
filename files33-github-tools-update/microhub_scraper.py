@@ -498,10 +498,24 @@ FLUOROPHORES = {
     # ===== MEMBRANE/CYTOSKELETON =====
     'Phalloidin': ['phalloidin'],
     'WGA': [r'\bwga\b', 'wheat germ agglutinin'],
-    'DiI': [r'\bdii\b', r'dii[\'"]?\s*(membrane)?'],
-    'DiO': [r'\bdio\b', r'dio[\'"]?\s*(membrane)?'],
-    'DiD': [r'\bdid\b'],
-    'DiR': [r'\bdir\b'],
+    # DiI, DiO, DiD, DiR - FULL MOLECULAR NAMES ONLY to avoid false positives
+    # These short acronyms match too many common words (did, dio, etc.)
+    'DiI': [
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindocarbocyanine",
+        r'dioctadecyl[- ]?tetramethyl[- ]?indocarbocyanine',
+    ],
+    'DiO': [
+        r"3,3'-dioctadecyloxacarbocyanine",
+        r'dioctadecyloxacarbocyanine',
+    ],
+    'DiD': [
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindodicarbocyanine",
+        r'dioctadecyl[- ]?tetramethyl[- ]?indodicarbocyanine',
+    ],
+    'DiR': [
+        r"1,1'-dioctadecyl-3,3,3',3'-tetramethylindotricarbocyanine",
+        r'dioctadecyl[- ]?tetramethyl[- ]?indotricarbocyanine',
+    ],
     'CellMask': ['cellmask'],
     'FM Dyes': ['fm 1-43', 'fm 4-64', 'fm1-43', 'fm4-64', 'fm dye'],
     
@@ -1174,7 +1188,7 @@ ANTIBODY_PATTERNS = [
 
 
 # ============================================================================
-# MICROSCOPE BRANDS
+# MICROSCOPE BRANDS - Actual microscope/imaging equipment manufacturers
 # ============================================================================
 
 MICROSCOPE_BRANDS = {
@@ -1183,19 +1197,15 @@ MICROSCOPE_BRANDS = {
     'Nikon': ['nikon'],
     'Olympus': ['olympus'],
     'Evident (Olympus)': ['evident'],
-    'Thermo Fisher': ['thermo fisher', 'thermofisher', 'fei company'],
     'JEOL': ['jeol'],
     'Bruker': ['bruker'],
     'Andor': ['andor'],
     'Hamamatsu': ['hamamatsu'],
-    'PerkinElmer': ['perkinelmer', 'perkin elmer'],
-    'Molecular Devices': ['molecular devices'],
     'Yokogawa': ['yokogawa'],
     'Visitech': ['visitech'],
     'Till Photonics': ['till photonics'],
     '3i (Intelligent Imaging)': ['3i ', 'intelligent imaging'],
     'LaVision BioTec': ['lavision'],
-    'Miltenyi': ['miltenyi', 'ultramicroscope'],
     'Luxendo': ['luxendo'],
     'Applied Scientific Instrumentation': ['asi ', 'applied scientific'],
     'Prior': ['prior scientific'],
@@ -1215,6 +1225,38 @@ MICROSCOPE_BRANDS = {
     'Abberior': ['abberior'],
     'PicoQuant': ['picoquant'],
     'Becker & Hickl': ['becker.*hickl', 'b&h'],
+}
+
+
+# ============================================================================
+# REAGENT SUPPLIERS - Companies that sell reagents, not microscope equipment
+# ============================================================================
+
+REAGENT_SUPPLIERS = {
+    'Thermo Fisher': ['thermo fisher', 'thermofisher', 'life technologies', 'invitrogen', 'gibco', 'molecular probes'],
+    'PerkinElmer': ['perkinelmer', 'perkin elmer'],
+    'Molecular Devices': ['molecular devices'],
+    'Miltenyi': ['miltenyi biotec', r'\bmiltenyi\b'],
+    'Sigma-Aldrich': ['sigma-aldrich', 'sigma aldrich', r'\bsigma\b.*(?:catalog|cat\.?\s*#|product|aldrich)'],
+    'Merck': [r'\bmerck\b.*(?:millipore|chemicals?|reagent)', 'emd millipore'],
+    'Abcam': [r'\babcam\b'],
+    'Cell Signaling Technology': ['cell signaling technology', r'\bcst\b.*(?:antibod|catalog)'],
+    'Bio-Rad': ['bio-rad', 'biorad'],
+    'Roche': [r'\broche\b.*(?:diagnos|applied|reagent|lightcycler)'],
+    'Qiagen': ['qiagen'],
+    'New England Biolabs': ['new england biolabs', r'\bneb\b.*(?:enzyme|kit|reagent)'],
+    'Takara Bio': ['takara bio', 'clontech'],
+    'BD Biosciences': ['bd biosciences', 'becton dickinson'],
+    'Jackson ImmunoResearch': ['jackson immunoresearch'],
+    'Vector Laboratories': ['vector laboratories'],
+    'Santa Cruz Biotechnology': ['santa cruz biotechnology'],
+    'Enzo Life Sciences': ['enzo life sciences'],
+    'Tocris': [r'\btocris\b'],
+    'Corning': [r'\bcorning\b.*(?:flask|plate|dish|matrigel|transwell)'],
+    'R&D Systems': ['r&d systems'],
+    'BioLegend': ['biolegend'],
+    'Promega': ['promega'],
+    'Agilent': ['agilent'],
 }
 
 
@@ -1493,8 +1535,18 @@ class MicroHubScraperV5:
             logger.debug(f"Semantic Scholar error: {e}")
             return {}
 
-    def fetch_citations_crossref(self, doi: str) -> Dict:
-        """Fetch citation count from CrossRef API with retry logic."""
+    def fetch_crossref_full_metadata(self, doi: str) -> Dict:
+        """
+        Fetch comprehensive metadata from CrossRef API.
+
+        Extracts:
+        - Citation count
+        - Links (data repositories, GitHub, etc.)
+        - Subjects/categories
+        - Funder information
+        - License
+        - Abstract (if available)
+        """
         if not doi:
             return {}
 
@@ -1510,10 +1562,98 @@ class MicroHubScraperV5:
                 if response.status_code == 200:
                     data = response.json()
                     message = data.get('message', {})
-                    return {
+
+                    result = {
                         'citation_count': message.get('is-referenced-by-count', 0),
                         'source': 'crossref',
                     }
+
+                    # Extract links - data repositories, GitHub, etc.
+                    links = message.get('link', [])
+                    extracted_links = []
+                    github_urls = []
+                    data_repos = []
+
+                    for link in links:
+                        link_url = link.get('URL', '')
+                        content_type = link.get('content-type', '')
+
+                        if link_url:
+                            extracted_links.append({
+                                'url': link_url,
+                                'type': content_type,
+                            })
+
+                            # Check for GitHub
+                            if 'github.com' in link_url.lower():
+                                github_urls.append(link_url)
+
+                            # Check for data repositories
+                            data_repo_domains = [
+                                'zenodo.org', 'figshare.com', 'dryad', 'osf.io',
+                                'dataverse', 'mendeley', 'ebi.ac.uk', 'ncbi.nlm.nih.gov/geo',
+                                'biostudies', 'empiar', 'idr.openmicroscopy'
+                            ]
+                            if any(domain in link_url.lower() for domain in data_repo_domains):
+                                data_repos.append(link_url)
+
+                    # Extract from reference/relation fields
+                    relations = message.get('relation', {})
+                    for rel_type, rel_items in relations.items():
+                        if isinstance(rel_items, list):
+                            for item in rel_items:
+                                item_url = item.get('id', '') if isinstance(item, dict) else str(item)
+                                if item_url.startswith('http'):
+                                    if 'github.com' in item_url.lower():
+                                        github_urls.append(item_url)
+                                    elif any(d in item_url.lower() for d in ['zenodo', 'figshare', 'dryad', 'osf.io', 'dataverse']):
+                                        data_repos.append(item_url)
+
+                    # Check resource link
+                    resource_link = message.get('resource', {})
+                    if isinstance(resource_link, dict):
+                        primary_url = resource_link.get('primary', {}).get('URL', '')
+                        if primary_url:
+                            extracted_links.append({'url': primary_url, 'type': 'primary'})
+
+                    if github_urls:
+                        result['github_urls'] = list(set(github_urls))
+                    if data_repos:
+                        result['data_repositories'] = list(set(data_repos))
+                    if extracted_links:
+                        result['links'] = extracted_links
+
+                    # Extract subjects/categories
+                    subjects = message.get('subject', [])
+                    if subjects:
+                        result['subjects'] = subjects
+
+                    # Extract funder information
+                    funders = message.get('funder', [])
+                    if funders:
+                        result['funders'] = [
+                            {
+                                'name': f.get('name', ''),
+                                'doi': f.get('DOI', ''),
+                                'award': f.get('award', []),
+                            }
+                            for f in funders
+                        ]
+
+                    # Extract license
+                    licenses = message.get('license', [])
+                    if licenses:
+                        result['license'] = licenses[0].get('URL', '')
+
+                    # Extract abstract if available
+                    abstract = message.get('abstract', '')
+                    if abstract:
+                        # Clean HTML tags
+                        abstract = re.sub(r'<[^>]+>', '', abstract)
+                        result['abstract'] = abstract
+
+                    return result
+
                 elif response.status_code == 429:  # Rate limited
                     delay = min(RETRY_BASE_DELAY * (2 ** (attempt + 2)), RETRY_MAX_DELAY)
                     logger.debug(f"CrossRef rate limited, waiting {delay:.1f}s")
@@ -1535,6 +1675,14 @@ class MicroHubScraperV5:
                 return {}
 
         return {}
+
+    def fetch_citations_crossref(self, doi: str) -> Dict:
+        """Fetch citation count from CrossRef API (wrapper for backward compatibility)."""
+        result = self.fetch_crossref_full_metadata(doi)
+        return {
+            'citation_count': result.get('citation_count', 0),
+            'source': result.get('source'),
+        }
     
     def fetch_citations(self, doi: str = None, pmid: str = None) -> Dict:
         """Fetch citations from best available source."""
@@ -1582,14 +1730,30 @@ class MicroHubScraperV5:
         """Normalize URL to avoid duplicates."""
         if not url:
             return ''
-        
+
         # Remove trailing slashes, .git, etc.
         url = url.rstrip('/')
         url = re.sub(r'\.git$', '', url)
         url = re.sub(r'#.*$', '', url)  # Remove fragments
         url = re.sub(r'\?.*$', '', url)  # Remove query params for dedup
-        
+
         return url.lower()
+
+    def _extract_github_full_name(self, url: str) -> Optional[str]:
+        """Extract owner/repo from GitHub URL."""
+        if not url:
+            return None
+
+        # Match patterns like github.com/owner/repo
+        match = re.search(r'github\.com/([^/]+)/([^/\s?#]+)', url, re.IGNORECASE)
+        if match:
+            owner = match.group(1)
+            repo = match.group(2).rstrip('.git')
+            # Skip non-repo paths
+            if owner.lower() in ('topics', 'search', 'explore', 'settings', 'notifications'):
+                return None
+            return f"{owner}/{repo}"
+        return None
 
     # ========== EXTRACTION METHODS ==========
     
@@ -1611,6 +1775,9 @@ class MicroHubScraperV5:
 
     def extract_microscope_brands(self, text: str) -> List[str]:
         return self.extract_from_patterns(text, MICROSCOPE_BRANDS)
+
+    def extract_reagent_suppliers(self, text: str) -> List[str]:
+        return self.extract_from_patterns(text, REAGENT_SUPPLIERS)
 
     def extract_microscope_models(self, text: str) -> List[str]:
         return self.extract_from_patterns(text, MICROSCOPE_MODELS)
@@ -2865,7 +3032,10 @@ Use empty arrays [] for categories with no applicable tags."""
             influential_citations = 0
             citation_source = None
             semantic_scholar_id = None
-            
+            crossref_github_urls = []
+            crossref_data_repos = []
+            crossref_abstract = ''
+
             if fetch_cites:
                 cite_data = self.fetch_citations(doi, pmid)
                 citation_count = cite_data.get('citation_count', 0)
@@ -2873,12 +3043,24 @@ Use empty arrays [] for categories with no applicable tags."""
                 citation_source = cite_data.get('source')
                 semantic_scholar_id = cite_data.get('semantic_scholar_id')
 
+                # ENHANCED: Get full CrossRef metadata for GitHub/data repository links
+                if doi:
+                    crossref_full = self.fetch_crossref_full_metadata(doi)
+                    crossref_github_urls = crossref_full.get('github_urls', [])
+                    crossref_data_repos = crossref_full.get('data_repositories', [])
+                    crossref_abstract = crossref_full.get('abstract', '')
+
+                    # Use CrossRef abstract if PubMed abstract is empty/short
+                    if crossref_abstract and len(crossref_abstract) > len(abstract):
+                        abstract = crossref_abstract
+
             # Combined text for extraction
             extraction_text = f"{title} {abstract} {full_methods} {full_text}"
 
             # Extract ALL categories
             microscopy_techniques = self.extract_microscopy_techniques(extraction_text)
             microscope_brands = self.extract_microscope_brands(extraction_text)
+            reagent_suppliers = self.extract_reagent_suppliers(extraction_text)
             microscope_models = self.extract_microscope_models(extraction_text)
             image_analysis_software = self.extract_image_analysis_software(extraction_text)
             image_acquisition_software = self.extract_image_acquisition_software(extraction_text)
@@ -2888,9 +3070,46 @@ Use empty arrays [] for categories with no applicable tags."""
             cell_lines = self.extract_cell_lines(extraction_text)
             protocols = self.extract_protocols(extraction_text)
             repositories, github_url = self.extract_repositories(extraction_text)
-            
+
+            # Merge CrossRef data repositories with extracted ones
+            if crossref_data_repos:
+                for repo_url in crossref_data_repos:
+                    if not any(repo_url.lower() in (r.get('url', '') or r).lower() for r in repositories):
+                        repo_type = 'Unknown'
+                        if 'zenodo' in repo_url.lower():
+                            repo_type = 'Zenodo'
+                        elif 'figshare' in repo_url.lower():
+                            repo_type = 'Figshare'
+                        elif 'dryad' in repo_url.lower():
+                            repo_type = 'Dryad'
+                        elif 'osf.io' in repo_url.lower():
+                            repo_type = 'OSF'
+                        elif 'ebi.ac.uk' in repo_url.lower():
+                            if 'biostudies' in repo_url.lower():
+                                repo_type = 'BioStudies'
+                            elif 'empiar' in repo_url.lower():
+                                repo_type = 'EMPIAR'
+                        repositories.append({'name': repo_type, 'url': repo_url})
+                        logger.debug(f"Added CrossRef repository: {repo_url}")
+
             # Extract ALL GitHub URLs for tool tracking (more comprehensive than repositories)
             github_tool_refs = self.extract_all_github_urls(extraction_text)
+
+            # Merge CrossRef GitHub URLs
+            if crossref_github_urls:
+                for gh_url in crossref_github_urls:
+                    # Add to github_url if not set
+                    if not github_url:
+                        github_url = gh_url
+                    # Add to tool refs if not already there
+                    gh_full_name = self._extract_github_full_name(gh_url)
+                    if gh_full_name and not any(gh_full_name.lower() in str(t).lower() for t in github_tool_refs):
+                        github_tool_refs.append({
+                            'full_name': gh_full_name,
+                            'url': gh_url,
+                            'relationship': 'crossref_linked',
+                        })
+                        logger.debug(f"Added CrossRef GitHub: {gh_url}")
             
             rrids = self.extract_rrids(extraction_text)
             rors = self.extract_rors(extraction_text)
@@ -2931,6 +3150,7 @@ Use empty arrays [] for categories with no applicable tags."""
                 # Categorized tags
                 'microscopy_techniques': microscopy_techniques,
                 'microscope_brands': microscope_brands,
+                'reagent_suppliers': reagent_suppliers,
                 'microscope_models': microscope_models,
                 'image_analysis_software': image_analysis_software,
                 'image_acquisition_software': image_acquisition_software,
