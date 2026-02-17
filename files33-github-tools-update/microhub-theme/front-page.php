@@ -65,6 +65,25 @@ if (taxonomy_exists('mh_facility')) {
     }
 }
 
+// Equipment & Reagent taxonomies
+$equipment_taxonomies = array(
+    'reagent_suppliers' => 'mh_reagent_supplier',
+    'general_software' => 'mh_general_software',
+    'lasers' => 'mh_laser',
+    'detectors' => 'mh_detector',
+    'objectives' => 'mh_objective',
+    'filters' => 'mh_filter',
+);
+foreach ($equipment_taxonomies as $key => $taxonomy) {
+    $filter_options[$key] = array();
+    if (taxonomy_exists($taxonomy)) {
+        $terms = get_terms(array('taxonomy' => $taxonomy, 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC'));
+        if (!is_wp_error($terms)) {
+            $filter_options[$key] = $terms;
+        }
+    }
+}
+
 // Get meta-based filter options (fluorophores, sample prep, cell lines, etc.)
 $meta_filter_options = mh_get_all_filter_options();
 ?>
@@ -193,6 +212,54 @@ $meta_filter_options = mh_get_all_filter_options();
                 <select id="filter-institution" data-filter="institution">
                     <option value="">All Institutions (<?php echo count($filter_options['institutions']); ?>)</option>
                     <?php foreach ($filter_options['institutions'] as $term): ?>
+                    <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-reagent-supplier" data-filter="reagent_supplier">
+                    <option value="">All Suppliers (<?php echo count($filter_options['reagent_suppliers']); ?>)</option>
+                    <?php foreach ($filter_options['reagent_suppliers'] as $term): ?>
+                    <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-general-software" data-filter="general_software">
+                    <option value="">General Software (<?php echo count($filter_options['general_software']); ?>)</option>
+                    <?php foreach ($filter_options['general_software'] as $term): ?>
+                    <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-laser" data-filter="laser">
+                    <option value="">All Lasers (<?php echo count($filter_options['lasers']); ?>)</option>
+                    <?php foreach ($filter_options['lasers'] as $term): ?>
+                    <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-detector" data-filter="detector">
+                    <option value="">All Detectors (<?php echo count($filter_options['detectors']); ?>)</option>
+                    <?php foreach ($filter_options['detectors'] as $term): ?>
+                    <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-objective" data-filter="objective">
+                    <option value="">All Objectives (<?php echo count($filter_options['objectives']); ?>)</option>
+                    <?php foreach ($filter_options['objectives'] as $term): ?>
+                    <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mh-filter-item">
+                <select id="filter-optical-filter" data-filter="optical_filter">
+                    <option value="">All Filters (<?php echo count($filter_options['filters']); ?>)</option>
+                    <?php foreach ($filter_options['filters'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
                 </select>

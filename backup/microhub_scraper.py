@@ -49,7 +49,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # ============================================================================
 LLM_MODEL = "claude-haiku-4-5-20250929"
 LLM_RATE_LIMIT_DELAY = 1.0  # Seconds between API calls
-LLM_MIN_TAGS_REQUIRED = 2  # Minimum tags to keep paper (skip if fewer)
+LLM_MIN_TAGS_REQUIRED = 5  # Minimum tags to keep paper (skip if fewer)
 
 # ============================================================================
 # API RETRY CONFIGURATION
