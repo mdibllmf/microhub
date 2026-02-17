@@ -129,6 +129,29 @@ def main():
 
         cleaned = []
         for paper in papers:
+            # Ensure ALL tag list fields exist (may be missing from older exports)
+            tag_list_fields = [
+                "microscopy_techniques", "microscope_brands", "microscope_models",
+                "reagent_suppliers", "image_analysis_software",
+                "image_acquisition_software", "general_software",
+                "fluorophores", "organisms", "antibody_sources",
+                "cell_lines", "sample_preparation", "protocols",
+                "repositories", "rrids", "rors", "institutions",
+                "objectives", "lasers", "detectors", "filters",
+                "imaging_modalities", "staining_methods",
+                "embedding_methods", "fixation_methods", "mounting_media",
+                "antibodies", "figures", "references",
+                "supplementary_materials", "affiliations",
+            ]
+            for field in tag_list_fields:
+                if field not in paper:
+                    paper[field] = []
+                elif isinstance(paper[field], str):
+                    try:
+                        paper[field] = json.loads(paper[field])
+                    except (json.JSONDecodeError, TypeError):
+                        paper[field] = []
+
             # Optionally re-run agents — merge results with existing data
             if enricher is not None:
                 agent_results = enricher.process_paper(paper)

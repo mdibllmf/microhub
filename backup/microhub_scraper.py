@@ -263,14 +263,18 @@ CREATE TABLE IF NOT EXISTS papers (
     microscopy_techniques TEXT DEFAULT '[]',
     image_analysis_software TEXT DEFAULT '[]',
     image_acquisition_software TEXT DEFAULT '[]',
+    general_software TEXT DEFAULT '[]',
     organisms TEXT DEFAULT '[]',
     sample_preparation TEXT DEFAULT '[]',
     fluorophores TEXT DEFAULT '[]',
     antibodies TEXT DEFAULT '[]',
+    antibody_sources TEXT DEFAULT '[]',
     cell_lines TEXT DEFAULT '[]',
     imaging_modalities TEXT DEFAULT '[]',
     staining_methods TEXT DEFAULT '[]',
-    
+    reagent_suppliers TEXT DEFAULT '[]',
+    institutions TEXT DEFAULT '[]',
+
     -- Additional scientific fields
     lasers TEXT DEFAULT '[]',
     detectors TEXT DEFAULT '[]',
