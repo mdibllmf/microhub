@@ -500,9 +500,13 @@ $meta_filter_options = mh_get_all_filter_options();
 /* Filter Row */
 .mh-filter-row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
     margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+    .mh-filter-row { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 640px) {
@@ -517,28 +521,28 @@ $meta_filter_options = mh_get_all_filter_options();
 }
 
 .mh-filter-item label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     color: #8b949e;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .mh-filter-item select {
     width: 100%;
-    padding: 8px 28px 8px 10px;
+    padding: 7px 24px 7px 8px;
     background: var(--bg-dark);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 8px center;
+    background-position: right 6px center;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
@@ -556,7 +560,11 @@ $meta_filter_options = mh_get_all_filter_options();
     border-radius: 8px;
     margin-bottom: 16px;
     border: 1px solid rgba(59, 130, 246, 0.1);
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-width: 1024px) {
+    .mh-filter-row-advanced { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 640px) {
