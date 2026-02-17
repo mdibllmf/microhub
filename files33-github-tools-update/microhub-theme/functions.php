@@ -1259,18 +1259,26 @@ function mh_display_paper_links($meta = null) {
  */
 function mh_display_paper_tags($post_id = null) {
     if (!$post_id) $post_id = get_the_ID();
-    
+
+    // All taxonomies matching protocol page display
     $taxonomies = array(
         'mh_technique' => 'technique',
         'mh_microscope' => 'microscope',
         'mh_organism' => 'organism',
-        'mh_software' => 'software'
+        'mh_software' => 'software',
+        'mh_fluorophore' => 'fluorophore',
+        'mh_sample_prep' => 'sample-prep',
+        'mh_cell_line' => 'cell-line',
+        'mh_microscope_model' => 'microscope',
+        'mh_analysis_software' => 'software',
+        'mh_acquisition_software' => 'software',
+        'mh_facility' => 'facility',
     );
-    
+
     echo '<div class="mh-tags">';
     foreach ($taxonomies as $tax => $class) {
         if (!taxonomy_exists($tax)) continue;
-        
+
         $terms = get_the_terms($post_id, $tax);
         if ($terms && !is_wp_error($terms)) {
             foreach ($terms as $term) {
