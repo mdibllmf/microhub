@@ -49,7 +49,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # ============================================================================
 LLM_MODEL = "claude-haiku-4-5-20250929"
 LLM_RATE_LIMIT_DELAY = 1.0  # Seconds between API calls
-LLM_MIN_TAGS_REQUIRED = 5  # Minimum tags to keep paper (skip if fewer)
+LLM_MIN_TAGS_REQUIRED = 2  # Minimum tags to keep paper (skip if fewer)
 
 # ============================================================================
 # API RETRY CONFIGURATION
@@ -1377,9 +1377,11 @@ class MicroHubScraperV5:
     """Paper scraper with CITATIONS, full text, AFFILIATIONS, and comprehensive extraction."""
 
     def __init__(self, db_path: str = 'microhub.db', email: str = None,
-                 llm_enrich: bool = False, llm_api_key: str = None):
+                 llm_enrich: bool = False, llm_api_key: str = None,
+                 ncbi_api_key: str = None):
         self.db_path = db_path
         self.email = email or 'microhub@example.com'
+        self.ncbi_api_key = ncbi_api_key
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': f'MicroHub/5.0 (Microscopy Database; mailto:{self.email})'
@@ -2546,13 +2548,25 @@ Use empty arrays [] for categories with no applicable tags."""
         return merged
 
     def count_tags(self, paper: Dict) -> int:
-        """Count total tags across key categories."""
+        """Count total tags across ALL categories."""
         count = 0
         for field in ['microscopy_techniques', 'organisms', 'fluorophores',
-                      'sample_preparation', 'cell_lines']:
+                      'sample_preparation', 'cell_lines',
+                      'microscope_brands', 'microscope_models',
+                      'image_analysis_software', 'image_acquisition_software',
+                      'general_software', 'reagent_suppliers',
+                      'lasers', 'detectors', 'objectives', 'filters']:
             tags = paper.get(field, [])
             if isinstance(tags, list):
                 count += len(tags)
+            elif isinstance(tags, str):
+                try:
+                    parsed = json.loads(tags)
+                    if isinstance(parsed, list):
+                        count += len(parsed)
+                except (json.JSONDecodeError, TypeError):
+                    if tags.strip():
+                        count += 1
         return count
 
     def has_minimum_tags(self, paper: Dict, min_tags: int = 1) -> bool:
@@ -2630,10 +2644,13 @@ Use empty arrays [] for categories with no applicable tags."""
                 'id': pmc_id,
                 'rettype': 'xml',
             }
+            if self.ncbi_api_key:
+                params['api_key'] = self.ncbi_api_key
 
             response = self.session.get(url, params=params, timeout=60)
             self.stats['api_calls'] += 1
-            time.sleep(0.34)
+            # Rate limit: 3 req/sec without key, 10 req/sec with key
+            time.sleep(0.11 if self.ncbi_api_key else 0.34)
 
             if response.status_code != 200:
                 return None
@@ -2856,10 +2873,13 @@ Use empty arrays [] for categories with no applicable tags."""
                     'retmode': 'json',
                     'sort': 'relevance',
                 }
+                if self.ncbi_api_key:
+                    params['api_key'] = self.ncbi_api_key
 
                 response = self.session.get(url, params=params, timeout=30)
                 self.stats['api_calls'] += 1
-                time.sleep(0.34)
+                # Rate limit: 3 req/sec without key, 10 req/sec with key
+                time.sleep(0.11 if self.ncbi_api_key else 0.34)
 
                 if response.status_code != 200:
                     break
@@ -2901,10 +2921,13 @@ Use empty arrays [] for categories with no applicable tags."""
                     'id': ','.join(batch),
                     'retmode': 'xml',
                 }
+                if self.ncbi_api_key:
+                    params['api_key'] = self.ncbi_api_key
 
                 response = self.session.get(url, params=params, timeout=60)
                 self.stats['api_calls'] += 1
-                time.sleep(0.34)
+                # Rate limit: 3 req/sec without key, 10 req/sec with key
+                time.sleep(0.11 if self.ncbi_api_key else 0.34)
 
                 if response.status_code != 200:
                     continue
@@ -3595,6 +3618,10 @@ Use empty arrays [] for categories with no applicable tags."""
         logger.info("=" * 70)
         logger.info("Features: Full text + CITATIONS + Complete tags + AFFILIATIONS")
         logger.info(f"Minimum tags required: {LLM_MIN_TAGS_REQUIRED} (papers with fewer will be skipped)")
+        if self.ncbi_api_key:
+            logger.info("NCBI API key: provided (10 req/sec rate limit)")
+        else:
+            logger.info("NCBI API key: not set (3 req/sec rate limit - use --ncbi-api-key for faster scraping)")
         if self.llm_enrich:
             logger.info(f"LLM ENRICHMENT ENABLED (model: {LLM_MODEL})")
         logger.info("")
@@ -3709,6 +3736,10 @@ def main():
     parser.add_argument('--update-citations', action='store_true', help='Update citations for existing papers')
     parser.add_argument('--update-limit', type=int, help='Limit papers for citation update')
 
+    # NCBI API key (increases PubMed rate limit from 3 to 10 req/sec)
+    parser.add_argument('--ncbi-api-key', type=str, default=None,
+                        help='NCBI API key (or set NCBI_API_KEY env var). Get one free at https://www.ncbi.nlm.nih.gov/account/settings/')
+
     # LLM enrichment arguments
     parser.add_argument('--llm-enrich', action='store_true',
                         help='Enable LLM enrichment for tag extraction (uses Claude Haiku)')
@@ -3724,6 +3755,13 @@ def main():
                         help='Max tools to update per run (default: 100)')
 
     args = parser.parse_args()
+
+    # Handle NCBI API key
+    ncbi_api_key = args.ncbi_api_key or os.environ.get('NCBI_API_KEY')
+    if ncbi_api_key:
+        print(f"NCBI API key provided - PubMed rate limit: 10 req/sec")
+    else:
+        print("No NCBI API key - PubMed rate limit: 3 req/sec (use --ncbi-api-key for faster scraping)")
 
     # Handle LLM API key
     llm_api_key = None
@@ -3742,7 +3780,8 @@ def main():
         db_path=args.db,
         email=args.email,
         llm_enrich=args.llm_enrich,
-        llm_api_key=llm_api_key
+        llm_api_key=llm_api_key,
+        ncbi_api_key=ncbi_api_key
     )
 
     if args.update_github_tools:
