@@ -103,8 +103,8 @@ Preferred usage (individual scripts):
     p_cleanup.add_argument("--output-dir", default="cleaned_export")
     p_cleanup.add_argument("--enrich", action="store_true",
                            help="Re-run agent pipeline during cleanup")
-    p_cleanup.add_argument("--api-enrich", action="store_true",
-                           help="Enrich via GitHub/S2/CrossRef APIs")
+    p_cleanup.add_argument("--skip-api", action="store_true",
+                           help="Skip GitHub/S2/CrossRef API enrichment")
 
     # ---- validate ----
     p_validate = subparsers.add_parser(
@@ -156,8 +156,8 @@ Preferred usage (individual scripts):
             fwd += ["--output-dir", args.output_dir]
         if args.enrich:
             fwd.append("--enrich")
-        if args.api_enrich:
-            fwd.append("--api-enrich")
+        if args.skip_api:
+            fwd.append("--skip-api")
         _delegate("3_clean.py", fwd)
 
     elif args.command == "validate":

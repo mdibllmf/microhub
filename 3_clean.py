@@ -6,11 +6,11 @@ Reads the chunked JSON from step 2, applies protocol classification, syncs
 field aliases, sets boolean flags, strips full_text, and writes final
 WordPress-ready files.
 
-    python 3_clean.py                                     # defaults
+    python 3_clean.py                                     # defaults (includes API enrichment)
     python 3_clean.py --input-dir raw_export/             # read from step 2 output
     python 3_clean.py --output-dir cleaned_export/        # write here
-    python 3_clean.py --enrich                            # re-run agents during cleanup
-    python 3_clean.py --api-enrich                        # GitHub/S2/CrossRef API enrichment
+    python 3_clean.py --enrich                            # also re-run agents during cleanup
+    python 3_clean.py --skip-api                          # skip GitHub/S2/CrossRef API enrichment
 
 Input:  raw_export/*_chunk_*.json   (from step 2)
 Output: cleaned_export/*_chunk_*.json (ready for step 4 and WordPress)
@@ -43,15 +43,14 @@ def main():
                         help="Output directory (default: cleaned_export/)")
     parser.add_argument("--enrich", action="store_true",
                         help="Re-run agent pipeline during cleanup")
-    parser.add_argument("--api-enrich", action="store_true",
-                        help="Enrich via GitHub/Semantic Scholar/CrossRef APIs "
-                             "(updates citations, GitHub metrics, discovers repos)")
+    parser.add_argument("--skip-api", action="store_true",
+                        help="Skip all API enrichment (GitHub/S2/CrossRef)")
     parser.add_argument("--no-github", action="store_true",
-                        help="Skip GitHub API calls during --api-enrich")
+                        help="Skip GitHub API calls")
     parser.add_argument("--no-citations", action="store_true",
-                        help="Skip Semantic Scholar calls during --api-enrich")
+                        help="Skip Semantic Scholar API calls")
     parser.add_argument("--no-crossref", action="store_true",
-                        help="Skip CrossRef calls during --api-enrich")
+                        help="Skip CrossRef API calls")
 
     args = parser.parse_args()
 
@@ -92,8 +91,8 @@ def main():
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None
         )
 
-    # --- Optional API enrichment (GitHub, S2, CrossRef) ---
-    api_enrich = args.api_enrich
+    # --- API enrichment (GitHub, S2, CrossRef) — on by default ---
+    api_enrich = not args.skip_api
     if api_enrich:
         from pipeline.enrichment import enrich_paper
 
