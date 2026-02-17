@@ -1447,6 +1447,10 @@ class MicroHubScraperV5:
             ('mounting_media', 'TEXT DEFAULT "[]"'),
             ('affiliations', 'TEXT DEFAULT "[]"'),  # NEW in v5.0
             ('has_affiliations', 'BOOLEAN DEFAULT 0'),  # NEW in v5.0
+            ('reagent_suppliers', 'TEXT DEFAULT "[]"'),  # NEW in v6.0
+            ('antibody_sources', 'TEXT DEFAULT "[]"'),  # NEW in v6.0
+            ('general_software', 'TEXT DEFAULT "[]"'),  # NEW in v6.0
+            ('institutions', 'TEXT DEFAULT "[]"'),  # NEW in v6.0
         ]
         
         for col_name, col_type in new_cols:
@@ -3292,6 +3296,8 @@ Use empty arrays [] for categories with no applicable tags."""
                     'protocols', 'repositories', 'rrids', 'rors', 'antibodies',
                     'supplementary_materials', 'figures', 'techniques', 'software',
                     'affiliations', 'github_tools',  # v5.0+ fields
+                    'reagent_suppliers', 'antibody_sources', 'general_software',
+                    'institutions',  # v6.0 fields
                 ]
 
                 for field in json_fields:
@@ -3311,6 +3317,7 @@ Use empty arrays [] for categories with no applicable tags."""
                         protocols, repositories, github_url, rrids, rors, antibodies,
                         supplementary_materials, figures, figure_count,
                         techniques, software, microscope_brand,
+                        reagent_suppliers, antibody_sources, general_software, institutions,
                         has_full_text, has_figures, has_protocols, has_github, has_data, has_affiliations,
                         priority_score, enriched_at, citations_updated_at
                     ) VALUES (
@@ -3325,6 +3332,7 @@ Use empty arrays [] for categories with no applicable tags."""
                         ?, ?, ?, ?, ?, ?,
                         ?, ?, ?,
                         ?, ?, ?,
+                        ?, ?, ?, ?,
                         ?, ?, ?, ?, ?, ?,
                         ?, datetime('now'), datetime('now')
                     )
@@ -3348,6 +3356,8 @@ Use empty arrays [] for categories with no applicable tags."""
                     paper.get('figures', '[]'), paper.get('figure_count', 0),
                     paper.get('techniques', '[]'), paper.get('software', '[]'),
                     paper.get('microscope_brand'),
+                    paper.get('reagent_suppliers', '[]'), paper.get('antibody_sources', '[]'),
+                    paper.get('general_software', '[]'), paper.get('institutions', '[]'),
                     paper.get('has_full_text', False), paper.get('has_figures', False),
                     paper.get('has_protocols', False), paper.get('has_github', False),
                     paper.get('has_data', False), paper.get('has_affiliations', False),  # NEW in v5.0

@@ -130,11 +130,15 @@ def main():
             paper["tags"] = paper.get("microscopy_techniques", [])
             paper["software"] = list(set(
                 (paper.get("image_analysis_software") or []) +
-                (paper.get("image_acquisition_software") or [])
+                (paper.get("image_acquisition_software") or []) +
+                (paper.get("general_software") or [])
             ))
 
-            # Boolean flags
-            paper["has_full_text"] = False
+            # Boolean flags — preserve has_full_text before stripping
+            paper["has_full_text"] = (
+                bool(paper.get("has_full_text"))
+                or bool(paper.get("full_text"))
+            )
             paper["has_protocols"] = bool(paper.get("protocols")) or paper.get("is_protocol", False)
             paper["has_github"] = bool(paper.get("github_url"))
             paper["has_github_tools"] = bool(paper.get("github_tools"))
@@ -145,12 +149,14 @@ def main():
             paper["has_cell_lines"] = bool(paper.get("cell_lines"))
             paper["has_sample_prep"] = bool(paper.get("sample_preparation"))
             paper["has_antibody_sources"] = bool(paper.get("antibody_sources"))
+            paper["has_reagent_suppliers"] = bool(paper.get("reagent_suppliers"))
+            paper["has_general_software"] = bool(paper.get("general_software"))
             paper["has_methods"] = bool(paper.get("methods") and len(str(paper.get("methods", ""))) > 100)
             paper["has_institutions"] = bool(paper.get("institutions"))
             paper["has_facility"] = paper["has_institutions"]
             paper["has_affiliations"] = bool(paper.get("affiliations"))
 
-            # Remove full_text from output
+            # Remove full_text from output (tags already extracted)
             paper.pop("full_text", None)
 
             cleaned.append(paper)

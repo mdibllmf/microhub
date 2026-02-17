@@ -44,8 +44,10 @@ FLUOROPHORE_RENAMES: Dict[str, str] = {
     "eYFP": "EYFP",
     "eBFP": "EBFP",
     # Name mismatches
+    "Cyan": "CFP",
     "mKate": "mKate2",
     "Dendra": "Dendra2",
+    "Emerald": "mEmerald",
     "Janelia Fluor 549": "JF549",
     "Janelia Fluor 646": "JF646",
     "Janelia Fluor 585": "JF585",
