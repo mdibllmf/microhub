@@ -60,11 +60,61 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     "dendra2": "Dendra2", "dendra": "Dendra2",
     "dronpa": "Dronpa",
     "pa-gfp": "PA-GFP", "pagfp": "PA-GFP",
+    "photoactivatable gfp": "PA-GFP",
+    # Additional green FPs
+    "sfgfp": "sfGFP", "superfolder gfp": "sfGFP",
+    "megfp": "mEGFP", "acgfp": "AcGFP",
+    "zsgreen": "ZsGreen", "mwasabi": "mWasabi",
+    # Additional red FPs
+    "tagrfp-t": "TagRFP-T", "mruby": "mRuby", "mruby2": "mRuby",
+    "mruby3": "mRuby", "mko": "mKO", "kusabira orange": "mKO",
+    "morange": "mOrange", "morange2": "mOrange",
+    "mstrawberry": "mStrawberry", "mapple": "mApple",
+    "mplum": "mPlum", "mcherry2": "mCherry",
+    "fusionred": "FusionRed", "mrasberry": "mRaspberry",
+    "mcardinal": "mCardinal", "mneptune": "mNeptune",
+    # Far-red / infrared FPs
+    "irfp": "iRFP", "irfp670": "iRFP", "irfp713": "iRFP",
+    "mirfp": "miRFP", "mirfp670": "miRFP",
+    "smurfp": "smURFP",
+    # Photoactivatable / photoconvertible
+    "ps-cfp2": "PS-CFP2", "pscfp2": "PS-CFP2",
+    "kaede": "Kaede", "kikgr": "KikGR",
+    "rsegfp": "rsEGFP", "rsegfp2": "rsEGFP",
+    "dreiklang": "Dreiklang", "padron": "Padron",
+    # Additional YFP variants
+    "ypet": "YPet", "syfp2": "SYFP2",
+    # Additional CFP variants
+    "mcerulean3": "mCerulean3", "cerulean": "mCerulean",
+    "amcyan": "AmCyan", "tagbfp": "TagBFP",
     # Calcium indicators
     "gcamp": "GCaMP", "gcamp6": "GCaMP6", "gcamp6f": "GCaMP6f", "gcamp6s": "GCaMP6s",
+    "gcamp6m": "GCaMP6m", "gcamp7s": "GCaMP7s", "gcamp7f": "GCaMP7f",
+    "gcamp8s": "GCaMP8s", "gcamp8m": "GCaMP8m", "gcamp8f": "GCaMP8f",
+    "jgcamp7": "jGCaMP7", "jgcamp8": "jGCaMP8",
+    "rcamp": "RCaMP", "jrcamp": "jRCaMP", "jrcamp1a": "jRCaMP",
     "jrgeco": "jRGECO", "jrgeco1a": "jRGECO",
+    "r-geco": "R-GECO", "rgeco": "R-GECO",
     "fluo-4": "Fluo-4", "fluo4": "Fluo-4",
+    "fluo-8": "Fluo-8", "fluo8": "Fluo-8",
     "fura-2": "Fura-2", "fura2": "Fura-2",
+    "cal-520": "Cal-520", "cal520": "Cal-520",
+    "cal-590": "Cal-590", "cal590": "Cal-590",
+    "oregon green bapta": "Oregon Green BAPTA", "ogb-1": "Oregon Green BAPTA",
+    "rhod-2": "Rhod-2", "rhod2": "Rhod-2",
+    "indo-1": "Indo-1", "indo1": "Indo-1",
+    "calcium green": "Calcium Green",
+    "x-rhod-1": "X-Rhod-1",
+    # Voltage indicators
+    "asap1": "ASAP1", "asap2": "ASAP2", "asap3": "ASAP3",
+    "voltron": "Voltron", "archon1": "Archon1", "archon2": "Archon2",
+    "quasar": "QuasAr", "arclight": "ArcLight",
+    "somarchon": "SomArchon",
+    # Neurotransmitter sensors
+    "iglusnfr": "iGluSnFR", "dlight": "dLight", "dlight1": "dLight",
+    "grab-da": "GRAB-DA", "grabda": "GRAB-DA",
+    "grab-ne": "GRAB-NE", "grab-5ht": "GRAB-5HT",
+    "grab-ach": "GRAB-ACh",
     # Common dyes
     "dapi": "DAPI",
     "hoechst": "Hoechst 33342",
@@ -111,17 +161,52 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     # Janelia Fluor
     "jf549": "JF549", "jf646": "JF646",
     # Others
-    "draq5": "DRAQ5", "bodipy": "BODIPY",
+    "draq5": "DRAQ5", "draq7": "DRAQ7",
+    "to-pro-3": "TO-PRO-3", "topro-3": "TO-PRO-3",
+    "bodipy": "BODIPY",
     "coumarin": "Coumarin", "dylight": "DyLight",
     "fm dyes": "FM Dyes", "fm1-43": "FM Dyes", "fm4-64": "FM Dyes",
     "sytox": "SYTOX", "sytox green": "SYTOX Green",
+    "sytox blue": "SYTOX Blue", "sytox orange": "SYTOX Orange",
     "syto": "SYTO",
     "wga": "WGA", "wheat germ agglutinin": "WGA",
     "apc": "APC", "allophycocyanin": "APC",
     "pe": None,  # PE is ambiguous (phycoerythrin vs other)
     "phycoerythrin": "PE",
-    "cf568": "CF568",
-    "cf dye": "CF Dye",
+    "percp": "PerCP", "percp-cy5.5": "PerCP-Cy5.5",
+    "pe-cy5": "PE-Cy5", "pe-cy7": "PE-Cy7",
+    "apc-cy7": "APC-Cy7",
+    "cf568": "CF568", "cf dye": "CF Dye",
+    # Brilliant Violet dyes
+    "bv421": "BV421", "brilliant violet 421": "BV421",
+    "bv510": "BV510", "brilliant violet 510": "BV510",
+    "bv605": "BV605", "brilliant violet 605": "BV605",
+    "bv650": "BV650", "brilliant violet 650": "BV650",
+    "bv711": "BV711", "brilliant violet 711": "BV711",
+    "bv785": "BV785", "brilliant violet 785": "BV785",
+    # Additional organelle trackers
+    "mitotracker deep red": "MitoTracker Deep Red",
+    "mitotracker orange": "MitoTracker Orange",
+    "lysotracker green": "LysoTracker Green",
+    "lysotracker blue": "LysoTracker Blue",
+    "lysotracker deep red": "LysoTracker Deep Red",
+    "er-tracker green": "ER-Tracker Green",
+    "er-tracker red": "ER-Tracker Red",
+    "golgi tracker": "Golgi-Tracker", "golgitracker": "Golgi-Tracker",
+    "cellrox": "CellROX",
+    "tmrm": "TMRM", "tetramethylrhodamine methyl": "TMRM",
+    "tmre": "TMRE", "tetramethylrhodamine ethyl": "TMRE",
+    # Additional synthetic dyes
+    "pacific blue": "Pacific Blue",
+    "pacific orange": "Pacific Orange",
+    "pacific green": "Pacific Green",
+    "marina blue": "Marina Blue",
+    "efluor": "eFluor",
+    "rhodamine 6g": "Rhodamine 6G",
+    "tetramethylrhodamine": "TRITC",
+    # Bimolecular fluorescence
+    "split-gfp": "Split-GFP", "split gfp": "Split-GFP",
+    "bifc": "BiFC", "bimolecular fluorescence": "BiFC",
 }
 
 # ======================================================================
@@ -158,6 +243,28 @@ _REGEX_PATTERNS: List[tuple] = [
     # CF dyes
     (re.compile(r"\bCF(\d{3})\b"),
      lambda m: f"CF{m.group(1)}"),
+    # Brilliant Violet NNN
+    (re.compile(r"\bBV(\d{3})\b"),
+     lambda m: f"BV{m.group(1)}"),
+    (re.compile(r"\bBrilliant\s+Violet\s+(\d{3})\b", re.I),
+     lambda m: f"BV{m.group(1)}"),
+    # eFluor NNN
+    (re.compile(r"\beFluor\s*(\d{3})\b", re.I),
+     lambda m: f"eFluor {m.group(1)}"),
+    # iRFP variants
+    (re.compile(r"\biRFP(\d{3})\b", re.I),
+     lambda m: f"iRFP{m.group(1)}"),
+    (re.compile(r"\bmiRFP(\d{3})\b", re.I),
+     lambda m: f"miRFP{m.group(1)}"),
+    # jGCaMP variants
+    (re.compile(r"\bjGCaMP(\d[a-z]?)\b", re.I),
+     lambda m: f"jGCaMP{m.group(1)}"),
+    # Janelia Fluor full name
+    (re.compile(r"\bJanelia\s+Fluor\s+(\d{3})\b", re.I),
+     lambda m: f"JF{m.group(1)}"),
+    # SYTO NNN
+    (re.compile(r"\bSYTO\s*(\d+)\b", re.I),
+     lambda m: f"SYTO {m.group(1)}"),
 ]
 
 # Context patterns for ambiguous short names (DiI, DiD, DiO, DiR, EdU, BrdU, SiR)

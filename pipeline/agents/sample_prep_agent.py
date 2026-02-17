@@ -29,7 +29,10 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "3DISCO": (re.compile(r"\b3DISCO\b"), 0.95),
     "uDISCO": (re.compile(r"\buDISCO\b"), 0.95),
     "SHIELD": (re.compile(r"\bSHIELD\b(?=.{0,50}(?:clear|tissue|brain|protocol))", re.I | re.S), 0.85),
-    "Tissue Clearing": (re.compile(r"\btissue\s+clearing\b", re.I), 0.9),
+    "Tissue Clearing": (re.compile(r"\b(?:tissue|optical)\s+clearing\b", re.I), 0.9),
+    "PACT": (re.compile(r"\bPACT\b(?=.{0,30}(?:clear|tissue|brain|protocol))", re.I | re.S), 0.85),
+    "PEGASOS": (re.compile(r"\bPEGASOS\b", re.I), 0.95),
+    "eFLASH": (re.compile(r"\beFLASH\b"), 0.95),
 
     # Embedding & sectioning
     "OCT Embedding": (re.compile(r"\bOCT\s+(?:embed|compound|medium|block)\b", re.I), 0.85),
@@ -47,6 +50,8 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "FISH": (re.compile(r"\b(?:fluorescen\w+\s+in\s+situ\s+hybridi[sz]\w+|FISH\s+(?:experiment|probe|signal|stain|label))\b", re.I), 0.85),
     "smFISH": (re.compile(r"\bsmFISH\b"), 0.95),
     "RNAscope": (re.compile(r"\bRNAscope\b", re.I), 0.95),
+    "MERFISH": (re.compile(r"\bMERFISH\b", re.I), 0.95),
+    "seqFISH": (re.compile(r"\bseqFISH\b", re.I), 0.95),
     "In Situ Hybridization": (re.compile(r"\bin\s+situ\s+hybridi[sz]\w+\b", re.I), 0.85),
     "TUNEL": (re.compile(r"\bTUNEL\b"), 0.9),
 

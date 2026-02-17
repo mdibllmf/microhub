@@ -217,6 +217,10 @@ REAGENT_SUPPLIERS: Dict[str, str] = {
     "addgene": "Addgene",
     "enzo life sciences": "Enzo Life Sciences",
     "qiagen": "Qiagen",
+    "r&d systems": "R&D Systems",
+    "biolegend": "BioLegend",
+    "visiopharm": "Visiopharm",
+    "definiens": "Definiens",
 }
 
 # Context patterns for reagent suppliers (e.g. "Sigma-Aldrich, St. Louis")
