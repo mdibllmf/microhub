@@ -129,6 +129,13 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         re.I | re.S,
     ), 0.85),
 
+    # --- Electron Microscopy Public Image Archive ---
+    "EMIAP": (re.compile(
+        r"\bEMIAP[- ]?\d+\b|"
+        r"(?:https?://)?(?:www\.)?ebi\.ac\.uk/emiap/[\w./]+",
+        re.I,
+    ), 0.95),
+
     # --- Genomics / transcriptomics ---
     "GEO": (re.compile(
         r"\bGSE\d{3,}\b|Gene\s+Expression\s+Omnibus|"

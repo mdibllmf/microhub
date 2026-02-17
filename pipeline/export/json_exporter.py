@@ -421,8 +421,14 @@ class JsonExporter:
             "has_reagent_suppliers": bool(reagent_suppliers),
             "has_general_software": bool(general_software),
             "has_methods": bool(self.safe_get(row_dict, "methods")) and len(str(self.safe_get(row_dict, "methods", ""))) > 100,
+            "has_antibodies": bool(antibodies),
             "has_affiliations": bool(affiliations) or bool(self.safe_get(row_dict, "has_affiliations")),
             "has_institutions": bool(institutions) or bool(self.safe_get(row_dict, "has_institutions")),
+            "has_supplementary_materials": bool(supplementary),
+            "has_objectives": bool(objectives),
+            "has_lasers": bool(lasers),
+            "has_detectors": bool(detectors),
+            "has_filters": bool(filters),
             "links_validated": bool(self.safe_get(row_dict, "links_validated")),
 
             # === TAG EXTRACTION METADATA ===
@@ -483,6 +489,7 @@ class JsonExporter:
             "fluorophores", "organisms", "antibody_sources",
             "cell_lines", "sample_preparation", "protocols",
             "repositories", "rrids", "rors", "institutions",
+            "objectives", "lasers", "detectors", "filters",
             "github_url", "tag_source",
         ]
 
