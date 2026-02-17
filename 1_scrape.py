@@ -26,6 +26,9 @@ Usage:
 Scraper flags (forwarded to backup/microhub_scraper.py):
     --db PATH               Database path (default: microhub.db)
     --email EMAIL            Email for NCBI API
+    --ncbi-api-key KEY       NCBI API key (or set NCBI_API_KEY env var)
+                             Increases PubMed rate limit from 3 to 10 req/sec
+                             Get one free: https://www.ncbi.nlm.nih.gov/account/settings/
     --limit N                Cap total papers
     --priority-only          Only high-priority sources
     --full-text-only         Only save papers with full text
