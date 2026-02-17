@@ -10,6 +10,7 @@ WordPress-ready files.
     python 3_clean.py --input-dir raw_export/             # read from step 2 output
     python 3_clean.py --output-dir cleaned_export/        # write here
     python 3_clean.py --enrich                            # re-run agents during cleanup
+    python 3_clean.py --api-enrich                        # GitHub/S2/CrossRef API enrichment
 
 Input:  raw_export/*_chunk_*.json   (from step 2)
 Output: cleaned_export/*_chunk_*.json (ready for step 4 and WordPress)
@@ -42,6 +43,15 @@ def main():
                         help="Output directory (default: cleaned_export/)")
     parser.add_argument("--enrich", action="store_true",
                         help="Re-run agent pipeline during cleanup")
+    parser.add_argument("--api-enrich", action="store_true",
+                        help="Enrich via GitHub/Semantic Scholar/CrossRef APIs "
+                             "(updates citations, GitHub metrics, discovers repos)")
+    parser.add_argument("--no-github", action="store_true",
+                        help="Skip GitHub API calls during --api-enrich")
+    parser.add_argument("--no-citations", action="store_true",
+                        help="Skip Semantic Scholar calls during --api-enrich")
+    parser.add_argument("--no-crossref", action="store_true",
+                        help="Skip CrossRef calls during --api-enrich")
 
     args = parser.parse_args()
 
@@ -82,12 +92,18 @@ def main():
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None
         )
 
+    # --- Optional API enrichment (GitHub, S2, CrossRef) ---
+    api_enrich = args.api_enrich
+    if api_enrich:
+        from pipeline.enrichment import enrich_paper
+
     logger.info("=" * 60)
     logger.info("STEP 3 — CLEAN (re-tag + finalize JSON)")
     logger.info("=" * 60)
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
     logger.info("Enrich:      %s", "yes" if args.enrich else "no")
+    logger.info("API enrich:  %s", "yes" if api_enrich else "no")
     logger.info("")
 
     total_papers = 0
@@ -102,16 +118,46 @@ def main():
 
         cleaned = []
         for paper in papers:
-            # Optionally re-run agents
+            # Optionally re-run agents — merge results with existing data
             if enricher is not None:
                 agent_results = enricher.process_paper(paper)
                 for key, val in agent_results.items():
                     if key.startswith("_"):
                         continue
-                    if isinstance(val, (list, dict)) and val:
+                    if isinstance(val, list) and val:
+                        # Union: combine existing + agent, deduplicate
+                        existing = paper.get(key) or []
+                        if isinstance(existing, str):
+                            try:
+                                existing = json.loads(existing)
+                            except (json.JSONDecodeError, TypeError):
+                                existing = []
+                        seen = set()
+                        combined = []
+                        for item in existing + val:
+                            if isinstance(item, dict):
+                                k = item.get("canonical") or item.get("id") or item.get("url") or json.dumps(item, sort_keys=True)
+                            else:
+                                k = str(item)
+                            if k not in seen:
+                                seen.add(k)
+                                combined.append(item)
+                        paper[key] = combined
+                    elif isinstance(val, dict) and val:
                         paper[key] = val
                     elif isinstance(val, str) and val:
-                        paper[key] = val
+                        # Scalar: only overwrite if paper has no value
+                        if not paper.get(key):
+                            paper[key] = val
+
+            # API enrichment (GitHub metrics, S2 citations, CrossRef repos)
+            if api_enrich:
+                enrich_paper(
+                    paper,
+                    fetch_github=not args.no_github,
+                    fetch_citations=not args.no_citations,
+                    fetch_crossref_repos=not args.no_crossref,
+                )
 
             # Normalize tag names (scraper variants → canonical forms)
             normalize_tags(paper)

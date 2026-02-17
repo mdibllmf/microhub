@@ -467,9 +467,11 @@ class JsonExporter:
 
     @staticmethod
     def _merge_agent_results(row_dict: Dict, agent: Dict) -> Dict:
-        """Overlay agent extraction results onto DB row values.
+        """Merge agent extraction results with DB row values.
 
-        Only replaces tag fields -- metadata (title, DOI, etc.) is kept
+        For list fields: unions both sources (scraper + agent) and
+        deduplicates.  For scalar fields: keeps DB value if agent
+        returns empty.  Metadata (title, DOI, etc.) is always kept
         from the database.
         """
         merged = dict(row_dict)
@@ -483,14 +485,52 @@ class JsonExporter:
             "repositories", "rrids", "rors", "institutions",
             "github_url", "tag_source",
         ]
+
+        # Fields where scraper data is authoritative and should never
+        # be replaced with empty agent results
+        preserve_if_empty = {"github_url", "tag_source"}
+
         for field in tag_fields:
-            if field in agent:
-                val = agent[field]
-                # Store lists as JSON strings for DB compatibility
-                if isinstance(val, (list, dict)):
-                    merged[field] = json.dumps(val, ensure_ascii=False)
+            if field not in agent:
+                continue
+            agent_val = agent[field]
+
+            if isinstance(agent_val, list):
+                # Union: combine DB values + agent values, deduplicate
+                db_raw = merged.get(field, "[]")
+                if isinstance(db_raw, str):
+                    try:
+                        db_list = json.loads(db_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        db_list = []
+                elif isinstance(db_raw, list):
+                    db_list = db_raw
                 else:
-                    merged[field] = val
+                    db_list = []
+
+                # Deduplicate: for dicts use canonical/id/url key, for strings use value
+                seen = set()
+                combined = []
+                for item in db_list + agent_val:
+                    if isinstance(item, dict):
+                        key = item.get("canonical") or item.get("id") or item.get("url") or json.dumps(item, sort_keys=True)
+                    else:
+                        key = str(item)
+                    if key not in seen:
+                        seen.add(key)
+                        combined.append(item)
+
+                merged[field] = json.dumps(combined, ensure_ascii=False)
+
+            elif isinstance(agent_val, dict) and agent_val:
+                merged[field] = json.dumps(agent_val, ensure_ascii=False)
+
+            else:
+                # Scalar: only overwrite if agent has a value
+                if field in preserve_if_empty and not agent_val:
+                    continue
+                if agent_val is not None:
+                    merged[field] = agent_val
 
         return merged
 
