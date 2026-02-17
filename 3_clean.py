@@ -93,8 +93,10 @@ def main():
 
     # --- API enrichment (GitHub, S2, CrossRef) — on by default ---
     api_enrich = not args.skip_api
+    enricher_api = None
     if api_enrich:
-        from pipeline.enrichment import enrich_paper
+        from pipeline.enrichment import Enricher
+        enricher_api = Enricher()
 
     logger.info("=" * 60)
     logger.info("STEP 3 — CLEAN (re-tag + finalize JSON)")
@@ -149,15 +151,6 @@ def main():
                         if not paper.get(key):
                             paper[key] = val
 
-            # API enrichment (GitHub metrics, S2 citations, CrossRef repos)
-            if api_enrich:
-                enrich_paper(
-                    paper,
-                    fetch_github=not args.no_github,
-                    fetch_citations=not args.no_citations,
-                    fetch_crossref_repos=not args.no_crossref,
-                )
-
             # Normalize tag names (scraper variants → canonical forms)
             normalize_tags(paper)
 
@@ -205,6 +198,15 @@ def main():
             paper.pop("full_text", None)
 
             cleaned.append(paper)
+
+        # Batch API enrichment (S2 citations in bulk, then per-paper GH/CrossRef)
+        if enricher_api is not None:
+            enricher_api.enrich_batch(
+                cleaned,
+                fetch_github=not args.no_github,
+                fetch_citations=not args.no_citations,
+                fetch_crossref_repos=not args.no_crossref,
+            )
 
         # Write output
         out_file = os.path.join(out_dir, os.path.basename(input_file))

@@ -1,3 +1,6 @@
+# API keys (never commit)
+.env
+
 # Database files - too large for GitHub
 microhub.db
 *.db
