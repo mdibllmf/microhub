@@ -365,53 +365,98 @@ $meta = mh_get_paper_meta();
             <?php endif;
             } ?>
             
-            <!-- Fluorophores (from meta) -->
-            <?php 
-            $fluorophores = json_decode(get_post_meta(get_the_ID(), '_mh_fluorophores', true), true) ?: array();
-            if (!empty($fluorophores)): 
+            <!-- Fluorophores (taxonomy first, then meta fallback) -->
+            <?php
+            $fluorophores_tax = taxonomy_exists('mh_fluorophore') ? get_the_terms(get_the_ID(), 'mh_fluorophore') : false;
+            if ($fluorophores_tax && !is_wp_error($fluorophores_tax) && !empty($fluorophores_tax)):
             ?>
             <div class="mh-sidebar-widget">
-                <h3>🔬 Fluorophores</h3>
+                <h3>✨ Fluorophores</h3>
                 <div class="mh-tags">
-                    <?php foreach ($fluorophores as $fluor): ?>
+                    <?php foreach ($fluorophores_tax as $term):
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-fluorophore"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
+                </div>
+            </div>
+            <?php else:
+                $fluorophores_meta = json_decode(get_post_meta(get_the_ID(), '_mh_fluorophores', true), true) ?: array();
+                if (!empty($fluorophores_meta)):
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>✨ Fluorophores</h3>
+                <div class="mh-tags">
+                    <?php foreach ($fluorophores_meta as $fluor): ?>
                         <span class="mh-tag mh-tag-fluorophore"><?php echo esc_html($fluor); ?></span>
                     <?php endforeach; ?>
                 </div>
             </div>
-            <?php endif; ?>
-            
-            <!-- Cell Lines (from meta) -->
-            <?php 
-            $cell_lines = json_decode(get_post_meta(get_the_ID(), '_mh_cell_lines', true), true) ?: array();
-            if (!empty($cell_lines)): 
+            <?php endif; endif; ?>
+
+            <!-- Cell Lines (taxonomy first, then meta fallback) -->
+            <?php
+            $cell_lines_tax = taxonomy_exists('mh_cell_line') ? get_the_terms(get_the_ID(), 'mh_cell_line') : false;
+            if ($cell_lines_tax && !is_wp_error($cell_lines_tax) && !empty($cell_lines_tax)):
             ?>
             <div class="mh-sidebar-widget">
                 <h3>🧫 Cell Lines</h3>
                 <div class="mh-tags">
-                    <?php foreach ($cell_lines as $cell): ?>
+                    <?php foreach ($cell_lines_tax as $term):
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-cell_line"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
+                </div>
+            </div>
+            <?php else:
+                $cell_lines_meta = json_decode(get_post_meta(get_the_ID(), '_mh_cell_lines', true), true) ?: array();
+                if (!empty($cell_lines_meta)):
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🧫 Cell Lines</h3>
+                <div class="mh-tags">
+                    <?php foreach ($cell_lines_meta as $cell): ?>
                         <span class="mh-tag mh-tag-cell_line"><?php echo esc_html($cell); ?></span>
                     <?php endforeach; ?>
                 </div>
             </div>
-            <?php endif; ?>
-            
-            <!-- Sample Preparation (from meta) -->
-            <?php 
-            $sample_prep = json_decode(get_post_meta(get_the_ID(), '_mh_sample_preparation', true), true) ?: array();
-            if (empty($sample_prep)) {
-                $sample_prep = json_decode(get_post_meta(get_the_ID(), '_mh_sample_prep', true), true) ?: array();
-            }
-            if (!empty($sample_prep)): 
+            <?php endif; endif; ?>
+
+            <!-- Sample Preparation (taxonomy first, then meta fallback) -->
+            <?php
+            $sample_prep_tax = taxonomy_exists('mh_sample_prep') ? get_the_terms(get_the_ID(), 'mh_sample_prep') : false;
+            if ($sample_prep_tax && !is_wp_error($sample_prep_tax) && !empty($sample_prep_tax)):
             ?>
             <div class="mh-sidebar-widget">
                 <h3>🧪 Sample Preparation</h3>
                 <div class="mh-tags">
-                    <?php foreach ($sample_prep as $prep): ?>
+                    <?php foreach ($sample_prep_tax as $term):
+                        $link = get_term_link($term);
+                        if (!is_wp_error($link)):
+                    ?>
+                        <a href="<?php echo esc_url($link); ?>" class="mh-tag mh-tag-sample_prep"><?php echo esc_html($term->name); ?></a>
+                    <?php endif; endforeach; ?>
+                </div>
+            </div>
+            <?php else:
+                $sample_prep_meta = json_decode(get_post_meta(get_the_ID(), '_mh_sample_preparation', true), true) ?: array();
+                if (empty($sample_prep_meta)) {
+                    $sample_prep_meta = json_decode(get_post_meta(get_the_ID(), '_mh_sample_prep', true), true) ?: array();
+                }
+                if (!empty($sample_prep_meta)):
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🧪 Sample Preparation</h3>
+                <div class="mh-tags">
+                    <?php foreach ($sample_prep_meta as $prep): ?>
                         <span class="mh-tag mh-tag-sample_prep"><?php echo esc_html($prep); ?></span>
                     <?php endforeach; ?>
                 </div>
             </div>
-            <?php endif; ?>
+            <?php endif; endif; ?>
             
             <!-- Microscope Brands (from meta) -->
             <?php 
@@ -427,51 +472,95 @@ $meta = mh_get_paper_meta();
                 </div>
             </div>
             <?php endif; ?>
-            
-            <!-- Related Papers -->
+
+            <!-- Reagent Suppliers (from meta) -->
             <?php
-            $related_terms = array();
-            $taxonomies = array('mh_technique', 'mh_microscope', 'mh_organism');
-            foreach ($taxonomies as $tax) {
-                if (!taxonomy_exists($tax)) continue;
-                $terms = get_the_terms(get_the_ID(), $tax);
-                if ($terms && !is_wp_error($terms)) {
-                    foreach ($terms as $term) {
-                        $related_terms[] = $term->term_id;
-                    }
+            $reagent_suppliers = json_decode(get_post_meta(get_the_ID(), '_mh_reagent_suppliers', true), true) ?: array();
+            if (!empty($reagent_suppliers)):
+            ?>
+            <div class="mh-sidebar-widget">
+                <h3>🧪 Reagent Suppliers</h3>
+                <div class="mh-tags">
+                    <?php foreach ($reagent_suppliers as $supplier): ?>
+                        <span class="mh-tag mh-tag-supplier"><?php echo esc_html($supplier); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Related Papers - scored by shared tag count across ALL taxonomies -->
+            <?php
+            $all_taxonomies_for_related = array(
+                'mh_technique', 'mh_microscope', 'mh_organism', 'mh_software',
+                'mh_fluorophore', 'mh_sample_prep', 'mh_cell_line',
+                'mh_microscope_model', 'mh_analysis_software', 'mh_acquisition_software',
+                'mh_facility',
+            );
+            $current_term_ids = array();
+            $tax_queries = array();
+            foreach ($all_taxonomies_for_related as $tax_name) {
+                if (!taxonomy_exists($tax_name)) continue;
+                $t = get_the_terms(get_the_ID(), $tax_name);
+                if ($t && !is_wp_error($t)) {
+                    $ids = wp_list_pluck($t, 'term_id');
+                    $current_term_ids[$tax_name] = $ids;
+                    $tax_queries[] = array(
+                        'taxonomy' => $tax_name,
+                        'terms' => $ids,
+                    );
                 }
             }
-            
-            if (!empty($related_terms) && mh_plugin_active()):
-                $related = new WP_Query(array(
-                    'post_type' => 'mh_paper',
-                    'posts_per_page' => 5,
+
+            if (!empty($tax_queries) && mh_plugin_active()):
+                $tax_queries['relation'] = 'OR';
+                $candidates = new WP_Query(array(
+                    'post_type' => array('mh_paper', 'mh_protocol'),
+                    'posts_per_page' => 30,
                     'post__not_in' => array(get_the_ID()),
-                    'tax_query' => array(
-                        'relation' => 'OR',
-                        array('taxonomy' => 'mh_technique', 'terms' => $related_terms),
-                        array('taxonomy' => 'mh_microscope', 'terms' => $related_terms),
-                        array('taxonomy' => 'mh_organism', 'terms' => $related_terms)
-                    )
+                    'tax_query' => $tax_queries,
+                    'fields' => 'ids',
                 ));
-                
-                if ($related->have_posts()):
+
+                // Score each candidate by counting shared terms
+                $scored = array();
+                if ($candidates->have_posts()) {
+                    foreach ($candidates->posts as $cand_id) {
+                        $score = 0;
+                        foreach ($current_term_ids as $tax_name => $term_ids) {
+                            $cand_terms = wp_get_post_terms($cand_id, $tax_name, array('fields' => 'ids'));
+                            if (!is_wp_error($cand_terms)) {
+                                $score += count(array_intersect($term_ids, $cand_terms));
+                            }
+                        }
+                        $scored[$cand_id] = $score;
+                    }
+                    arsort($scored);
+                }
+                wp_reset_postdata();
+
+                $top_ids = array_slice(array_keys($scored), 0, 5, true);
+                if (!empty($top_ids)):
             ?>
             <div class="mh-sidebar-widget">
                 <h3>📚 Related Papers</h3>
                 <ul style="display: flex; flex-direction: column; gap: 12px;">
-                    <?php while ($related->have_posts()): $related->the_post(); ?>
+                    <?php foreach ($top_ids as $rel_id):
+                        $rel_post = get_post($rel_id);
+                        if (!$rel_post) continue;
+                        $match_count = $scored[$rel_id];
+                    ?>
                     <li>
-                        <a href="<?php the_permalink(); ?>" style="color: var(--text-light); font-size: 0.9rem; display: block;">
-                            <?php the_title(); ?>
+                        <a href="<?php echo get_permalink($rel_id); ?>" style="color: var(--text-light); font-size: 0.9rem; display: block;">
+                            <?php echo esc_html($rel_post->post_title); ?>
                         </a>
+                        <span style="font-size: 0.7rem; color: var(--text-muted, #8b949e);"><?php echo intval($match_count); ?> shared tags</span>
                     </li>
-                    <?php endwhile; wp_reset_postdata(); ?>
+                    <?php endforeach; ?>
                 </ul>
             </div>
-            <?php 
+            <?php
                 endif;
-            endif; 
+            endif;
             ?>
         </aside>
     </div>
