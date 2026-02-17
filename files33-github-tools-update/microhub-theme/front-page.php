@@ -166,8 +166,8 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
         </div>
 
-        <!-- Advanced Filters - Two rows of 6 -->
-        <div class="mh-filter-row mh-filter-row-advanced" id="advanced-filters" style="display: none;">
+        <!-- Advanced Filters - Row 2 of 6 -->
+        <div class="mh-filter-row" id="advanced-filters" style="display: none;">
             <div class="mh-filter-item">
                 <select id="filter-fluorophore" data-filter="fluorophore">
                     <option value="">Fluorophore</option>
@@ -216,6 +216,9 @@ $meta_filter_options = mh_get_all_filter_options();
                     <?php endforeach; ?>
                 </select>
             </div>
+        </div>
+        <!-- Advanced Filters - Row 3 of 6 -->
+        <div class="mh-filter-row" id="advanced-filters-2" style="display: none;">
             <div class="mh-filter-item">
                 <select id="filter-reagent-supplier" data-filter="reagent_supplier">
                     <option value="">Supplier</option>
@@ -530,25 +533,7 @@ $meta_filter_options = mh_get_all_filter_options();
     box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3);
 }
 
-/* Advanced Filters Row */
-.mh-filter-row-advanced {
-    display: grid;
-    background: rgba(59, 130, 246, 0.05);
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    border: 1px solid rgba(59, 130, 246, 0.1);
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
-}
-
-@media (max-width: 1024px) {
-    .mh-filter-row-advanced { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 640px) {
-    .mh-filter-row-advanced { grid-template-columns: repeat(2, 1fr); }
-}
+/* Advanced filters use the same .mh-filter-row class - no wrapper needed */
 
 .mh-advanced-toggle {
     display: flex;
@@ -1118,16 +1103,18 @@ function filterByInstitution(institutionSlug) {
     const sortSelect = document.getElementById('mh-sort');
     const clearBtn = document.getElementById('mh-clear-filters');
     const advancedFilters = document.getElementById('advanced-filters');
+    const advancedFilters2 = document.getElementById('advanced-filters-2');
     const toggleBtn = document.getElementById('toggle-advanced-filters');
-    
+
     // Initialize
     searchPapers();
-    
+
     // Toggle advanced filters
     if (toggleBtn && advancedFilters) {
         toggleBtn.addEventListener('click', () => {
             const isHidden = advancedFilters.style.display === 'none';
-            advancedFilters.style.display = isHidden ? 'flex' : 'none';
+            advancedFilters.style.display = isHidden ? 'grid' : 'none';
+            if (advancedFilters2) advancedFilters2.style.display = isHidden ? 'grid' : 'none';
             toggleBtn.querySelector('.toggle-text').textContent = isHidden ? 'Hide Advanced Filters' : 'Show Advanced Filters';
             toggleBtn.classList.toggle('active', isHidden);
         });
@@ -1232,6 +1219,7 @@ function filterByInstitution(institutionSlug) {
         
         // Also hide advanced filters panel
         if (advancedFilters) advancedFilters.style.display = 'none';
+        if (advancedFilters2) advancedFilters2.style.display = 'none';
         if (toggleBtn) {
             toggleBtn.classList.remove('active');
             const toggleText = toggleBtn.querySelector('.toggle-text');
