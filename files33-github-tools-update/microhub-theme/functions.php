@@ -1272,7 +1272,13 @@ function mh_display_paper_tags($post_id = null) {
         'mh_microscope_model' => 'microscope',
         'mh_analysis_software' => 'software',
         'mh_acquisition_software' => 'software',
+        'mh_general_software' => 'software',
         'mh_facility' => 'facility',
+        'mh_reagent_supplier' => 'supplier',
+        'mh_laser' => 'laser',
+        'mh_detector' => 'detector',
+        'mh_objective' => 'objective',
+        'mh_filter' => 'filter',
     );
 
     echo '<div class="mh-tags">';
