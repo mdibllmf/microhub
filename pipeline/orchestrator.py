@@ -22,8 +22,11 @@ from .agents.sample_prep_agent import SamplePrepAgent
 from .agents.cell_line_agent import CellLineAgent
 from .agents.protocol_agent import ProtocolAgent
 from .agents.institution_agent import InstitutionAgent
+from .agents.pubtator_agent import PubTatorAgent
 from .parsing.section_extractor import PaperSections, from_pubmed_dict
 from .validation.tag_validator import TagValidator
+from .validation.api_validator import ApiValidator
+from .validation.identifier_normalizer import IdentifierNormalizer
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +34,10 @@ logger = logging.getLogger(__name__)
 class PipelineOrchestrator:
     """Main orchestrator that runs all agents on a paper and assembles output."""
 
-    def __init__(self, tag_dictionary_path: str = None):
-        # Agents
+    def __init__(self, tag_dictionary_path: str = None, *,
+                 use_pubtator: bool = True,
+                 use_api_validation: bool = True):
+        # Extraction agents
         self.technique_agent = TechniqueAgent()
         self.equipment_agent = EquipmentAgent()
         self.fluorophore_agent = FluorophoreAgent()
@@ -43,8 +48,13 @@ class PipelineOrchestrator:
         self.protocol_agent = ProtocolAgent()
         self.institution_agent = InstitutionAgent()
 
+        # Supplemental: PubTator NLP-based extraction (fills regex gaps)
+        self.pubtator_agent = PubTatorAgent() if use_pubtator else None
+
         # Validation
         self.tag_validator = TagValidator(tag_dictionary_path)
+        self.api_validator = ApiValidator() if use_api_validation else None
+        self.id_normalizer = IdentifierNormalizer()
 
     # ------------------------------------------------------------------
     def process_paper(self, paper: Dict[str, Any]) -> Dict[str, Any]:
@@ -62,7 +72,21 @@ class PipelineOrchestrator:
             Extraction results keyed by category, ready for the exporter.
         """
         sections = from_pubmed_dict(paper)
-        return self._run_agents(sections, paper)
+        results = self._run_agents(sections, paper)
+
+        # Supplemental: PubTator NLP-based extraction for papers with PMIDs
+        pmid = paper.get("pmid")
+        if self.pubtator_agent and pmid:
+            self._merge_pubtator(results, pmid)
+
+        # Post-extraction: validate tags against authoritative APIs
+        if self.api_validator:
+            self.api_validator.validate_paper(results)
+
+        # Post-extraction: normalize all identifiers
+        self.id_normalizer.normalize_paper(results)
+
+        return results
 
     def process_sections(self, sections: PaperSections) -> Dict[str, Any]:
         """Process pre-parsed PaperSections."""
@@ -333,6 +357,50 @@ class PipelineOrchestrator:
                 })
 
         return rors
+
+    def _merge_pubtator(self, results: Dict[str, Any], pmid: str) -> None:
+        """Merge PubTator NLP extractions into results.
+
+        Only adds entities not already found by regex agents.
+        This fills gaps — PubTator catches entities our patterns miss.
+        """
+        pt_exts = self.pubtator_agent.analyze_pmid(pmid)
+        if not pt_exts:
+            return
+
+        # Build sets of what we already have (lowercased for comparison)
+        existing = {
+            "organisms": {v.lower() for v in results.get("organisms", [])},
+            "fluorophores": {v.lower() for v in results.get("fluorophores", [])},
+            "cell_lines": {v.lower() for v in results.get("cell_lines", [])},
+        }
+
+        added = 0
+        for ext in pt_exts:
+            canonical = ext.canonical()
+            canonical_lower = canonical.lower()
+
+            if ext.label == "ORGANISM":
+                if canonical_lower not in existing["organisms"]:
+                    results.setdefault("organisms", []).append(canonical)
+                    existing["organisms"].add(canonical_lower)
+                    added += 1
+
+            elif ext.label == "FLUOROPHORE":
+                if canonical_lower not in existing["fluorophores"]:
+                    results.setdefault("fluorophores", []).append(canonical)
+                    existing["fluorophores"].add(canonical_lower)
+                    added += 1
+
+            elif ext.label == "CELL_LINE":
+                if canonical_lower not in existing["cell_lines"]:
+                    results.setdefault("cell_lines", []).append(canonical)
+                    existing["cell_lines"].add(canonical_lower)
+                    added += 1
+
+        if added:
+            logger.debug("PubTator added %d supplemental entities for PMID %s",
+                         added, pmid)
 
     @staticmethod
     def _confidence_summary(exts: List[Extraction]) -> Dict:
