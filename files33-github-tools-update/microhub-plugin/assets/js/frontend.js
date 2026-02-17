@@ -769,6 +769,12 @@
         if (this.activeFilters.microscope) params.microscope = this.activeFilters.microscope;
         if (this.activeFilters.organism) params.organism = this.activeFilters.organism;
         if (this.activeFilters.software) params.software = this.activeFilters.software;
+        if (this.activeFilters.reagent_supplier) params.reagent_supplier = this.activeFilters.reagent_supplier;
+        if (this.activeFilters.general_software) params.general_software = this.activeFilters.general_software;
+        if (this.activeFilters.laser) params.laser = this.activeFilters.laser;
+        if (this.activeFilters.detector) params.detector = this.activeFilters.detector;
+        if (this.activeFilters.objective) params.objective = this.activeFilters.objective;
+        if (this.activeFilters.optical_filter) params.optical_filter = this.activeFilters.optical_filter;
 
         var yearFilter = this.activeFilters.year;
         if (yearFilter) {

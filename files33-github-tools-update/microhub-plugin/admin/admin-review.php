@@ -458,6 +458,12 @@ function microhub_bulk_edit_page() {
                         <option value="mh_software">Software</option>
                         <option value="mh_organism">Organisms</option>
                         <option value="mh_microscope">Microscopes</option>
+                        <option value="mh_reagent_supplier">Reagent Suppliers</option>
+                        <option value="mh_general_software">General Software</option>
+                        <option value="mh_laser">Lasers</option>
+                        <option value="mh_detector">Detectors</option>
+                        <option value="mh_objective">Objectives</option>
+                        <option value="mh_filter">Optical Filters</option>
                     </select>
                 </div>
                 
@@ -493,6 +499,12 @@ function microhub_bulk_edit_page() {
                         <option value="mh_software">Software</option>
                         <option value="mh_organism">Organisms</option>
                         <option value="mh_microscope">Microscopes</option>
+                        <option value="mh_reagent_supplier">Reagent Suppliers</option>
+                        <option value="mh_general_software">General Software</option>
+                        <option value="mh_laser">Lasers</option>
+                        <option value="mh_detector">Detectors</option>
+                        <option value="mh_objective">Objectives</option>
+                        <option value="mh_filter">Optical Filters</option>
                     </select>
                 </div>
                 

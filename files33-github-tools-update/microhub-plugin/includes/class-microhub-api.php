@@ -233,6 +233,60 @@ class MicroHub_API {
             );
         }
 
+        // Reagent supplier filter
+        if ($request->get_param('reagent_supplier')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_reagent_supplier',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('reagent_supplier')),
+            );
+        }
+
+        // General software filter
+        if ($request->get_param('general_software')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_general_software',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('general_software')),
+            );
+        }
+
+        // Laser filter
+        if ($request->get_param('laser')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_laser',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('laser')),
+            );
+        }
+
+        // Detector filter
+        if ($request->get_param('detector')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_detector',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('detector')),
+            );
+        }
+
+        // Objective filter
+        if ($request->get_param('objective')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_objective',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('objective')),
+            );
+        }
+
+        // Optical filter filter
+        if ($request->get_param('optical_filter')) {
+            $tax_query[] = array(
+                'taxonomy' => 'mh_filter',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($request->get_param('optical_filter')),
+            );
+        }
+
         if (count($tax_query) > 1) {
             $args['tax_query'] = $tax_query;
         }

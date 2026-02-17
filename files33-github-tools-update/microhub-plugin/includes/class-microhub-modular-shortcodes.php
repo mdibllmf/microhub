@@ -170,7 +170,7 @@ class MicroHub_Modular_Shortcodes {
      */
     public function filters_shortcode($atts) {
         $atts = shortcode_atts(array(
-            'show' => 'technique,software,organism,microscope,year,citations',
+            'show' => 'technique,software,organism,microscope,year,citations,reagent_supplier,general_software,laser,detector,objective,optical_filter',
             'layout' => 'horizontal', // horizontal or vertical
         ), $atts);
         
@@ -248,7 +248,67 @@ class MicroHub_Modular_Shortcodes {
                     </select>
                 </div>
                 <?php endif; ?>
-                
+
+                <?php if (in_array('reagent_supplier', $filters)) : ?>
+                <div class="mh-filter-item">
+                    <label>Reagent Supplier</label>
+                    <select id="mh-filter-reagent-supplier" data-filter="reagent_supplier">
+                        <option value="">All Suppliers</option>
+                        <?php echo $this->get_taxonomy_options('mh_reagent_supplier'); ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <?php if (in_array('general_software', $filters)) : ?>
+                <div class="mh-filter-item">
+                    <label>General Software</label>
+                    <select id="mh-filter-general-software" data-filter="general_software">
+                        <option value="">All Software</option>
+                        <?php echo $this->get_taxonomy_options('mh_general_software'); ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <?php if (in_array('laser', $filters)) : ?>
+                <div class="mh-filter-item">
+                    <label>Laser</label>
+                    <select id="mh-filter-laser" data-filter="laser">
+                        <option value="">All Lasers</option>
+                        <?php echo $this->get_taxonomy_options('mh_laser'); ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <?php if (in_array('detector', $filters)) : ?>
+                <div class="mh-filter-item">
+                    <label>Detector</label>
+                    <select id="mh-filter-detector" data-filter="detector">
+                        <option value="">All Detectors</option>
+                        <?php echo $this->get_taxonomy_options('mh_detector'); ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <?php if (in_array('objective', $filters)) : ?>
+                <div class="mh-filter-item">
+                    <label>Objective</label>
+                    <select id="mh-filter-objective" data-filter="objective">
+                        <option value="">All Objectives</option>
+                        <?php echo $this->get_taxonomy_options('mh_objective'); ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <?php if (in_array('optical_filter', $filters)) : ?>
+                <div class="mh-filter-item">
+                    <label>Optical Filter</label>
+                    <select id="mh-filter-optical-filter" data-filter="optical_filter">
+                        <option value="">All Filters</option>
+                        <?php echo $this->get_taxonomy_options('mh_filter'); ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
             </div>
         </div>
         <?php
