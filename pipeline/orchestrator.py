@@ -166,6 +166,18 @@ class PipelineOrchestrator:
         results["reagent_suppliers"] = self._canonicals(
             [e for e in equipment_exts if e.label == "REAGENT_SUPPLIER"],
         )
+        results["objectives"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "OBJECTIVE"],
+        )
+        results["lasers"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "LASER"],
+        )
+        results["detectors"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "DETECTOR"],
+        )
+        results["filters"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "FILTER"],
+        )
         results["image_analysis_software"] = self._canonicals(
             [e for e in software_exts if e.label == "IMAGE_ANALYSIS_SOFTWARE"],
             "image_analysis_software",
@@ -244,6 +256,10 @@ class PipelineOrchestrator:
             yield sections.introduction, "introduction"
         if sections.discussion:
             yield sections.discussion, "discussion"
+        if sections.figures:
+            yield sections.figures, "figures"
+        if sections.data_availability:
+            yield sections.data_availability, "data_availability"
         # If we only have full_text (no section segmentation),
         # yield it as "full_text" to give agents something to work with
         if (not sections.methods and not sections.results
