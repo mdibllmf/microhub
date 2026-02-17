@@ -57,6 +57,9 @@ def main():
     from pipeline.export.json_exporter import is_protocol_paper, get_protocol_type
     from pipeline.normalization import normalize_tags
     from pipeline.orchestrator import PipelineOrchestrator
+    from pipeline.validation.identifier_normalizer import IdentifierNormalizer
+
+    id_normalizer = IdentifierNormalizer()
 
     # --- Resolve input files ---
     if args.input:
@@ -153,6 +156,9 @@ def main():
 
             # Normalize tag names (scraper variants → canonical forms)
             normalize_tags(paper)
+
+            # Normalize all identifiers (DOIs, RRIDs, RORs, repo URLs)
+            id_normalizer.normalize_paper(paper)
 
             # Protocol classification
             paper["is_protocol"] = is_protocol_paper(paper) or bool(paper.get("protocols"))
