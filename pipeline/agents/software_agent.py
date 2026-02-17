@@ -43,14 +43,16 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "big data viewer": "BigDataViewer",
     "chimerax": "ChimeraX",
     "ucsf chimera": "UCSF Chimera",
+    "chimera": "UCSF Chimera",  # bare chimera (ChimeraX handled separately)
     "pymol": "PyMOL",
     "neurolucida": "Neurolucida",
     "halo": "HALO",
     "inform": "inForm",
     "autoquant": "AutoQuant",
     "digital micrograph": "Digital Micrograph",
+    "gatan": "Digital Micrograph",
     "imod": "IMOD",
-    "eman2": "EMAN2",
+    "eman2": "EMAN2", "eman": "EMAN2",
     "relion": "RELION",
     "cryosparc": "cryoSPARC",
     "cryo-sparc": "cryoSPARC",
@@ -59,7 +61,7 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "vaa3d": "Vaa3D",
     "aivia": "Aivia",
     "sam": "SAM",
-    "segment anything": "SAM",
+    "segment anything": "SAM", "segment-anything": "SAM",
     "mask r-cnn": "Mask R-CNN",
     "mask rcnn": "Mask R-CNN",
     "u-net": "U-Net",
@@ -68,6 +70,7 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "yolo": "YOLOv",
     "scikit-image": "scikit-image",
     "skimage": "scikit-image",
+    "arivis": "Arivis",
 }
 
 # ======================================================================
@@ -132,6 +135,13 @@ GENERAL_SOFTWARE: Dict[str, str] = {
     "origin": None,  # too ambiguous
     "spss": "SPSS",
     "igor pro": "Igor Pro",
+    "julia": "Julia",
+    "java": "Java",
+    "c++": "C++",
+    "knime": "KNIME",
+    "sas": "SAS",
+    "microsoft excel": "Excel",
+    "excel": "Excel",
 }
 
 # R needs context to avoid matching single-letter occurrences

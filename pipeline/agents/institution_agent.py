@@ -100,6 +100,46 @@ INSTITUTION_ROR_IDS: Dict[str, str] = {
     "Monash University": "02bfwt286",
     "University of Melbourne": "01ej9dk98",
     "University of Queensland": "00rqy9422",
+    # Additional US institutions
+    "Northwestern University": "000e0be47",
+    "New York University": "0190ak572",
+    "NYU": "0190ak572",
+    "University of Texas at Austin": "00hj54h04",
+    "UT Austin": "00hj54h04",
+    "UT Southwestern Medical Center": "00a4bsz29",
+    "MD Anderson Cancer Center": "04twxam07",
+    "Mayo Clinic": "02qp3tb03",
+    "Whitehead Institute": "00x0k6167",
+    "Stowers Institute": "00h0r6t62",
+    "University of Virginia": "0153tk833",
+    "University of Pittsburgh": "01an3r305",
+    "University of Minnesota": "017zqws13",
+    "University of North Carolina": "0130frc33",
+    "Vanderbilt University": "02vm5rt34",
+    "Baylor College of Medicine": "02pttbw34",
+    # Additional UK institutions
+    "University of Manchester": "027m9bs27",
+    "Wellcome Sanger Institute": "05cy4wa09",
+    "Sanger Institute": "05cy4wa09",
+    "University of Bristol": "0524sp257",
+    "University of Sheffield": "05krs5044",
+    # Additional European institutions
+    "EPFL": "02s376052",
+    "Institut Curie": "04t0gwh46",
+    "CNRS": "02feahw73",
+    "INSERM": "02vjkv261",
+    "University of Geneva": "01swzsf04",
+    "University of Basel": "02s6k3f65",
+    # Additional Asia-Pacific institutions
+    "University of Sydney": "0384j8v12",
+    "Australian National University": "019wvm592",
+    "ANU": "019wvm592",
+    "Osaka University": "035t8zc32",
+    "Seoul National University": "04h9pn542",
+    # Additional Canadian institutions
+    "SickKids Research Institute": "04374qe70",
+    "University of Alberta": "0160cpw27",
+    "University of Ottawa": "03c4mmv16",
 }
 
 # Patterns for extracting institution names from affiliation strings
@@ -108,11 +148,26 @@ _INSTITUTION_PATTERNS: List[tuple] = [
     (re.compile(r"\bUniversity\s+of\s+[\w\s]+(?=,|\.|;|\d)", re.I), None),
     # X University
     (re.compile(r"\b[\w]+\s+University\b", re.I), None),
+    # European university formats (Universität, Université, Universiteit)
+    (re.compile(r"\bUniversit[äeéiay]\w*\s+[\w\s]+(?=,|\.|;|\d)", re.I), None),
     # X Institute / X Laboratory
     (re.compile(r"\b[\w\s]+(?:Institute|Laboratory|Lab)\s+(?:of|for)\s+[\w\s]+(?=,|\.|;)", re.I), None),
     # Hospital / Medical Center
     (re.compile(r"\b[\w\s]+(?:Hospital|Medical\s+Center|Medical\s+School)\b", re.I), None),
+    # X College
+    (re.compile(r"\b[\w]+\s+College\b(?!\s+of\s+(?:the|a)\b)", re.I), None),
+    # National Laboratory / Research Center
+    (re.compile(r"\b[\w\s]+National\s+Laborator\w*\b", re.I), None),
+    (re.compile(r"\b[\w\s]+Research\s+Center\b", re.I), None),
+    (re.compile(r"\b[\w\s]+Cancer\s+Center\b", re.I), None),
+    (re.compile(r"\b[\w\s]+Children(?:'s)?\s+Hospital\b", re.I), None),
 ]
+
+# Patterns to exclude from institution extraction (acknowledgment noise)
+_ACKNOWLEDGMENT_EXCLUSIONS = re.compile(
+    r"\b(?:funded?\s+by|grant|supported?\s+by|acknowledg|thank)\b",
+    re.IGNORECASE,
+)
 
 
 class InstitutionAgent(BaseAgent):
@@ -158,6 +213,10 @@ class InstitutionAgent(BaseAgent):
                 ))
 
         # 2. Pattern-based extraction for institutions not in the dictionary
+        #    Skip text that looks like acknowledgment/funding context
+        if _ACKNOWLEDGMENT_EXCLUSIONS.search(text):
+            return extractions
+
         for pattern, _ in _INSTITUTION_PATTERNS:
             for m in pattern.finditer(text):
                 name = m.group(0).strip().rstrip(",.")

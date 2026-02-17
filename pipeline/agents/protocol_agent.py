@@ -40,9 +40,40 @@ _PROTOCOL_URL_PATTERN = re.compile(
     r"|dx\.doi\.org/10\.\d+/[\w.-]+"  # DOI-based protocol refs
     r"|bio-protocol\.org/[\w/.-]+"
     r"|jove\.com/[\w/.-]+"
+    r"|nature\.com/nprot[\w/.-]*"
+    r"|cell\.com/star-protocols[\w/.-]*"
+    r"|currentprotocols\.[\w/.-]+"
+    r"|cshprotocols\.[\w/.-]+"
     r")",
     re.IGNORECASE,
 )
+
+# Protocol DOI patterns -- identify protocol papers by their DOI prefix
+PROTOCOL_DOI_PATTERNS = [
+    re.compile(r"\b10\.1038/nprot\b"),           # Nature Protocols
+    re.compile(r"\b10\.3791/\d+\b"),             # JoVE
+    re.compile(r"\b10\.1016/j\.xpro\b"),         # STAR Protocols
+    re.compile(r"\b10\.21769/BioProtoc\b"),      # Bio-protocol
+    re.compile(r"\b10\.1002/cpz\d?\b"),          # Current Protocols
+    re.compile(r"\b10\.1002/cphy\b"),            # Current Protocols
+    re.compile(r"\b10\.1101/pdb\b"),             # Cold Spring Harbor Protocols
+]
+
+# Protocol journal patterns -- identify protocol papers by journal name
+PROTOCOL_JOURNAL_PATTERNS = [
+    re.compile(r"\bnat\.?\s*protoc", re.I),
+    re.compile(r"\bj\.?\s*vis\.?\s*exp\b", re.I),
+    re.compile(r"\bcurr\.?\s*protoc", re.I),
+    re.compile(r"\bmethods\s+mol\.?\s*biol\b", re.I),
+    re.compile(r"\bcsh\s+protocols?\b", re.I),
+    re.compile(r"\bmethods\s*x\b", re.I),
+    re.compile(r"\bstar\s+protocols?\b", re.I),
+    re.compile(r"\bjournal\s+of\s+biological\s+methods\b", re.I),
+    re.compile(r"\bdetailed\s+protocol\b", re.I),
+    re.compile(r"\bstep[- ]by[- ]step\s+protocol\b", re.I),
+    re.compile(r"\boptimized\s+protocol\b", re.I),
+    re.compile(r"\bimproved\s+protocol\b", re.I),
+]
 
 # ======================================================================
 # Repository patterns
@@ -60,9 +91,9 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
     "BioImage Archive": (re.compile(r"\bBioImage\s+Archive\b|(?:https?://)?(?:www\.)?bioimage-archive\.ebi\.ac\.uk/[\w./]+", re.I), 0.95),
     "IDR": (re.compile(r"\bImage\s+Data\s+Resource\b|\bidr\d{4}\b|(?:https?://)?idr\.openmicroscopy\.org/[\w./]+", re.I), 0.9),
     "OMERO": (re.compile(r"\bOMERO\b(?=.{0,30}(?:server|repositor|public|database|instance))", re.I | re.S), 0.8),
-    "GEO": (re.compile(r"\bGSE\d{3,}\b|Gene\s+Expression\s+Omnibus", re.I), 0.9),
+    "GEO": (re.compile(r"\bGSE\d{3,}\b|Gene\s+Expression\s+Omnibus|(?:https?://)?(?:www\.)?ncbi\.nlm\.nih\.gov/geo/[\w./]+", re.I), 0.9),
     "SRA": (re.compile(r"\bSR[APXR]\d{6,}\b|Sequence\s+Read\s+Archive", re.I), 0.9),
-    "ArrayExpress": (re.compile(r"\bArrayExpress\b|E-MTAB-\d+", re.I), 0.9),
+    "ArrayExpress": (re.compile(r"\bArrayExpress\b|E-MTAB-\d+|(?:https?://)?(?:www\.)?ebi\.ac\.uk/arrayexpress/[\w./]+", re.I), 0.9),
     "PRIDE": (re.compile(r"\bPRIDE\b|PXD\d{6,}", re.I), 0.85),
     "OSF": (re.compile(r"(?:https?://)?osf\.io/[\w]+", re.I), 0.9),
     "Code Ocean": (re.compile(r"\bCode\s+Ocean\b|codeocean\.com", re.I), 0.9),
@@ -91,7 +122,13 @@ _RRID_TYPE_MAP = {
 # ROR patterns
 # ======================================================================
 
-_ROR_URL_PATTERN = re.compile(r"(?:https?://)?ror\.org/(0[a-z0-9]{8})\b", re.I)
+_ROR_PATTERNS = [
+    re.compile(r"(?:https?://)?ror\.org/(0[a-z0-9]{8})\b", re.I),
+    re.compile(r"\bROR\s*:\s*(0[a-z0-9]{8})\b", re.I),
+    re.compile(r"\bROR\s+ID\s*:\s*(0[a-z0-9]{8})\b", re.I),
+    re.compile(r"\(ROR:\s*(0[a-z0-9]{8})\)", re.I),
+    re.compile(r"doi\.org/10\.(?:ror|ROR)/(0[a-z0-9]{8})", re.I),
+]
 
 # ======================================================================
 # GitHub URL extraction
@@ -181,20 +218,21 @@ class ProtocolAgent(BaseAgent):
     # ------------------------------------------------------------------
     def _match_rors(self, text: str, section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
-        for m in _ROR_URL_PATTERN.finditer(text):
-            ror_id = m.group(1)
-            extractions.append(Extraction(
-                text=m.group(0),
-                label="ROR",
-                start=m.start(), end=m.end(),
-                confidence=0.95,
-                source_agent=self.name,
-                section=section or "",
-                metadata={
-                    "canonical": ror_id,
-                    "url": f"https://ror.org/{ror_id}",
-                },
-            ))
+        for pattern in _ROR_PATTERNS:
+            for m in pattern.finditer(text):
+                ror_id = m.group(1)
+                extractions.append(Extraction(
+                    text=m.group(0),
+                    label="ROR",
+                    start=m.start(), end=m.end(),
+                    confidence=0.95,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={
+                        "canonical": ror_id,
+                        "url": f"https://ror.org/{ror_id}",
+                    },
+                ))
         return extractions
 
     # ------------------------------------------------------------------

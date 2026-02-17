@@ -24,11 +24,12 @@ from .base_agent import BaseAgent, Extraction
 FLUOROPHORE_CANONICAL: Dict[str, str] = {
     # GFP family
     "gfp": "GFP", "green fluorescent protein": "GFP",
-    "egfp": "EGFP", "enhanced gfp": "EGFP", "enhanced green fluorescent protein": "EGFP",
+    "egfp": "EGFP", "e-gfp": "EGFP",
+    "enhanced gfp": "EGFP", "enhanced green fluorescent protein": "EGFP",
     "mgfp": "mGFP",
     # YFP
     "yfp": "YFP", "yellow fluorescent protein": "YFP",
-    "eyfp": "EYFP", "enhanced yellow fluorescent protein": "EYFP",
+    "eyfp": "EYFP", "enhanced yfp": "EYFP", "enhanced yellow fluorescent protein": "EYFP",
     "venus": "Venus", "citrine": "Citrine",
     "mvenus": "mVenus",
     # RFP
@@ -42,7 +43,7 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     "mrfp": "mRFP",
     # CFP/BFP
     "cfp": "CFP", "cyan fluorescent protein": "CFP",
-    "ecfp": "ECFP", "enhanced cfp": "ECFP",
+    "ecfp": "ECFP", "enhanced cfp": "ECFP", "enhanced cyan fluorescent protein": "ECFP",
     "bfp": "BFP", "blue fluorescent protein": "BFP",
     "ebfp": "EBFP",
     "mturquoise": "mTurquoise", "mturquoise2": "mTurquoise",
@@ -54,8 +55,9 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     "mneongreen": "mNeonGreen", "mneon green": "mNeonGreen",
     "neongreen": "NeonGreen",
     "meos": "mEos", "meos2": "mEos2", "meos3": "mEos3", "meos3.2": "mEos3.2",
+    "meos 3.2": "mEos3.2",
     "mmaple": "mMaple", "mmaple3": "mMaple",
-    "dendra2": "Dendra2",
+    "dendra2": "Dendra2", "dendra": "Dendra2",
     "dronpa": "Dronpa",
     "pa-gfp": "PA-GFP", "pagfp": "PA-GFP",
     # Calcium indicators
@@ -65,12 +67,13 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     "fura-2": "Fura-2", "fura2": "Fura-2",
     # Common dyes
     "dapi": "DAPI",
+    "hoechst": "Hoechst 33342",
     "hoechst 33342": "Hoechst 33342", "hoechst33342": "Hoechst 33342",
     "hoechst 33258": "Hoechst 33258", "hoechst33258": "Hoechst 33258",
     "propidium iodide": "Propidium Iodide", "pi": None,  # PI is ambiguous
     "fitc": "FITC", "fluorescein isothiocyanate": "FITC",
     "tritc": "TRITC",
-    "texas red": "Texas Red",
+    "texas red": "Texas Red", "texasred": "Texas Red",
     "rhodamine": "Rhodamine", "rhodamine 123": "Rhodamine 123", "rhodamine b": "Rhodamine B",
     "phalloidin": "Phalloidin",
     "calcein": "Calcein", "calcein-am": "Calcein-AM", "calcein am": "Calcein-AM",
@@ -78,6 +81,9 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     "jc-1": "JC-1", "jc1": "JC-1",
     # Cyanine dyes
     "cy3": "Cy3", "cy5": "Cy5", "cy7": "Cy7",
+    "cyanine 3": "Cy3", "cyanine3": "Cy3",
+    "cyanine 5": "Cy5", "cyanine5": "Cy5",
+    "cyanine 7": "Cy7", "cyanine7": "Cy7",
     # SiR dyes
     "sir": None,  # bare "SiR" is ambiguous
     "sir-actin": "SiR-Actin", "siractin": "SiR-Actin",
@@ -111,8 +117,11 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     "sytox": "SYTOX", "sytox green": "SYTOX Green",
     "syto": "SYTO",
     "wga": "WGA", "wheat germ agglutinin": "WGA",
-    "apc": "APC", "pe": None,  # PE is ambiguous (phycoerythrin vs other)
+    "apc": "APC", "allophycocyanin": "APC",
+    "pe": None,  # PE is ambiguous (phycoerythrin vs other)
+    "phycoerythrin": "PE",
     "cf568": "CF568",
+    "cf dye": "CF Dye",
 }
 
 # ======================================================================
@@ -160,7 +169,14 @@ _CONTEXT_PATTERNS: List[tuple] = [
     (re.compile(r"\bEdU\b(?=.{0,30}(?:label|incorporat|click|proliferat|stain))", re.I | re.S), "EdU"),
     (re.compile(r"\bBrdU\b(?=.{0,30}(?:label|incorporat|proliferat|stain))", re.I | re.S), "BrdU"),
     (re.compile(r"\bSiR[- ](?:actin|tubulin|DNA|lysosome)\b", re.I), None),  # handled by canonical
+    (re.compile(r"\bSiR\b(?=[\s-]*(?:dye|fluor|label|stain|probe))", re.I), "SiR"),
     (re.compile(r"\bsilicon\s+rhodamine\b", re.I), "SiR"),
+    # Full chemical names for lipophilic dyes
+    (re.compile(r"\bdioctadecyl\w*indocarbocyanine\b", re.I), "DiI"),
+    (re.compile(r"\bdioctadecyl\w*oxacarbocyanine\b", re.I), "DiO"),
+    (re.compile(r"\bdioctadecyl\w*indodicarbocyanine\b", re.I), "DiD"),
+    # PE with context
+    (re.compile(r"\bPE\b(?=[\s-]*(?:conjugat|label|fluor|stain|antibod))", re.I), "PE"),
 ]
 
 

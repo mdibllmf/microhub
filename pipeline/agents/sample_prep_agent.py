@@ -41,7 +41,7 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
 
     # Staining / labeling
     "Immunostaining": (re.compile(r"\b(?:immunostain|immuno[- ]?stain)\w*\b", re.I), 0.9),
-    "Immunofluorescence": (re.compile(r"\bimmunofluorescen\w*\b", re.I), 0.9),
+    "Immunofluorescence": (re.compile(r"\b(?:immunofluorescen\w*|IF\s+staining)\b", re.I), 0.9),
     "Immunohistochemistry": (re.compile(r"\b(?:immunohistochemist\w*|IHC)\b", re.I), 0.85),
     "H&E": (re.compile(r"\b(?:H\s*&\s*E|hematoxylin\s+(?:and\s+)?eosin)\b", re.I), 0.9),
     "FISH": (re.compile(r"\b(?:fluorescen\w+\s+in\s+situ\s+hybridi[sz]\w+|FISH\s+(?:experiment|probe|signal|stain|label))\b", re.I), 0.85),
@@ -59,7 +59,7 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "Electroporation": (re.compile(r"\belectroporat\w+\b", re.I), 0.9),
     "Lentiviral": (re.compile(r"\blentivir\w+\b", re.I), 0.85),
     "Adenoviral": (re.compile(r"\badenovir\w+\b", re.I), 0.85),
-    "AAV": (re.compile(r"\bAAV\d*\b"), 0.85),
+    "AAV": (re.compile(r"\b(?:AAV\d*|adeno[- ]?associated\s+virus)\b", re.I), 0.85),
     "CRISPR": (re.compile(r"\bCRISPR\b"), 0.9),
     "Knockdown": (re.compile(r"\b(?:knockdown|knock[- ]?down|siRNA|shRNA)\b", re.I), 0.85),
     "Knockout": (re.compile(r"\b(?:knockout|knock[- ]?out)\b", re.I), 0.85),

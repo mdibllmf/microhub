@@ -28,6 +28,7 @@ MICROSCOPE_BRANDS: Dict[str, str] = {
     "olympus": "Olympus",
     "evident": "Evident (Olympus)",
     "evident (olympus)": "Evident (Olympus)",
+    "evident olympus": "Evident (Olympus)",
     "andor": "Andor",
     "andor technology": "Andor",
     "yokogawa": "Yokogawa",
@@ -53,6 +54,9 @@ MICROSCOPE_BRANDS: Dict[str, str] = {
     "abberior": "Abberior",
     "3i": "3i (Intelligent Imaging)",
     "intelligent imaging": "3i (Intelligent Imaging)",
+    "intelligent imaging innovations": "3i (Intelligent Imaging)",
+    "3i intelligent imaging": "3i (Intelligent Imaging)",
+    "3i (intelligent imaging)": "3i (Intelligent Imaging)",
     "lavision biotec": "LaVision BioTec",
     "lavision": "LaVision BioTec",
     "luxendo": "Luxendo",
@@ -73,12 +77,26 @@ MICROSCOPE_BRANDS: Dict[str, str] = {
     "photron": "Photron",
     "till photonics": "Till Photonics",
     "miltenyi": "Miltenyi",
+    "olympus life science": "Olympus",
+    "motic": "Motic",
+    "leica biosystems": "Leica",
 }
+
+# ======================================================================
+# Additional Prior Scientific variant patterns (avoid bare "prior")
+# ======================================================================
+_PRIOR_PATTERNS = [
+    re.compile(r"\bPrior\s+Scientific\b", re.I),
+    re.compile(r"\bPrior\s+NanoDrive\b", re.I),
+    re.compile(r"\bPrior\s+OptiScan\b", re.I),
+    re.compile(r"\bPrior\s+(?:motorized\s+)?stage\b", re.I),
+    re.compile(r"\bPrior\s+(?:focus|controller)\b", re.I),
+    re.compile(r"\bPrior\s+instruments?\b", re.I),
+    re.compile(r"\bPrior\s+ProScan\b", re.I),
+]
 
 # Additional patterns that need context to avoid false positives
 _BRAND_CONTEXT_PATTERNS = [
-    # "Prior Scientific" vs the word "prior"
-    (re.compile(r"\bPrior\s+Scientific\b", re.I), "Prior Scientific"),
     # "ASI" needs microscopy context
     (re.compile(r"\bASI\s+(?:stage|controller|MS-?\d|Tiger)", re.I), "ASI"),
     # "3i" needs context
@@ -139,6 +157,16 @@ MODEL_PATTERNS: List[tuple] = [
     (re.compile(r"\bOpenSPIM\b", re.I), lambda m: "OpenSPIM", None),
     (re.compile(r"\bUltraMicroscope\b", re.I), lambda m: "UltraMicroscope", None),
     (re.compile(r"\bSmartSPIM\b", re.I), lambda m: "SmartSPIM", None),
+    (re.compile(r"\bMuVi\s+SPIM\b", re.I), lambda m: "MuVi SPIM", "Luxendo"),
+    (re.compile(r"\bctASLM\b", re.I), lambda m: "ctASLM", None),
+    (re.compile(r"\bCLARITY\s+SPIM\b", re.I), lambda m: "CLARITY SPIM", None),
+    (re.compile(r"\bASOM\b", re.I), lambda m: "ASOM", "ASI"),
+    (re.compile(r"\bTCS\s+SP8\s+DLS\b", re.I), lambda m: "TCS SP8 DLS", "Leica"),
+    (re.compile(r"\b3i\s+Lattice\s+Light\s+Sheet\b", re.I), lambda m: "3i Lattice Light Sheet", "3i (Intelligent Imaging)"),
+
+    # Zeiss light sheet specific patterns
+    (re.compile(r"\bZeiss\s+Lightsheet\b", re.I), lambda m: "Zeiss Lightsheet", "Zeiss"),
+    (re.compile(r"\bZ\.?1\b(?=.{0,30}(?:light|zeiss|sheet))", re.I), lambda m: "Z.1", "Zeiss"),
 ]
 
 # ======================================================================
@@ -148,20 +176,27 @@ MODEL_PATTERNS: List[tuple] = [
 REAGENT_SUPPLIERS: Dict[str, str] = {
     "invitrogen": "Invitrogen",
     "thermo fisher scientific": "Thermo Fisher Scientific",
+    "thermofisher": "Thermo Fisher Scientific",
     "sigma-aldrich": "Sigma-Aldrich",
     "sigma aldrich": "Sigma-Aldrich",
+    "sigma": "Sigma-Aldrich",
     "merck": "Merck",
+    "emd millipore": "Merck",
     "abcam": "Abcam",
     "cell signaling": "Cell Signaling Technology",
     "cell signaling technology": "Cell Signaling Technology",
+    "cst": "Cell Signaling Technology",
     "bio-rad": "Bio-Rad",
     "biorad": "Bio-Rad",
+    "bio rad": "Bio-Rad",
     "jackson immunoresearch": "Jackson ImmunoResearch",
     "life technologies": "Life Technologies",
+    "molecular probes": "Thermo Fisher Scientific",
     "santa cruz": "Santa Cruz Biotechnology",
+    "santa cruz biotechnology": "Santa Cruz Biotechnology",
     "bd biosciences": "BD Biosciences",
+    "becton dickinson": "BD Biosciences",
     "millipore": "Millipore",
-    "emd millipore": "Millipore",
     "corning": "Corning",
     "ibidi": "ibidi",
     "mattek": "MatTek",
@@ -171,6 +206,8 @@ REAGENT_SUPPLIERS: Dict[str, str] = {
     "new england biolabs": "New England Biolabs",
     "neb": "New England Biolabs",
     "takara": "Takara Bio",
+    "takara bio": "Takara Bio",
+    "clontech": "Takara Bio",
     "roche": "Roche",
     "dako": "Dako",
     "agilent": "Agilent",
@@ -178,6 +215,8 @@ REAGENT_SUPPLIERS: Dict[str, str] = {
     "biotium": "Biotium",
     "tocris": "Tocris",
     "addgene": "Addgene",
+    "enzo life sciences": "Enzo Life Sciences",
+    "qiagen": "Qiagen",
 }
 
 # Context patterns for reagent suppliers (e.g. "Sigma-Aldrich, St. Louis")
@@ -234,6 +273,20 @@ class EquipmentAgent(BaseAgent):
                     source_agent=self.name,
                     section=section or "",
                     metadata={"canonical": canonical},
+                ))
+
+        # Prior Scientific context patterns (avoid bare "prior")
+        for pattern in _PRIOR_PATTERNS:
+            for m in pattern.finditer(text):
+                extractions.append(Extraction(
+                    text=m.group(0),
+                    label="MICROSCOPE_BRAND",
+                    start=m.start(),
+                    end=m.end(),
+                    confidence=0.85,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={"canonical": "Prior Scientific"},
                 ))
 
         return extractions

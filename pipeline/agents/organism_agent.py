@@ -22,6 +22,7 @@ from .base_agent import BaseAgent, Extraction
 # ======================================================================
 
 ORGANISM_LATIN: Dict[str, str] = {
+    # Full Latin names
     "mus musculus": "Mouse",
     "rattus norvegicus": "Rat",
     "homo sapiens": "Human",
@@ -52,6 +53,35 @@ ORGANISM_LATIN: Dict[str, str] = {
     "nicotiana benthamiana": "Tobacco",
     "nicotiana tabacum": "Tobacco",
     "oryctolagus cuniculus": "Rabbit",
+    "oryza sativa": "Rice",
+    # Abbreviated Latin names (e.g., M. musculus)
+    "m. musculus": "Mouse",
+    "h. sapiens": "Human",
+    "r. norvegicus": "Rat",
+    "d. rerio": "Zebrafish",
+    "d. melanogaster": "Drosophila",
+    "x. laevis": "Xenopus",
+    "x. tropicalis": "Xenopus",
+    "g. gallus": "Chicken",
+    "s. scrofa": "Pig",
+    "m. mulatta": "Monkey",
+    "m. fascicularis": "Monkey",
+    "o. cuniculus": "Rabbit",
+    "c. familiaris": "Dog",
+    "s. cerevisiae": "Yeast",
+    "s. pombe": "Yeast",
+    "a. thaliana": "Arabidopsis",
+    "n. tabacum": "Tobacco",
+    "n. benthamiana": "Tobacco",
+    "z. mays": "Maize",
+    "o. sativa": "Rice",
+    # Bare genus names
+    "rattus": "Rat",
+    "saccharomyces": "Yeast",
+    "escherichia": "E. coli",
+    "nicotiana": "Tobacco",
+    "oryctolagus": "Rabbit",
+    "gallus": "Chicken",
 }
 
 # Common-name patterns that require EXPERIMENTAL context
@@ -75,8 +105,20 @@ _COMMON_WITH_CONTEXT: Dict[str, str] = {
     "pig": "Pig",
     "porcine": "Pig",
     "canine": "Dog",
+    "dog": "Dog",
     "primate": "Monkey",
     "macaque": "Monkey",
+    "monkey": "Monkey",
+    "chick": "Chicken",
+    "rice": "Rice",
+    "corn": "Maize",
+    "plant": "Plant",
+    "plant cell": "Plant",
+    "plant tissue": "Plant",
+    "organoid": "Organoid",
+    "spheroid": "Spheroid",
+    "bacteria": "Bacteria",
+    "bacterial": "Bacteria",
 }
 
 # Experimental context terms -- when a common name co-occurs with these,
