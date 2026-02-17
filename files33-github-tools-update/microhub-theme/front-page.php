@@ -115,7 +115,7 @@ $meta_filter_options = mh_get_all_filter_options();
         <div class="mh-filter-row">
             <div class="mh-filter-item">
                 <select id="filter-technique" data-filter="technique">
-                    <option value="">Technique</option>
+                    <option value="">🔬 Technique (<?php echo count($filter_options['techniques']); ?>)</option>
                     <?php foreach ($filter_options['techniques'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -123,7 +123,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-microscope" data-filter="microscope">
-                    <option value="">Microscope</option>
+                    <option value="">🔭 Microscope (<?php echo count($filter_options['microscopes']); ?>)</option>
                     <?php foreach ($filter_options['microscopes'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -131,7 +131,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-organism" data-filter="organism">
-                    <option value="">Organism</option>
+                    <option value="">🧬 Organism (<?php echo count($filter_options['organisms']); ?>)</option>
                     <?php foreach ($filter_options['organisms'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -139,7 +139,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-software" data-filter="software">
-                    <option value="">Software</option>
+                    <option value="">💻 Software (<?php echo count($filter_options['software']); ?>)</option>
                     <?php foreach ($filter_options['software'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -147,7 +147,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-year" data-filter="year">
-                    <option value="">Year</option>
+                    <option value="">📅 Year</option>
                     <option value="2024-2025">2024-2025</option>
                     <option value="2020-2023">2020-2023</option>
                     <option value="2015-2019">2015-2019</option>
@@ -157,7 +157,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-citations" data-filter="citations">
-                    <option value="">Citations</option>
+                    <option value="">📊 Citations</option>
                     <option value="100">100+ (Foundational)</option>
                     <option value="50">50+ (High Impact)</option>
                     <option value="25">25+</option>
@@ -170,7 +170,7 @@ $meta_filter_options = mh_get_all_filter_options();
         <div class="mh-filter-row" id="advanced-filters" style="display: none;">
             <div class="mh-filter-item">
                 <select id="filter-fluorophore" data-filter="fluorophore">
-                    <option value="">Fluorophore</option>
+                    <option value="">💡 Fluorophore (<?php echo count($meta_filter_options['fluorophores']); ?>)</option>
                     <?php foreach ($meta_filter_options['fluorophores'] as $fluor => $count): ?>
                     <option value="<?php echo esc_attr($fluor); ?>"><?php echo esc_html($fluor); ?> (<?php echo $count; ?>)</option>
                     <?php endforeach; ?>
@@ -178,7 +178,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-sample-prep" data-filter="sample_prep">
-                    <option value="">Sample Prep</option>
+                    <option value="">🧪 Sample Prep (<?php echo count($meta_filter_options['sample_preparation']); ?>)</option>
                     <?php foreach ($meta_filter_options['sample_preparation'] as $prep => $count): ?>
                     <option value="<?php echo esc_attr($prep); ?>"><?php echo esc_html($prep); ?> (<?php echo $count; ?>)</option>
                     <?php endforeach; ?>
@@ -186,7 +186,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-cell-line" data-filter="cell_line">
-                    <option value="">Cell Line</option>
+                    <option value="">🧫 Cell Line (<?php echo count($meta_filter_options['cell_lines']); ?>)</option>
                     <?php foreach ($meta_filter_options['cell_lines'] as $cell => $count): ?>
                     <option value="<?php echo esc_attr($cell); ?>"><?php echo esc_html($cell); ?> (<?php echo $count; ?>)</option>
                     <?php endforeach; ?>
@@ -194,7 +194,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-brand" data-filter="brand">
-                    <option value="">Brand</option>
+                    <option value="">🏭 Brand (<?php echo count($meta_filter_options['microscope_brands']); ?>)</option>
                     <?php foreach ($meta_filter_options['microscope_brands'] as $brand => $count): ?>
                     <option value="<?php echo esc_attr($brand); ?>"><?php echo esc_html($brand); ?> (<?php echo $count; ?>)</option>
                     <?php endforeach; ?>
@@ -202,7 +202,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-analysis-sw" data-filter="analysis_software">
-                    <option value="">Analysis SW</option>
+                    <option value="">🖥️ Analysis SW (<?php echo count($meta_filter_options['image_analysis_software']); ?>)</option>
                     <?php foreach ($meta_filter_options['image_analysis_software'] as $sw => $count): ?>
                     <option value="<?php echo esc_attr($sw); ?>"><?php echo esc_html($sw); ?> (<?php echo $count; ?>)</option>
                     <?php endforeach; ?>
@@ -210,7 +210,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-institution" data-filter="institution">
-                    <option value="">Institution</option>
+                    <option value="">🏛️ Institution (<?php echo count($filter_options['institutions']); ?>)</option>
                     <?php foreach ($filter_options['institutions'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -221,7 +221,7 @@ $meta_filter_options = mh_get_all_filter_options();
         <div class="mh-filter-row" id="advanced-filters-2" style="display: none;">
             <div class="mh-filter-item">
                 <select id="filter-reagent-supplier" data-filter="reagent_supplier">
-                    <option value="">Supplier</option>
+                    <option value="">🧴 Supplier (<?php echo count($filter_options['reagent_suppliers']); ?>)</option>
                     <?php foreach ($filter_options['reagent_suppliers'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -229,7 +229,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-general-software" data-filter="general_software">
-                    <option value="">General SW</option>
+                    <option value="">⚙️ General SW (<?php echo count($filter_options['general_software']); ?>)</option>
                     <?php foreach ($filter_options['general_software'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -237,7 +237,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-laser" data-filter="laser">
-                    <option value="">Laser</option>
+                    <option value="">⚡ Laser (<?php echo count($filter_options['lasers']); ?>)</option>
                     <?php foreach ($filter_options['lasers'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -245,7 +245,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-detector" data-filter="detector">
-                    <option value="">Detector</option>
+                    <option value="">📡 Detector (<?php echo count($filter_options['detectors']); ?>)</option>
                     <?php foreach ($filter_options['detectors'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -253,7 +253,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-objective" data-filter="objective">
-                    <option value="">Objective</option>
+                    <option value="">🎯 Objective (<?php echo count($filter_options['objectives']); ?>)</option>
                     <?php foreach ($filter_options['objectives'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
@@ -261,7 +261,7 @@ $meta_filter_options = mh_get_all_filter_options();
             </div>
             <div class="mh-filter-item">
                 <select id="filter-optical-filter" data-filter="optical_filter">
-                    <option value="">Optical Filter</option>
+                    <option value="">🔎 Filter (<?php echo count($filter_options['filters']); ?>)</option>
                     <?php foreach ($filter_options['filters'] as $term): ?>
                     <option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?> (<?php echo $term->count; ?>)</option>
                     <?php endforeach; ?>
