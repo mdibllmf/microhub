@@ -1276,6 +1276,7 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
     }
 
     // v4.1 scraper fields - additional microscopy details
+    // Save as JSON meta AND set as searchable taxonomy terms
     if (!empty($data['imaging_modalities']) && is_array($data['imaging_modalities'])) {
         update_post_meta($post_id, '_mh_imaging_modalities', wp_json_encode($data['imaging_modalities']));
     }
@@ -1284,15 +1285,98 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
     }
     if (!empty($data['lasers']) && is_array($data['lasers'])) {
         update_post_meta($post_id, '_mh_lasers', wp_json_encode($data['lasers']));
+        // Extract string tag values for taxonomy
+        $laser_tags = array();
+        foreach ($data['lasers'] as $laser) {
+            if (is_string($laser)) {
+                $laser_tags[] = $laser;
+            } elseif (is_array($laser)) {
+                // Handle structured data: prefer canonical, then text, then build from wavelength
+                if (!empty($laser['canonical'])) {
+                    $laser_tags[] = $laser['canonical'];
+                } elseif (!empty($laser['text'])) {
+                    $laser_tags[] = $laser['text'];
+                } elseif (!empty($laser['wavelength_nm'])) {
+                    $laser_tags[] = $laser['wavelength_nm'] . ' nm';
+                }
+                if (!empty($laser['type'])) {
+                    $laser_tags[] = $laser['type'];
+                }
+            }
+        }
+        $laser_tags = array_unique(array_filter(array_map('sanitize_text_field', $laser_tags)));
+        if (!empty($laser_tags)) {
+            wp_set_object_terms($post_id, $laser_tags, 'mh_laser');
+        }
     }
     if (!empty($data['detectors']) && is_array($data['detectors'])) {
         update_post_meta($post_id, '_mh_detectors', wp_json_encode($data['detectors']));
+        // Extract string tag values for taxonomy
+        $detector_tags = array();
+        foreach ($data['detectors'] as $det) {
+            if (is_string($det)) {
+                $detector_tags[] = $det;
+            } elseif (is_array($det)) {
+                if (!empty($det['canonical'])) {
+                    $detector_tags[] = $det['canonical'];
+                } elseif (!empty($det['text'])) {
+                    $detector_tags[] = $det['text'];
+                } elseif (!empty($det['type'])) {
+                    $detector_tags[] = $det['type'];
+                }
+            }
+        }
+        $detector_tags = array_unique(array_filter(array_map('sanitize_text_field', $detector_tags)));
+        if (!empty($detector_tags)) {
+            wp_set_object_terms($post_id, $detector_tags, 'mh_detector');
+        }
     }
     if (!empty($data['objectives']) && is_array($data['objectives'])) {
         update_post_meta($post_id, '_mh_objectives', wp_json_encode($data['objectives']));
+        // Extract string tag values for taxonomy
+        $objective_tags = array();
+        foreach ($data['objectives'] as $obj) {
+            if (is_string($obj)) {
+                $objective_tags[] = $obj;
+            } elseif (is_array($obj)) {
+                if (!empty($obj['canonical'])) {
+                    $objective_tags[] = $obj['canonical'];
+                } elseif (!empty($obj['text'])) {
+                    $objective_tags[] = $obj['text'];
+                } else {
+                    // Build from structured fields
+                    $parts = array();
+                    if (!empty($obj['magnification'])) $parts[] = $obj['magnification'];
+                    if (!empty($obj['na'])) $parts[] = 'NA ' . $obj['na'];
+                    if (!empty($obj['immersion'])) $parts[] = ucfirst($obj['immersion']);
+                    if (!empty($parts)) $objective_tags[] = implode(' ', $parts);
+                }
+            }
+        }
+        $objective_tags = array_unique(array_filter(array_map('sanitize_text_field', $objective_tags)));
+        if (!empty($objective_tags)) {
+            wp_set_object_terms($post_id, $objective_tags, 'mh_objective');
+        }
     }
     if (!empty($data['filters']) && is_array($data['filters'])) {
         update_post_meta($post_id, '_mh_filters', wp_json_encode($data['filters']));
+        // Extract string tag values for taxonomy
+        $filter_tags = array();
+        foreach ($data['filters'] as $filt) {
+            if (is_string($filt)) {
+                $filter_tags[] = $filt;
+            } elseif (is_array($filt)) {
+                if (!empty($filt['canonical'])) {
+                    $filter_tags[] = $filt['canonical'];
+                } elseif (!empty($filt['text'])) {
+                    $filter_tags[] = $filt['text'];
+                }
+            }
+        }
+        $filter_tags = array_unique(array_filter(array_map('sanitize_text_field', $filter_tags)));
+        if (!empty($filter_tags)) {
+            wp_set_object_terms($post_id, $filter_tags, 'mh_filter');
+        }
     }
     if (!empty($data['embedding_methods']) && is_array($data['embedding_methods'])) {
         update_post_meta($post_id, '_mh_embedding_methods', wp_json_encode($data['embedding_methods']));

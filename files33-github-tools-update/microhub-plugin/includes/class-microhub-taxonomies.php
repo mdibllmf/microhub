@@ -259,5 +259,119 @@ class MicroHub_Taxonomies {
             'show_in_rest' => true,
             'rewrite' => array('slug' => 'protocol-type'),
         ));
+
+        // Register Reagent Supplier taxonomy (non-hierarchical)
+        register_taxonomy('mh_reagent_supplier', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Reagent Suppliers', 'microhub'),
+                'singular_name' => __('Reagent Supplier', 'microhub'),
+                'search_items' => __('Search Reagent Suppliers', 'microhub'),
+                'all_items' => __('All Reagent Suppliers', 'microhub'),
+                'edit_item' => __('Edit Reagent Supplier', 'microhub'),
+                'update_item' => __('Update Reagent Supplier', 'microhub'),
+                'add_new_item' => __('Add New Reagent Supplier', 'microhub'),
+                'new_item_name' => __('New Reagent Supplier Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'reagent-supplier'),
+        ));
+
+        // Register General Software taxonomy (non-hierarchical)
+        register_taxonomy('mh_general_software', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('General Software', 'microhub'),
+                'singular_name' => __('General Software', 'microhub'),
+                'search_items' => __('Search General Software', 'microhub'),
+                'all_items' => __('All General Software', 'microhub'),
+                'edit_item' => __('Edit General Software', 'microhub'),
+                'update_item' => __('Update General Software', 'microhub'),
+                'add_new_item' => __('Add New General Software', 'microhub'),
+                'new_item_name' => __('New General Software Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'general-software'),
+        ));
+
+        // Register Laser taxonomy (non-hierarchical)
+        register_taxonomy('mh_laser', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Lasers', 'microhub'),
+                'singular_name' => __('Laser', 'microhub'),
+                'search_items' => __('Search Lasers', 'microhub'),
+                'all_items' => __('All Lasers', 'microhub'),
+                'edit_item' => __('Edit Laser', 'microhub'),
+                'update_item' => __('Update Laser', 'microhub'),
+                'add_new_item' => __('Add New Laser', 'microhub'),
+                'new_item_name' => __('New Laser Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'laser'),
+        ));
+
+        // Register Detector taxonomy (non-hierarchical)
+        register_taxonomy('mh_detector', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Detectors', 'microhub'),
+                'singular_name' => __('Detector', 'microhub'),
+                'search_items' => __('Search Detectors', 'microhub'),
+                'all_items' => __('All Detectors', 'microhub'),
+                'edit_item' => __('Edit Detector', 'microhub'),
+                'update_item' => __('Update Detector', 'microhub'),
+                'add_new_item' => __('Add New Detector', 'microhub'),
+                'new_item_name' => __('New Detector Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'detector'),
+        ));
+
+        // Register Objective taxonomy (non-hierarchical)
+        register_taxonomy('mh_objective', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Objectives', 'microhub'),
+                'singular_name' => __('Objective', 'microhub'),
+                'search_items' => __('Search Objectives', 'microhub'),
+                'all_items' => __('All Objectives', 'microhub'),
+                'edit_item' => __('Edit Objective', 'microhub'),
+                'update_item' => __('Update Objective', 'microhub'),
+                'add_new_item' => __('Add New Objective', 'microhub'),
+                'new_item_name' => __('New Objective Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'objective'),
+        ));
+
+        // Register Filter taxonomy (non-hierarchical)
+        register_taxonomy('mh_filter', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Filters', 'microhub'),
+                'singular_name' => __('Filter', 'microhub'),
+                'search_items' => __('Search Filters', 'microhub'),
+                'all_items' => __('All Filters', 'microhub'),
+                'edit_item' => __('Edit Filter', 'microhub'),
+                'update_item' => __('Update Filter', 'microhub'),
+                'add_new_item' => __('Add New Filter', 'microhub'),
+                'new_item_name' => __('New Filter Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'filter'),
+        ));
     }
 }

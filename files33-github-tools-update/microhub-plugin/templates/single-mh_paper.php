@@ -37,6 +37,12 @@ $image_analysis_software_meta = json_decode(get_post_meta($post_id, '_mh_image_a
 $image_acquisition_software_meta = json_decode(get_post_meta($post_id, '_mh_image_acquisition_software', true), true) ?: array();
 $general_software_meta = json_decode(get_post_meta($post_id, '_mh_general_software', true), true) ?: array();
 
+// Equipment meta (structured data for display, plus taxonomy terms for search)
+$lasers_meta = json_decode(get_post_meta($post_id, '_mh_lasers', true), true) ?: array();
+$detectors_meta = json_decode(get_post_meta($post_id, '_mh_detectors', true), true) ?: array();
+$objectives_meta = json_decode(get_post_meta($post_id, '_mh_objectives', true), true) ?: array();
+$filters_meta = json_decode(get_post_meta($post_id, '_mh_filters', true), true) ?: array();
+
 // Get all taxonomy terms
 $techniques = wp_get_post_terms($post_id, 'mh_technique', array('fields' => 'all'));
 $microscopes = wp_get_post_terms($post_id, 'mh_microscope', array('fields' => 'all'));
@@ -49,6 +55,12 @@ $microscope_models = wp_get_post_terms($post_id, 'mh_microscope_model', array('f
 $analysis_software = wp_get_post_terms($post_id, 'mh_analysis_software', array('fields' => 'all'));
 $acquisition_software = wp_get_post_terms($post_id, 'mh_acquisition_software', array('fields' => 'all'));
 $facilities_tax = wp_get_post_terms($post_id, 'mh_facility', array('fields' => 'all'));
+$lasers_tax = wp_get_post_terms($post_id, 'mh_laser', array('fields' => 'all'));
+$detectors_tax = wp_get_post_terms($post_id, 'mh_detector', array('fields' => 'all'));
+$objectives_tax = wp_get_post_terms($post_id, 'mh_objective', array('fields' => 'all'));
+$filters_tax = wp_get_post_terms($post_id, 'mh_filter', array('fields' => 'all'));
+$reagent_suppliers_tax = wp_get_post_terms($post_id, 'mh_reagent_supplier', array('fields' => 'all'));
+$general_software_tax = wp_get_post_terms($post_id, 'mh_general_software', array('fields' => 'all'));
 
 // Normalize WP_Error to empty arrays
 if (is_wp_error($techniques)) $techniques = array();
@@ -62,6 +74,12 @@ if (is_wp_error($microscope_models)) $microscope_models = array();
 if (is_wp_error($analysis_software)) $analysis_software = array();
 if (is_wp_error($acquisition_software)) $acquisition_software = array();
 if (is_wp_error($facilities_tax)) $facilities_tax = array();
+if (is_wp_error($lasers_tax)) $lasers_tax = array();
+if (is_wp_error($detectors_tax)) $detectors_tax = array();
+if (is_wp_error($objectives_tax)) $objectives_tax = array();
+if (is_wp_error($filters_tax)) $filters_tax = array();
+if (is_wp_error($reagent_suppliers_tax)) $reagent_suppliers_tax = array();
+if (is_wp_error($general_software_tax)) $general_software_tax = array();
 ?>
 
 <article class="mh-single-paper">
@@ -242,13 +260,114 @@ if (is_wp_error($facilities_tax)) $facilities_tax = array();
                 </section>
                 <?php endif; ?>
 
-                <!-- Reagent Suppliers (from meta) -->
-                <?php if (!empty($reagent_suppliers_meta)) : ?>
+                <!-- Reagent Suppliers (taxonomy first, then meta fallback) -->
+                <?php if (!empty($reagent_suppliers_tax)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#129514; Reagent Suppliers</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($reagent_suppliers_tax as $term) : ?>
+                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag supplier"><?php echo esc_html($term->name); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php elseif (!empty($reagent_suppliers_meta)) : ?>
                 <section class="mh-paper-section">
                     <h2>&#129514; Reagent Suppliers</h2>
                     <div class="mh-tag-list">
                         <?php foreach ($reagent_suppliers_meta as $supplier) : ?>
                             <span class="mh-tag supplier"><?php echo esc_html($supplier); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php endif; ?>
+
+                <!-- Lasers (taxonomy first, then meta fallback) -->
+                <?php if (!empty($lasers_tax)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#128308; Lasers</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($lasers_tax as $term) : ?>
+                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag laser"><?php echo esc_html($term->name); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php elseif (!empty($lasers_meta)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#128308; Lasers</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($lasers_meta as $laser) :
+                            $label = is_string($laser) ? $laser : ($laser['canonical'] ?? $laser['text'] ?? ($laser['wavelength_nm'] ?? '') . ' nm');
+                        ?>
+                            <span class="mh-tag laser"><?php echo esc_html($label); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php endif; ?>
+
+                <!-- Detectors (taxonomy first, then meta fallback) -->
+                <?php if (!empty($detectors_tax)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#128247; Detectors</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($detectors_tax as $term) : ?>
+                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag detector"><?php echo esc_html($term->name); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php elseif (!empty($detectors_meta)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#128247; Detectors</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($detectors_meta as $det) :
+                            $label = is_string($det) ? $det : ($det['canonical'] ?? $det['text'] ?? $det['type'] ?? '');
+                        ?>
+                            <span class="mh-tag detector"><?php echo esc_html($label); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php endif; ?>
+
+                <!-- Objectives (taxonomy first, then meta fallback) -->
+                <?php if (!empty($objectives_tax)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#128270; Objectives</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($objectives_tax as $term) : ?>
+                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag objective"><?php echo esc_html($term->name); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php elseif (!empty($objectives_meta)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#128270; Objectives</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($objectives_meta as $obj) :
+                            $label = is_string($obj) ? $obj : ($obj['canonical'] ?? $obj['text'] ?? '');
+                        ?>
+                            <span class="mh-tag objective"><?php echo esc_html($label); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php endif; ?>
+
+                <!-- Filters (taxonomy first, then meta fallback) -->
+                <?php if (!empty($filters_tax)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#127912; Filters</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($filters_tax as $term) : ?>
+                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag filter-tag"><?php echo esc_html($term->name); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+                <?php elseif (!empty($filters_meta)) : ?>
+                <section class="mh-paper-section">
+                    <h2>&#127912; Filters</h2>
+                    <div class="mh-tag-list">
+                        <?php foreach ($filters_meta as $filt) :
+                            $label = is_string($filt) ? $filt : ($filt['canonical'] ?? $filt['text'] ?? '');
+                        ?>
+                            <span class="mh-tag filter-tag"><?php echo esc_html($label); ?></span>
                         <?php endforeach; ?>
                     </div>
                 </section>
@@ -606,7 +725,8 @@ if (is_wp_error($facilities_tax)) $facilities_tax = array();
                         'mh_technique', 'mh_microscope', 'mh_organism', 'mh_software',
                         'mh_fluorophore', 'mh_sample_prep', 'mh_cell_line',
                         'mh_microscope_model', 'mh_analysis_software', 'mh_acquisition_software',
-                        'mh_facility',
+                        'mh_general_software', 'mh_facility', 'mh_reagent_supplier',
+                        'mh_laser', 'mh_detector', 'mh_objective', 'mh_filter',
                     );
                     $current_term_ids = array();
                     $tax_queries = array();
@@ -674,42 +794,6 @@ if (is_wp_error($facilities_tax)) $facilities_tax = array();
                     <?php endif; ?>
                 </div>
 
-                <!-- Organisms sidebar -->
-                <?php if (!empty($organisms)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#129516; Organisms</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($organisms as $term) : ?>
-                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag organism"><?php echo esc_html($term->name); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Microscopes sidebar -->
-                <?php if (!empty($microscopes)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#128301; Microscopes</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($microscopes as $term) : ?>
-                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag microscope"><?php echo esc_html($term->name); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Software sidebar -->
-                <?php if (!empty($software)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#128187; Software</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($software as $term) : ?>
-                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag software"><?php echo esc_html($term->name); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-
                 <!-- RRIDs sidebar with links -->
                 <?php if (!empty($rrids)) : ?>
                 <div class="mh-sidebar-widget">
@@ -755,71 +839,6 @@ if (is_wp_error($facilities_tax)) $facilities_tax = array();
                 </div>
                 <?php endif; ?>
 
-                <!-- Fluorophores sidebar -->
-                <?php
-                $sidebar_fluorophores = !empty($fluorophores_tax) ? $fluorophores_tax : null;
-                if ($sidebar_fluorophores) :
-                ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#10024; Fluorophores</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($sidebar_fluorophores as $term) : ?>
-                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag fluorophore"><?php echo esc_html($term->name); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php elseif (!empty($fluorophores_meta)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#10024; Fluorophores</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($fluorophores_meta as $fluor) : ?>
-                            <span class="mh-tag fluorophore"><?php echo esc_html($fluor); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Cell Lines sidebar -->
-                <?php if (!empty($cell_lines_tax)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#129514; Cell Lines</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($cell_lines_tax as $term) : ?>
-                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag cell-line"><?php echo esc_html($term->name); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php elseif (!empty($cell_lines_meta)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#129514; Cell Lines</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($cell_lines_meta as $cell) : ?>
-                            <span class="mh-tag cell-line"><?php echo esc_html($cell); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Sample Preparation sidebar -->
-                <?php if (!empty($sample_prep_tax)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#129514; Sample Preparation</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($sample_prep_tax as $term) : ?>
-                            <a href="<?php echo esc_url(get_term_link($term)); ?>" class="mh-tag sample-prep"><?php echo esc_html($term->name); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php elseif (!empty($sample_preparation_meta)) : ?>
-                <div class="mh-sidebar-widget">
-                    <h3>&#129514; Sample Preparation</h3>
-                    <div class="mh-tag-list">
-                        <?php foreach ($sample_preparation_meta as $prep) : ?>
-                            <span class="mh-tag sample-prep"><?php echo esc_html($prep); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
             </aside>
         </div>
     </article>
@@ -944,6 +963,10 @@ if (is_wp_error($facilities_tax)) $facilities_tax = array();
 .mh-tag.cell-line { background: #3d3d1f; color: #d4a72c; }
 .mh-tag.brand { background: #475569; color: #e2e8f0; }
 .mh-tag.supplier { background: #4a3728; color: #ffb86c; }
+.mh-tag.laser { background: #3d1f1f; color: #f85149; }
+.mh-tag.detector { background: #1f2d3d; color: #79c0ff; }
+.mh-tag.objective { background: #2d2d1f; color: #e3b341; }
+.mh-tag.filter-tag { background: #1f3d3d; color: #56d4c4; }
 .mh-tag.general-software { background: #2d2d3d; color: #bd93f9; }
 .mh-tag:hover {
     filter: brightness(1.2);
