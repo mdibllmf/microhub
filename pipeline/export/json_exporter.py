@@ -654,6 +654,8 @@ class JsonExporter:
             "with_cell_lines": 0, "with_staining": 0,
             "with_affiliations": 0, "with_institutions": 0,
             "with_reagent_suppliers": 0, "with_general_software": 0,
+            "with_objectives": 0, "with_lasers": 0,
+            "with_detectors": 0, "with_filters": 0,
             "total_citations": 0, "total_figures": 0,
             "total_protocols": 0, "total_repositories": 0,
             "total_fluorophores": 0, "total_cell_lines": 0,
@@ -717,6 +719,14 @@ class JsonExporter:
             stats["with_reagent_suppliers"] += 1
         if paper.get("general_software"):
             stats["with_general_software"] += 1
+        if paper.get("objectives"):
+            stats["with_objectives"] += 1
+        if paper.get("lasers"):
+            stats["with_lasers"] += 1
+        if paper.get("detectors"):
+            stats["with_detectors"] += 1
+        if paper.get("filters"):
+            stats["with_filters"] += 1
         ts = paper.get("tag_source", "")
         if ts == "methods":
             stats["from_methods"] += 1
@@ -760,6 +770,10 @@ class JsonExporter:
         logger.info("  With sample prep:    %d", stats["with_sample_prep"])
         logger.info("  With cell lines:     %d (%d total)", stats["with_cell_lines"], stats["total_cell_lines"])
         logger.info("  With staining:       %d", stats["with_staining"])
+        logger.info("  With objectives:     %d", stats.get("with_objectives", 0))
+        logger.info("  With lasers:         %d", stats.get("with_lasers", 0))
+        logger.info("  With detectors:      %d", stats.get("with_detectors", 0))
+        logger.info("  With filters:        %d", stats.get("with_filters", 0))
         logger.info("")
         logger.info("TAG EXTRACTION SOURCE:")
         logger.info("  From methods (high confidence):  %d", stats["from_methods"])
