@@ -46,6 +46,7 @@ def main():
     args = parser.parse_args()
 
     from pipeline.export.json_exporter import is_protocol_paper, get_protocol_type
+    from pipeline.normalization import normalize_tags
     from pipeline.orchestrator import PipelineOrchestrator
 
     # --- Resolve input files ---
@@ -111,6 +112,9 @@ def main():
                         paper[key] = val
                     elif isinstance(val, str) and val:
                         paper[key] = val
+
+            # Normalize tag names (scraper variants → canonical forms)
+            normalize_tags(paper)
 
             # Protocol classification
             paper["is_protocol"] = is_protocol_paper(paper) or bool(paper.get("protocols"))
