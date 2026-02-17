@@ -521,46 +521,55 @@ $meta_filter_options = mh_get_all_filter_options();
 }
 
 .mh-filter-item label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #8b949e;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
 }
 
 .mh-filter-item select {
     width: 100%;
-    padding: 7px 24px 7px 8px;
-    background: var(--bg-dark);
-    border: 1px solid var(--border);
+    padding: 9px 28px 9px 10px;
+    background-color: #0d1117;
+    border: 1px solid #30363d;
     border-radius: 6px;
-    color: var(--text);
+    color: #e6edf3;
     font-size: 0.8rem;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
+    -moz-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 6px center;
+    background-position: right 8px center;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
 }
 
+.mh-filter-item select:hover {
+    border-color: #58a6ff;
+}
+
 .mh-filter-item select:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3);
 }
 
 /* Advanced Filters Row */
 .mh-filter-row-advanced {
+    display: grid;
     background: rgba(59, 130, 246, 0.05);
     padding: 16px;
     border-radius: 8px;
     margin-bottom: 16px;
     border: 1px solid rgba(59, 130, 246, 0.1);
     grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
 }
 
 @media (max-width: 1024px) {
@@ -1317,6 +1326,12 @@ function filterByInstitution(institutionSlug) {
         if (activeFilters.brand) params.set('brand', activeFilters.brand);
         if (activeFilters.analysis_software) params.set('analysis_software', activeFilters.analysis_software);
         if (activeFilters.author) params.set('author', activeFilters.author);
+        if (activeFilters.reagent_supplier) params.set('reagent_supplier', activeFilters.reagent_supplier);
+        if (activeFilters.general_software) params.set('general_software', activeFilters.general_software);
+        if (activeFilters.laser) params.set('laser', activeFilters.laser);
+        if (activeFilters.detector) params.set('detector', activeFilters.detector);
+        if (activeFilters.objective) params.set('objective', activeFilters.objective);
+        if (activeFilters.optical_filter) params.set('optical_filter', activeFilters.optical_filter);
         
         fetch(apiBase + '/papers?' + params.toString())
             .then(res => res.json())
