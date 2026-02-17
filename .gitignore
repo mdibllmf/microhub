@@ -53,3 +53,13 @@ Thumbs.db
 *_chunk_*.json
 *_github_tools.json
 cleaned_export/
+
+# Archive directories (WordPress plugin/theme files)
+old/
+files microhub/
+files microhub.zip
+files31/
+files31.zip
+files33-github-tools-update/
+files33-github-tools-update.zip
+updates/

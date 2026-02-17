@@ -1,0 +1,349 @@
+"""
+Pipeline orchestrator -- wires all agents together.
+
+Processes papers through section-aware parsing → agent extraction →
+validation → conflict resolution → output assembly.
+
+Produces a dict per paper whose keys exactly match the existing
+WordPress JSON export format to prevent upload issues.
+"""
+
+import logging
+import re
+from typing import Any, Dict, List, Optional, Set
+
+from .agents.base_agent import Extraction
+from .agents.technique_agent import TechniqueAgent
+from .agents.equipment_agent import EquipmentAgent
+from .agents.fluorophore_agent import FluorophoreAgent
+from .agents.organism_agent import OrganismAgent
+from .agents.software_agent import SoftwareAgent
+from .agents.sample_prep_agent import SamplePrepAgent
+from .agents.cell_line_agent import CellLineAgent
+from .agents.protocol_agent import ProtocolAgent
+from .agents.institution_agent import InstitutionAgent
+from .parsing.section_extractor import PaperSections, from_pubmed_dict
+from .validation.tag_validator import TagValidator
+
+logger = logging.getLogger(__name__)
+
+
+class PipelineOrchestrator:
+    """Main orchestrator that runs all agents on a paper and assembles output."""
+
+    def __init__(self, tag_dictionary_path: str = None):
+        # Agents
+        self.technique_agent = TechniqueAgent()
+        self.equipment_agent = EquipmentAgent()
+        self.fluorophore_agent = FluorophoreAgent()
+        self.organism_agent = OrganismAgent()
+        self.software_agent = SoftwareAgent()
+        self.sample_prep_agent = SamplePrepAgent()
+        self.cell_line_agent = CellLineAgent()
+        self.protocol_agent = ProtocolAgent()
+        self.institution_agent = InstitutionAgent()
+
+        # Validation
+        self.tag_validator = TagValidator(tag_dictionary_path)
+
+    # ------------------------------------------------------------------
+    def process_paper(self, paper: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a single paper dict and return agent-enriched results.
+
+        Parameters
+        ----------
+        paper : dict
+            A paper dict from the database (or existing JSON export).
+            Must contain at least ``title`` and ``abstract``.
+
+        Returns
+        -------
+        dict
+            Extraction results keyed by category, ready for the exporter.
+        """
+        sections = from_pubmed_dict(paper)
+        return self._run_agents(sections, paper)
+
+    def process_sections(self, sections: PaperSections) -> Dict[str, Any]:
+        """Process pre-parsed PaperSections."""
+        return self._run_agents(sections, sections.metadata)
+
+    # ------------------------------------------------------------------
+    def _run_agents(self, sections: PaperSections,
+                    metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Run all agents over each relevant section and assemble results."""
+
+        # Determine which text to extract from
+        # Priority: methods > full_text > title+abstract
+        primary_text = sections.methods_or_fallback()
+        title = sections.title
+        abstract = sections.abstract
+
+        # Decide tag_source
+        tag_source = sections.tag_source
+
+        # ---- Run agents on the appropriate text ----
+
+        # For most agents, run on the primary text (methods preferred)
+        technique_exts = self._run_on_sections(
+            self.technique_agent, sections
+        )
+        equipment_exts = self._run_on_sections(
+            self.equipment_agent, sections
+        )
+        fluorophore_exts = self._run_on_sections(
+            self.fluorophore_agent, sections
+        )
+        organism_exts = self._run_on_sections(
+            self.organism_agent, sections
+        )
+        software_exts = self._run_on_sections(
+            self.software_agent, sections
+        )
+        sample_prep_exts = self._run_on_sections(
+            self.sample_prep_agent, sections
+        )
+        cell_line_exts = self._run_on_sections(
+            self.cell_line_agent, sections
+        )
+        protocol_exts = self._run_on_sections(
+            self.protocol_agent, sections
+        )
+
+        # Antibody sources (from organism agent)
+        antibody_exts = []
+        for text, sec in self._section_texts(sections):
+            antibody_exts.extend(
+                self.organism_agent.extract_antibody_sources(text, sec)
+            )
+
+        # Institutions from affiliations (NOT from paper body)
+        institution_exts = []
+        affiliations = metadata.get("affiliations", [])
+        if isinstance(affiliations, list) and affiliations:
+            institution_exts = self.institution_agent.analyze_affiliations(affiliations)
+        elif isinstance(affiliations, str) and affiliations:
+            institution_exts = self.institution_agent.analyze(affiliations, "affiliation")
+
+        # ---- Collect canonical values by category ----
+        results: Dict[str, Any] = {}
+
+        results["microscopy_techniques"] = self._canonicals(
+            technique_exts, "microscopy_techniques"
+        )
+        results["microscope_brands"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "MICROSCOPE_BRAND"],
+            "microscope_brands",
+        )
+        results["microscope_models"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "MICROSCOPE_MODEL"],
+            "microscope_models",
+        )
+        results["reagent_suppliers"] = self._canonicals(
+            [e for e in equipment_exts if e.label == "REAGENT_SUPPLIER"],
+        )
+        results["image_analysis_software"] = self._canonicals(
+            [e for e in software_exts if e.label == "IMAGE_ANALYSIS_SOFTWARE"],
+            "image_analysis_software",
+        )
+        results["image_acquisition_software"] = self._canonicals(
+            [e for e in software_exts if e.label == "IMAGE_ACQUISITION_SOFTWARE"],
+            "image_acquisition_software",
+        )
+        results["general_software"] = self._canonicals(
+            [e for e in software_exts if e.label == "GENERAL_SOFTWARE"],
+        )
+        results["fluorophores"] = self._canonicals(
+            fluorophore_exts, "fluorophores"
+        )
+        results["organisms"] = self._canonicals(
+            organism_exts, "organisms"
+        )
+        results["antibody_sources"] = self._canonicals(antibody_exts)
+        results["cell_lines"] = self._canonicals(
+            cell_line_exts, "cell_lines"
+        )
+        results["sample_preparation"] = self._canonicals(
+            sample_prep_exts, "sample_preparation"
+        )
+
+        # Protocols and repositories (structured)
+        results["protocols"] = self._structured_protocols(protocol_exts)
+        results["repositories"] = self._structured_repositories(protocol_exts)
+        results["rrids"] = self._structured_rrids(protocol_exts)
+        results["rors"] = self._structured_rors(
+            protocol_exts, institution_exts
+        )
+        results["institutions"] = self._canonicals(institution_exts)
+
+        # GitHub URL (first one found)
+        github_exts = [e for e in protocol_exts if e.label == "GITHUB_URL"]
+        results["github_url"] = (
+            github_exts[0].metadata.get("url") if github_exts else None
+        )
+
+        # Tag source
+        results["tag_source"] = tag_source
+
+        # Confidence scores for debugging
+        results["_confidence"] = self._confidence_summary(
+            technique_exts + equipment_exts + fluorophore_exts +
+            organism_exts + software_exts + sample_prep_exts +
+            cell_line_exts + protocol_exts + institution_exts
+        )
+
+        return results
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    def _run_on_sections(self, agent, sections: PaperSections) -> List[Extraction]:
+        """Run an agent over all available sections and merge results."""
+        all_exts: List[Extraction] = []
+        for text, sec_type in self._section_texts(sections):
+            all_exts.extend(agent.analyze(text, sec_type))
+        return agent._deduplicate(all_exts)
+
+    @staticmethod
+    def _section_texts(sections: PaperSections):
+        """Yield (text, section_type) pairs for each available section."""
+        if sections.title:
+            yield sections.title, "title"
+        if sections.abstract:
+            yield sections.abstract, "abstract"
+        if sections.methods:
+            yield sections.methods, "methods"
+        if sections.results:
+            yield sections.results, "results"
+        if sections.introduction:
+            yield sections.introduction, "introduction"
+        if sections.discussion:
+            yield sections.discussion, "discussion"
+        # If we only have full_text (no section segmentation),
+        # yield it as "full_text" to give agents something to work with
+        if (not sections.methods and not sections.results
+                and sections.full_text
+                and sections.full_text != sections.abstract):
+            yield sections.full_text, "full_text"
+
+    def _canonicals(self, extractions: List[Extraction],
+                    validation_category: str = None) -> List[str]:
+        """Extract unique canonical values, optionally validated."""
+        seen: Set[str] = set()
+        result: List[str] = []
+        for ext in extractions:
+            canonical = ext.canonical()
+            if canonical not in seen:
+                seen.add(canonical)
+                result.append(canonical)
+
+        if validation_category:
+            result = self.tag_validator.filter_valid(
+                validation_category, result
+            )
+        return result
+
+    @staticmethod
+    def _structured_protocols(exts: List[Extraction]) -> List[Dict]:
+        """Build structured protocol list."""
+        protocols = []
+        seen: Set[str] = set()
+        for ext in exts:
+            if ext.label not in ("PROTOCOL", "PROTOCOL_URL"):
+                continue
+            name = ext.canonical()
+            if name in seen:
+                continue
+            seen.add(name)
+            entry = {"name": name}
+            if ext.metadata.get("url"):
+                entry["url"] = ext.metadata["url"]
+            entry["source"] = ext.section
+            protocols.append(entry)
+        return protocols
+
+    @staticmethod
+    def _structured_repositories(exts: List[Extraction]) -> List[Dict]:
+        """Build structured repository list."""
+        repos = []
+        seen: Set[str] = set()
+        for ext in exts:
+            if ext.label != "REPOSITORY":
+                continue
+            key = ext.metadata.get("url") or ext.canonical()
+            if key in seen:
+                continue
+            seen.add(key)
+            entry = {"name": ext.canonical()}
+            if ext.metadata.get("url"):
+                entry["url"] = ext.metadata["url"]
+            repos.append(entry)
+        return repos
+
+    @staticmethod
+    def _structured_rrids(exts: List[Extraction]) -> List[Dict]:
+        """Build structured RRID list."""
+        rrids = []
+        seen: Set[str] = set()
+        for ext in exts:
+            if ext.label != "RRID":
+                continue
+            rrid_id = ext.metadata.get("rrid_id", "")
+            if rrid_id in seen:
+                continue
+            seen.add(rrid_id)
+            rrids.append({
+                "id": f"RRID:{rrid_id}",
+                "type": ext.metadata.get("rrid_type", ""),
+                "url": ext.metadata.get("url", ""),
+            })
+        return rrids
+
+    @staticmethod
+    def _structured_rors(protocol_exts: List[Extraction],
+                         institution_exts: List[Extraction]) -> List[Dict]:
+        """Build structured ROR list from both protocol and institution agents."""
+        rors = []
+        seen: Set[str] = set()
+
+        # From protocol agent (ROR URLs found in text)
+        for ext in protocol_exts:
+            if ext.label != "ROR":
+                continue
+            ror_id = ext.canonical()
+            if ror_id in seen:
+                continue
+            seen.add(ror_id)
+            rors.append({
+                "id": ror_id,
+                "url": ext.metadata.get("url", ""),
+                "source": "text",
+            })
+
+        # From institution agent (ROR IDs looked up from institution names)
+        for ext in institution_exts:
+            ror_id = ext.metadata.get("ror_id")
+            if ror_id and ror_id not in seen:
+                seen.add(ror_id)
+                rors.append({
+                    "id": ror_id,
+                    "url": ext.metadata.get("ror_url", ""),
+                    "source": "institution_lookup",
+                })
+
+        return rors
+
+    @staticmethod
+    def _confidence_summary(exts: List[Extraction]) -> Dict:
+        """Summarise average confidence by label for diagnostics."""
+        from collections import defaultdict
+        sums: Dict[str, float] = defaultdict(float)
+        counts: Dict[str, int] = defaultdict(int)
+        for ext in exts:
+            sums[ext.label] += ext.confidence
+            counts[ext.label] += 1
+        return {
+            label: round(sums[label] / counts[label], 3)
+            for label in counts
+        }
