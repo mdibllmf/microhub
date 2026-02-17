@@ -80,26 +80,89 @@ PROTOCOL_JOURNAL_PATTERNS = [
 # ======================================================================
 
 REPOSITORY_PATTERNS: Dict[str, tuple] = {
+    # --- Code repositories ---
     "GitHub": (re.compile(r"(?:https?://)?(?:www\.)?github\.com/[\w.-]+/[\w.-]+", re.I), 0.95),
     "GitLab": (re.compile(r"(?:https?://)?(?:www\.)?gitlab\.com/[\w.-]+/[\w.-]+", re.I), 0.95),
-    "Zenodo": (re.compile(r"(?:https?://)?(?:www\.)?zenodo\.org/(?:record|doi)/[\w./]+", re.I), 0.95),
+    "Bitbucket": (re.compile(r"(?:https?://)?(?:www\.)?bitbucket\.org/[\w.-]+/[\w.-]+", re.I), 0.95),
+
+    # --- Data repositories ---
+    "Zenodo": (re.compile(r"(?:https?://)?(?:www\.)?zenodo\.org/(?:record|doi|api)/[\w./]+", re.I), 0.95),
     "Figshare": (re.compile(r"(?:https?://)?(?:www\.)?figshare\.com/[\w./]+", re.I), 0.95),
     "Dryad": (re.compile(r"(?:https?://)?(?:www\.)?datadryad\.org/[\w./]+", re.I), 0.95),
-    "EMPIAR": (re.compile(r"\bEMPIAR[- ]?\d+\b|(?:https?://)?(?:www\.)?ebi\.ac\.uk/empiar/[\w./]+", re.I), 0.95),
-    "EMDB": (re.compile(r"\bEMD[- ]?\d{4,}\b|(?:https?://)?(?:www\.)?ebi\.ac\.uk/emdb/[\w./]+", re.I), 0.95),
-    "PDB": (re.compile(r"\bPDB(?:\s+(?:ID|accession|code|entry))?\s*[:# ]?\s*\d[A-Za-z0-9]{3}\b", re.I), 0.85),
-    "BioImage Archive": (re.compile(r"\bBioImage\s+Archive\b|(?:https?://)?(?:www\.)?bioimage-archive\.ebi\.ac\.uk/[\w./]+", re.I), 0.95),
-    "IDR": (re.compile(r"\bImage\s+Data\s+Resource\b|\bidr\d{4}\b|(?:https?://)?idr\.openmicroscopy\.org/[\w./]+", re.I), 0.9),
-    "OMERO": (re.compile(r"\bOMERO\b(?=.{0,30}(?:server|repositor|public|database|instance))", re.I | re.S), 0.8),
-    "GEO": (re.compile(r"\bGSE\d{3,}\b|Gene\s+Expression\s+Omnibus|(?:https?://)?(?:www\.)?ncbi\.nlm\.nih\.gov/geo/[\w./]+", re.I), 0.9),
-    "SRA": (re.compile(r"\bSR[APXR]\d{6,}\b|Sequence\s+Read\s+Archive", re.I), 0.9),
-    "ArrayExpress": (re.compile(r"\bArrayExpress\b|E-MTAB-\d+|(?:https?://)?(?:www\.)?ebi\.ac\.uk/arrayexpress/[\w./]+", re.I), 0.9),
-    "PRIDE": (re.compile(r"\bPRIDE\b|PXD\d{6,}", re.I), 0.85),
     "OSF": (re.compile(r"(?:https?://)?osf\.io/[\w]+", re.I), 0.9),
     "Code Ocean": (re.compile(r"\bCode\s+Ocean\b|codeocean\.com", re.I), 0.9),
     "Mendeley Data": (re.compile(r"\bMendeley\s+Data\b|data\.mendeley\.com", re.I), 0.9),
+
+    # --- Structural biology ---
+    "EMPIAR": (re.compile(r"\bEMPIAR[- ]?\d+\b|(?:https?://)?(?:www\.)?ebi\.ac\.uk/empiar/[\w./]+", re.I), 0.95),
+    "EMDB": (re.compile(r"\bEMD[- ]?\d{4,}\b|(?:https?://)?(?:www\.)?ebi\.ac\.uk/emdb/[\w./]+", re.I), 0.95),
+    "PDB": (re.compile(r"\bPDB(?:\s+(?:ID|accession|code|entry))?\s*[:# ]?\s*\d[A-Za-z0-9]{3}\b", re.I), 0.85),
+
+    # --- BioImaging repositories ---
+    "BioImage Archive": (re.compile(
+        r"\bBioImage\s+Archive\b|"
+        r"(?:https?://)?(?:www\.)?bioimage-archive\.ebi\.ac\.uk/[\w./]+",
+        re.I,
+    ), 0.95),
+    "IDR": (re.compile(
+        r"\bImage\s+Data\s+Resource\b|\bidr\d{4}\b|"
+        r"(?:https?://)?idr\.openmicroscopy\.org/[\w./]*",
+        re.I,
+    ), 0.9),
+    "OMERO": (re.compile(
+        # OMERO URLs (openmicroscopy.org or any domain with /omero/ path)
+        r"(?:https?://)?(?:[\w.-]+\.)?openmicroscopy\.org/omero[\w./]*|"
+        r"(?:https?://)?[\w.-]+/omero/(?:webclient|api|webgateway)[\w./]*|"
+        # OMERO with context words after (server, repository, public, etc.)
+        r"\bOMERO\b(?=.{0,30}(?:server|repositor|public|database|instance|gallery))|"
+        # "OMERO" + component (OMERO.web, OMERO.figure, OMERO Plus)
+        r"\bOMERO\s*[.]?\s*(?:web|figure|Plus|insight|cli|server)\b|"
+        # OMERO with availability context after
+        r"\bOMERO\b(?=.{0,50}(?:https?://|available|deposited|hosted|stored|accessible))|"
+        # Availability context before OMERO (e.g., "deposited in OMERO", "via OMERO")
+        r"(?:available|deposited|hosted|stored|accessible|uploaded|shared)\s+(?:in|on|via|through|at|to)\s+OMERO\b",
+        re.I | re.S,
+    ), 0.85),
+    "SSBD": (re.compile(
+        r"\bSSBD\b(?=.{0,30}(?:database|repositor|available))|"
+        r"(?:https?://)?ssbd\.riken\.jp/[\w./]*",
+        re.I | re.S,
+    ), 0.85),
+
+    # --- Genomics / transcriptomics ---
+    "GEO": (re.compile(
+        r"\bGSE\d{3,}\b|Gene\s+Expression\s+Omnibus|"
+        r"(?:https?://)?(?:www\.)?ncbi\.nlm\.nih\.gov/geo/[\w./]+",
+        re.I,
+    ), 0.9),
+    "SRA": (re.compile(r"\bSR[APXR]\d{6,}\b|Sequence\s+Read\s+Archive", re.I), 0.9),
+    "ArrayExpress": (re.compile(
+        r"\bArrayExpress\b|E-MTAB-\d+|"
+        r"(?:https?://)?(?:www\.)?ebi\.ac\.uk/arrayexpress/[\w./]+",
+        re.I,
+    ), 0.9),
+    "ENA": (re.compile(
+        r"\bEuropean\s+Nucleotide\s+Archive\b|"
+        r"\bENA\b(?=.{0,20}(?:accession|project))|"
+        r"\bPRJE[A-Z]\d{5,}\b",
+        re.I | re.S,
+    ), 0.9),
+
+    # --- Proteomics ---
+    "PRIDE": (re.compile(r"\bPRIDE\b(?=.{0,20}(?:database|archive|accession))|PXD\d{6,}", re.I | re.S), 0.85),
+    "ProteomeXchange": (re.compile(r"\bProteomeXchange\b", re.I), 0.85),
+
+    # --- Multi-purpose ---
     "BioStudies": (re.compile(r"\bBioStudies\b|S-BSST\d+", re.I), 0.9),
-    "SSBD": (re.compile(r"\bSSBD\b(?=.{0,20}(?:database|repositor))", re.I | re.S), 0.8),
+    "Dataverse": (re.compile(
+        r"(?:https?://)?(?:[\w.-]+\.)?dataverse\.[\w./]+|"
+        r"\bDataverse\b(?=.{0,20}(?:dataset|repositor|available))",
+        re.I | re.S,
+    ), 0.85),
+    "Hugging Face": (re.compile(
+        r"(?:https?://)?huggingface\.co/[\w.-]+/[\w.-]+",
+        re.I,
+    ), 0.9),
 }
 
 # ======================================================================

@@ -37,6 +37,10 @@ class PaperSections:
     introduction: str = ""
     discussion: str = ""
     full_text: str = ""
+    # Figure captions — rich source of equipment/technique info
+    figures: str = ""
+    # Data/Code availability statements — contain repository links
+    data_availability: str = ""
     # Raw section list for agents that want heading-level granularity
     sections: List[Dict[str, str]] = field(default_factory=list)
     # Metadata carried through from the source
@@ -46,7 +50,8 @@ class PaperSections:
     def all_text(self) -> str:
         """Concatenate all meaningful text (for whole-document agents)."""
         parts = [self.title, self.abstract, self.methods, self.results,
-                 self.introduction, self.discussion]
+                 self.introduction, self.discussion, self.figures,
+                 self.data_availability]
         return "\n\n".join(p for p in parts if p)
 
     def methods_or_fallback(self) -> str:
@@ -73,6 +78,8 @@ def from_sections_list(sections: List[Dict[str, str]],
     results_parts: List[str] = []
     intro_parts: List[str] = []
     discussion_parts: List[str] = []
+    figure_parts: List[str] = []
+    data_avail_parts: List[str] = []
     all_parts: List[str] = []
 
     for sec in sections:
@@ -92,11 +99,17 @@ def from_sections_list(sections: List[Dict[str, str]],
             intro_parts.append(text)
         elif stype == "discussion":
             discussion_parts.append(text)
+        elif stype == "figures":
+            figure_parts.append(text)
+        elif stype == "data_availability":
+            data_avail_parts.append(text)
 
     ps.methods = " ".join(methods_parts)
     ps.results = " ".join(results_parts)
     ps.introduction = " ".join(intro_parts)
     ps.discussion = " ".join(discussion_parts)
+    ps.figures = " ".join(figure_parts)
+    ps.data_availability = " ".join(data_avail_parts)
     ps.full_text = " ".join(all_parts)
 
     # Title from metadata
@@ -110,13 +123,78 @@ def from_sections_list(sections: List[Dict[str, str]],
 
 def from_pubmed_dict(paper: Dict) -> PaperSections:
     """Build PaperSections from a scraper-style dict (DB row or JSON record)."""
+    full_text = paper.get("full_text", "") or ""
+    figures = ""
+    data_availability = ""
+
+    # Extract figure captions from full text if available
+    if full_text:
+        figures = _extract_figure_captions(full_text)
+        data_availability = _extract_data_availability(full_text)
+
     return PaperSections(
         title=paper.get("title", "") or "",
         abstract=paper.get("abstract", "") or "",
         methods=paper.get("methods", "") or "",
-        full_text=paper.get("full_text", "") or "",
+        full_text=full_text,
+        figures=figures,
+        data_availability=data_availability,
         metadata=paper,
     )
+
+
+# ======================================================================
+# Heuristic extraction from full text
+# ======================================================================
+
+# Figure caption patterns — extract "Figure 1. ..." or "Fig. 1: ..."
+_FIGURE_CAPTION_RE = re.compile(
+    r"(?:^|\n)\s*(?:(?:Supplementary\s+)?Fig(?:ure|\.)\s*(?:S?\d+)[\.:]\s*)"
+    r"(.+?)(?=\n\s*(?:(?:Supplementary\s+)?Fig(?:ure|\.)\s*(?:S?\d+)|$))",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Data/Code availability section headings
+_DATA_AVAIL_RE = re.compile(
+    r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:"
+    r"data\s+(?:and\s+(?:code|software|materials?)\s+)?availability"
+    r"|code\s+availability"
+    r"|data\s+(?:access|deposition|sharing)"
+    r"|(?:availability\s+of\s+(?:data|code|materials?))"
+    r"|accession\s+(?:codes?|numbers?)"
+    r")\s*\n",
+    re.IGNORECASE,
+)
+
+
+def _extract_figure_captions(text: str) -> str:
+    """Extract figure captions from full text using regex."""
+    captions = []
+    for m in _FIGURE_CAPTION_RE.finditer(text):
+        caption = m.group(0).strip()
+        # Limit individual caption length (avoid grabbing full paragraphs)
+        if len(caption) < 2000:
+            captions.append(caption)
+    return " ".join(captions)
+
+
+def _extract_data_availability(text: str) -> str:
+    """Extract Data Availability section from full text."""
+    m = _DATA_AVAIL_RE.search(text)
+    if not m:
+        return ""
+
+    start = m.end()
+    # Take text until next section heading or end
+    _next_heading = re.compile(
+        r"\n\s*(?:\d+\.?\s*)?(?:acknowledge?ments?|references?|funding|"
+        r"supplementary|author\s+contributions?|competing\s+interests?|"
+        r"conflict\s+of\s+interest)\s*\n",
+        re.IGNORECASE,
+    )
+    end_m = _next_heading.search(text, start)
+    end = end_m.start() if end_m else min(start + 2000, len(text))
+    return text[start:end].strip()
 
 
 def from_pdf(pdf_path: str, grobid_url: str = "http://localhost:8070") -> PaperSections:

@@ -12,6 +12,7 @@ import re
 from typing import Dict, List, Set
 
 from .base_agent import BaseAgent, Extraction
+from ..confidence import get_confidence
 
 # ======================================================================
 # Microscope brand dictionary -- canonical names
@@ -230,8 +231,100 @@ _REAGENT_PATTERN = re.compile(
 )
 
 
+# ======================================================================
+# Objective lens patterns
+# ======================================================================
+
+# Matches "60x/1.4 NA oil", "100x 1.49NA", "40× 0.95 NA", etc.
+_OBJECTIVE_FULL_RE = re.compile(
+    r"(\d{1,3})\s*[x×X]\s*/?\s*(\d+\.?\d*)\s*(?:NA|N\.A\.)"
+    r"(?:\s+(oil|water|silicone|glycerol|air|dry|multi[- ]?immersion))?"
+    r"(?:\s+(?:objective|lens))?",
+    re.IGNORECASE,
+)
+
+# Matches standalone "Plan Apo 60x" or "Apo TIRF 100x"
+_OBJECTIVE_TYPE_RE = re.compile(
+    r"(?:Plan[- ]?(?:Apo(?:chromat)?|Fluor|Neofluar)|"
+    r"Apo(?:chromat)?[- ]?(?:TIRF|Lambda)?|"
+    r"C[- ]?Apo(?:chromat)?|"
+    r"HC\s+PL\s+APO|"
+    r"CFI\s+Plan\s+(?:Apo|Fluor))\s+"
+    r"(\d{1,3})\s*[x×X]",
+    re.IGNORECASE,
+)
+
+# ======================================================================
+# Laser patterns
+# ======================================================================
+
+_LASER_WAVELENGTH_RE = re.compile(
+    r"(\d{3,4})\s*[-–]?\s*nm\s*(?:laser|excitation|line|diode|DPSS)?",
+    re.IGNORECASE,
+)
+
+_LASER_TYPE_RE = re.compile(
+    r"\b(argon|krypton|HeNe|He-Ne|diode|DPSS|Ti[:-]?Sapph(?:ire)?|"
+    r"femtosecond|picosecond|pulsed|CW|multiphoton|two[- ]?photon|"
+    r"Mai\s*Tai|Chameleon|InSight|Coherent)\s*(?:laser)?",
+    re.IGNORECASE,
+)
+
+# Common laser lines used in microscopy
+_COMMON_LASER_LINES = {
+    "355", "405", "440", "445", "458", "473", "488", "491", "514", "532",
+    "543", "552", "555", "561", "568", "594", "633", "638", "640", "647",
+    "660", "685", "730", "750", "780", "800", "850", "900", "920", "940",
+    "960", "980", "1040", "1064",
+}
+
+# ======================================================================
+# Detector patterns
+# ======================================================================
+
+DETECTOR_PATTERNS = [
+    (re.compile(r"\bPMT\b"), "PMT"),
+    (re.compile(r"\bGaAsP\b", re.I), "GaAsP"),
+    (re.compile(r"\bHyD\b(?:\s*[SX])?", re.I), "HyD"),
+    (re.compile(r"\bsCMOS\b", re.I), "sCMOS"),
+    (re.compile(r"\bEMCCD\b", re.I), "EMCCD"),
+    (re.compile(r"\bCCD\b(?!\s*camera\s+phone)", re.I), "CCD"),
+    (re.compile(r"\bAPD\b"), "APD"),
+    (re.compile(r"\bSPAD\b"), "SPAD"),
+    (re.compile(r"\bMCP\b(?=.{0,20}(?:detector|channel|plate))", re.I | re.S), "MCP"),
+    # Camera models used as detectors
+    (re.compile(r"\bORCA[- ]?(?:Flash|Fusion|Quest|Spark)\s*\w*\b", re.I), None),
+    (re.compile(r"\biXon\s*\w*\b", re.I), None),
+    (re.compile(r"\bZyla\s*\w*\b", re.I), None),
+    (re.compile(r"\bSona\s*\w*\b", re.I), None),
+    (re.compile(r"\bNeo\s+\d\.\d\b", re.I), None),
+    (re.compile(r"\bKinetix\b", re.I), None),
+    (re.compile(r"\bPrime\s*(?:BSI|95B)\b", re.I), None),
+]
+
+# ======================================================================
+# Filter patterns
+# ======================================================================
+
+_FILTER_RE = re.compile(
+    r"\b(\d{3,4})\s*/\s*(\d{1,3})\s*(?:nm)?\s*"
+    r"(?:band[- ]?pass|BP|emission|excitation|filter)\b",
+    re.IGNORECASE,
+)
+
+_DICHROIC_RE = re.compile(
+    r"\b(?:dichroic|beam\s*splitter|DM)\s*\d{3,4}(?:/\d{3,4})?\b",
+    re.IGNORECASE,
+)
+
+_FILTER_SET_RE = re.compile(
+    r"\b(?:(?:Chroma|Semrock)\s+)?(?:ET|FF|BrightLine)\s*\d{3,4}/\d{1,3}\b",
+    re.IGNORECASE,
+)
+
+
 class EquipmentAgent(BaseAgent):
-    """Extract microscope brands, models, and reagent suppliers."""
+    """Extract microscope brands, models, objectives, lasers, detectors, filters."""
 
     name = "equipment"
 
@@ -239,6 +332,10 @@ class EquipmentAgent(BaseAgent):
         results: List[Extraction] = []
         results.extend(self._match_brands(text, section))
         results.extend(self._match_models(text, section))
+        results.extend(self._match_objectives(text, section))
+        results.extend(self._match_lasers(text, section))
+        results.extend(self._match_detectors(text, section))
+        results.extend(self._match_filters(text, section))
         results.extend(self._match_reagent_suppliers(text, section))
         return self._deduplicate(results)
 
@@ -253,7 +350,7 @@ class EquipmentAgent(BaseAgent):
                 continue  # handled by context patterns below
             idx = text_lower.find(key)
             if idx != -1:
-                conf = 0.9 if section in ("methods", "materials") else 0.7
+                conf = get_confidence("MICROSCOPE_BRAND", section)
                 extractions.append(Extraction(
                     text=text[idx:idx + len(key)],
                     label="MICROSCOPE_BRAND",
@@ -301,7 +398,7 @@ class EquipmentAgent(BaseAgent):
         for pattern, name_fn, brand in MODEL_PATTERNS:
             for m in pattern.finditer(text):
                 canonical = name_fn(m)
-                conf = 0.9 if section in ("methods", "materials") else 0.75
+                conf = get_confidence("MICROSCOPE_MODEL", section)
                 meta: Dict = {"canonical": canonical}
                 if brand:
                     meta["brand"] = brand
@@ -318,6 +415,147 @@ class EquipmentAgent(BaseAgent):
         return extractions
 
     # ------------------------------------------------------------------
+    def _match_objectives(self, text: str, section: str = None) -> List[Extraction]:
+        extractions: List[Extraction] = []
+
+        for m in _OBJECTIVE_FULL_RE.finditer(text):
+            mag = m.group(1)
+            na = m.group(2)
+            immersion = (m.group(3) or "").lower()
+            canonical = f"{mag}x/{na} NA"
+            if immersion:
+                canonical += f" {immersion}"
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="OBJECTIVE",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("OBJECTIVE", section),
+                source_agent=self.name,
+                section=section or "",
+                metadata={
+                    "canonical": canonical,
+                    "magnification": f"{mag}x",
+                    "na": na,
+                    "immersion": immersion or "unknown",
+                },
+            ))
+
+        for m in _OBJECTIVE_TYPE_RE.finditer(text):
+            mag = m.group(1)
+            canonical = f"{m.group(0).strip()}"
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="OBJECTIVE",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("OBJECTIVE", section),
+                source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": canonical, "magnification": f"{mag}x"},
+            ))
+
+        return extractions
+
+    # ------------------------------------------------------------------
+    def _match_lasers(self, text: str, section: str = None) -> List[Extraction]:
+        extractions: List[Extraction] = []
+        seen_wavelengths: Set[str] = set()
+
+        for m in _LASER_WAVELENGTH_RE.finditer(text):
+            wl = m.group(1)
+            if wl not in _COMMON_LASER_LINES:
+                continue
+            if wl in seen_wavelengths:
+                continue
+            seen_wavelengths.add(wl)
+
+            canonical = f"{wl} nm laser"
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="LASER",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("LASER", section),
+                source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": canonical, "wavelength_nm": wl},
+            ))
+
+        for m in _LASER_TYPE_RE.finditer(text):
+            canonical = m.group(0).strip()
+            extractions.append(Extraction(
+                text=canonical,
+                label="LASER",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("LASER", section) * 0.9,
+                source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": canonical},
+            ))
+
+        return extractions
+
+    # ------------------------------------------------------------------
+    def _match_detectors(self, text: str, section: str = None) -> List[Extraction]:
+        extractions: List[Extraction] = []
+
+        for pattern, canonical_override in DETECTOR_PATTERNS:
+            for m in pattern.finditer(text):
+                matched = m.group(0).strip()
+                canonical = canonical_override or matched
+                extractions.append(Extraction(
+                    text=matched,
+                    label="DETECTOR",
+                    start=m.start(), end=m.end(),
+                    confidence=get_confidence("DETECTOR", section),
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={"canonical": canonical},
+                ))
+
+        return extractions
+
+    # ------------------------------------------------------------------
+    def _match_filters(self, text: str, section: str = None) -> List[Extraction]:
+        extractions: List[Extraction] = []
+
+        for m in _FILTER_RE.finditer(text):
+            center = m.group(1)
+            width = m.group(2)
+            canonical = f"{center}/{width} bandpass"
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="FILTER",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("FILTER", section),
+                source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": canonical, "center_nm": center, "bandwidth_nm": width},
+            ))
+
+        for m in _DICHROIC_RE.finditer(text):
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="FILTER",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("FILTER", section),
+                source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": m.group(0).strip(), "type": "dichroic"},
+            ))
+
+        for m in _FILTER_SET_RE.finditer(text):
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="FILTER",
+                start=m.start(), end=m.end(),
+                confidence=get_confidence("FILTER", section),
+                source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": m.group(0).strip(), "type": "filter_set"},
+            ))
+
+        return extractions
+
+    # ------------------------------------------------------------------
     def _match_reagent_suppliers(self, text: str,
                                  section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
@@ -328,7 +566,7 @@ class EquipmentAgent(BaseAgent):
                 label="REAGENT_SUPPLIER",
                 start=m.start(),
                 end=m.end(),
-                confidence=0.8,
+                confidence=get_confidence("REAGENT_SUPPLIER", section),
                 source_agent=self.name,
                 section=section or "",
                 metadata={"canonical": canonical},
