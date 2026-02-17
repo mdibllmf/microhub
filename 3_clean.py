@@ -51,6 +51,10 @@ def main():
                         help="Skip Semantic Scholar API calls")
     parser.add_argument("--no-crossref", action="store_true",
                         help="Skip CrossRef API calls")
+    parser.add_argument("--ollama", action="store_true",
+                        help="Use local Ollama LLM to verify Methods section tags")
+    parser.add_argument("--ollama-model", default=None,
+                        help="Ollama model name (default: llama3.1 or OLLAMA_MODEL env)")
 
     args = parser.parse_args()
 
@@ -91,7 +95,9 @@ def main():
     if args.enrich:
         dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
         enricher = PipelineOrchestrator(
-            tag_dictionary_path=dict_path if os.path.exists(dict_path) else None
+            tag_dictionary_path=dict_path if os.path.exists(dict_path) else None,
+            use_ollama=args.ollama,
+            ollama_model=args.ollama_model
         )
 
     # --- API enrichment (GitHub, S2, CrossRef) — on by default ---
@@ -107,6 +113,7 @@ def main():
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
     logger.info("Enrich:      %s", "yes" if args.enrich else "no")
+    logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")
     logger.info("")
 

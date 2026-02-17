@@ -23,6 +23,7 @@ from .agents.cell_line_agent import CellLineAgent
 from .agents.protocol_agent import ProtocolAgent
 from .agents.institution_agent import InstitutionAgent
 from .agents.pubtator_agent import PubTatorAgent
+from .agents.ollama_agent import OllamaVerificationAgent
 from .parsing.section_extractor import PaperSections, from_pubmed_dict
 from .validation.tag_validator import TagValidator
 from .validation.api_validator import ApiValidator
@@ -36,7 +37,9 @@ class PipelineOrchestrator:
 
     def __init__(self, tag_dictionary_path: str = None, *,
                  use_pubtator: bool = True,
-                 use_api_validation: bool = True):
+                 use_api_validation: bool = True,
+                 use_ollama: bool = False,
+                 ollama_model: str = None):
         # Extraction agents
         self.technique_agent = TechniqueAgent()
         self.equipment_agent = EquipmentAgent()
@@ -50,6 +53,13 @@ class PipelineOrchestrator:
 
         # Supplemental: PubTator NLP-based extraction (fills regex gaps)
         self.pubtator_agent = PubTatorAgent() if use_pubtator else None
+
+        # Ollama LLM verification (reads Methods, cross-checks regex results)
+        self.ollama_agent = None
+        if use_ollama:
+            self.ollama_agent = OllamaVerificationAgent(
+                model=ollama_model or None
+            )
 
         # Validation
         self.tag_validator = TagValidator(tag_dictionary_path)
@@ -82,6 +92,17 @@ class PipelineOrchestrator:
         # Post-extraction: validate tags against authoritative APIs
         if self.api_validator:
             self.api_validator.validate_paper(results)
+
+        # Post-extraction: Ollama LLM verification of Methods section
+        if self.ollama_agent and self.ollama_agent.is_available():
+            llm_results = self.ollama_agent.verify_and_extract(paper, results)
+            if llm_results.get("added") or llm_results.get("removed"):
+                self.ollama_agent.apply_results(results, llm_results)
+                logger.debug(
+                    "Ollama verification: added=%s, flagged=%s",
+                    llm_results.get("added", {}),
+                    llm_results.get("removed", {}),
+                )
 
         # Post-extraction: normalize all identifiers
         self.id_normalizer.normalize_paper(results)
