@@ -538,20 +538,22 @@ class EquipmentAgent(BaseAgent):
     # ------------------------------------------------------------------
     def _match_brands(self, text: str, section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
-        text_lower = text.lower()
 
         for key, canonical in MICROSCOPE_BRANDS.items():
             # Avoid false-positive "prior" in normal text
             if key == "prior":
                 continue  # handled by context patterns below
-            idx = text_lower.find(key)
-            if idx != -1:
+            # Use word-boundary regex to avoid substring matches
+            # (e.g. "ASI" must not match inside "quasi" or "basis")
+            pattern = re.compile(r"\b" + re.escape(key) + r"\b", re.I)
+            m = pattern.search(text)
+            if m:
                 conf = get_confidence("MICROSCOPE_BRAND", section)
                 extractions.append(Extraction(
-                    text=text[idx:idx + len(key)],
+                    text=m.group(0),
                     label="MICROSCOPE_BRAND",
-                    start=idx,
-                    end=idx + len(key),
+                    start=m.start(),
+                    end=m.end(),
                     confidence=conf,
                     source_agent=self.name,
                     section=section or "",

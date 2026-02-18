@@ -93,12 +93,137 @@ def normalize_tags(paper: Dict) -> Dict:
     _apply(paper, "microscope_brands", BRAND_RENAMES)
     _apply(paper, "image_analysis_software", SOFTWARE_RENAMES)
     _apply(paper, "organisms", ORGANISM_RENAMES)
+
+    # Structured equipment normalization (objectives, lasers)
+    _normalize_objectives(paper)
+    _normalize_lasers(paper)
+
     return paper
 
 
 # ======================================================================
 # Internals
 # ======================================================================
+
+# Regex to parse objective canonical strings into components
+_OBJECTIVE_PARSE_RE = re.compile(
+    r"(?:(\w[\w\s&()]*?)\s+)?"       # optional brand
+    r"(?:([\w\s-]+?)\s+)?"           # optional prefix (HC PL APO, etc.)
+    r"(\d{1,3})\s*[x×X]"            # magnification
+    r"(?:\s*/?\s*(\d+\.?\d*)\s*NA)?" # optional NA
+    r"(?:\s+(oil|water|silicone|glycerol|air|dry|multi[- ]?immersion))?",  # optional immersion
+    re.IGNORECASE,
+)
+
+
+def _normalize_objectives(paper: Dict) -> None:
+    """Group duplicate objectives by matching magnification+NA+immersion.
+
+    Different textual representations of the same objective (e.g.,
+    '60x/1.4 NA oil' and 'Nikon 60x/1.4 NA oil') are merged into
+    the most specific (branded) canonical form.
+    """
+    objectives = paper.get("objectives")
+    if not objectives or not isinstance(objectives, list):
+        return
+
+    # Group by normalized key: (magnification, na, immersion)
+    groups: Dict[str, List[Dict]] = {}
+    for obj in objectives:
+        if isinstance(obj, str):
+            obj = {"canonical": obj}
+        canonical = obj.get("canonical", "")
+        mag = obj.get("magnification", "")
+        na = obj.get("na", "")
+        immersion = obj.get("immersion", "unknown")
+
+        # Parse from canonical if fields missing
+        if not mag and canonical:
+            m = re.search(r"(\d{1,3})\s*[x×X]", canonical)
+            if m:
+                mag = f"{m.group(1)}x"
+        if not na and canonical:
+            m = re.search(r"(\d+\.?\d*)\s*NA", canonical)
+            if m:
+                na = m.group(1)
+
+        # Build grouping key
+        key = f"{mag}|{na}|{immersion}".lower()
+        groups.setdefault(key, []).append(obj)
+
+    # For each group, keep the most specific entry (longest canonical = most detail)
+    result = []
+    seen_keys = set()
+    for key, entries in groups.items():
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        # Prefer branded entries, then longest canonical
+        best = max(entries, key=lambda e: (
+            1 if e.get("brand") else 0,
+            len(e.get("canonical", "")),
+        ))
+        result.append(best)
+
+    paper["objectives"] = result
+
+
+def _normalize_lasers(paper: Dict) -> None:
+    """Group duplicate lasers and remove generic wavelength-only tags.
+
+    - Removes lasers like '488 nm laser' that have no brand/model info.
+    - Groups lasers with the same brand+model into a single entry.
+    """
+    lasers = paper.get("lasers")
+    if not lasers or not isinstance(lasers, list):
+        return
+
+    # Filter out generic wavelength-only lasers (e.g. "488 nm laser")
+    # These are not useful for users searching for specific equipment
+    _WL_ONLY_RE = re.compile(r"^\d{3,4}\s*nm\s*laser$", re.I)
+    filtered = []
+    for laser in lasers:
+        if isinstance(laser, str):
+            laser = {"canonical": laser}
+        canonical = laser.get("canonical", "")
+        brand = laser.get("brand", "")
+        # Remove generic wavelength-only lasers without brand
+        if not brand and _WL_ONLY_RE.match(canonical):
+            continue
+        filtered.append(laser)
+
+    # Group by brand+model (or brand+canonical if no model)
+    groups: Dict[str, List[Dict]] = {}
+    for laser in filtered:
+        canonical = laser.get("canonical", "")
+        brand = laser.get("brand", "")
+        model = laser.get("model", "")
+        laser_type = laser.get("type", "")
+        # Build grouping key
+        if brand and model:
+            key = f"{brand}|{model}".lower()
+        elif brand and laser_type:
+            key = f"{brand}|{laser_type}".lower()
+        else:
+            key = canonical.lower()
+        groups.setdefault(key, []).append(laser)
+
+    # For each group, keep the most specific entry
+    result = []
+    seen_keys = set()
+    for key, entries in groups.items():
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        best = max(entries, key=lambda e: (
+            1 if e.get("brand") else 0,
+            1 if e.get("model") else 0,
+            len(e.get("canonical", "")),
+        ))
+        result.append(best)
+
+    paper["lasers"] = result
+
 
 def _normalize_fluoro(value: str) -> str:
     """Extra normalization for fluorophores beyond exact renames."""

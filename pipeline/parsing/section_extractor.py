@@ -22,6 +22,7 @@ from .pubmed_parser import (
     fetch_pmc_fulltext,
     fetch_pubmed_metadata,
 )
+from .scihub_fetcher import fetch_fulltext_via_scihub
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,10 @@ def from_sections_list(sections: List[Dict[str, str]],
         text = sec.get("text", "")
         if not text:
             continue
+        # Skip references/bibliography sections to avoid tagging
+        # entities mentioned in citation titles and author names
+        if stype in ("references", "bibliography"):
+            continue
         all_parts.append(text)
 
         if stype == "abstract":
@@ -122,21 +127,39 @@ def from_sections_list(sections: List[Dict[str, str]],
 
 
 def from_pubmed_dict(paper: Dict) -> PaperSections:
-    """Build PaperSections from a scraper-style dict (DB row or JSON record)."""
+    """Build PaperSections from a scraper-style dict (DB row or JSON record).
+
+    If the paper has a DOI but no full text, attempts to retrieve it
+    via SciHub as a last-resort fallback (for tag extraction only —
+    the SciHub text is never stored or displayed).
+    """
     full_text = paper.get("full_text", "") or ""
     figures = ""
     data_availability = ""
 
-    # Extract figure captions from full text if available
+    # SciHub fallback: if we have a DOI but no full text, try to fetch it
+    if not full_text and paper.get("doi"):
+        scihub_text = fetch_fulltext_via_scihub(paper["doi"])
+        if scihub_text:
+            full_text = scihub_text
+            logger.info(
+                "SciHub fallback: retrieved full text for DOI %s (%d chars)",
+                paper["doi"], len(scihub_text),
+            )
+
+    # Extract figure captions and data availability BEFORE stripping references
     if full_text:
         figures = _extract_figure_captions(full_text)
         data_availability = _extract_data_availability(full_text)
+
+    # Strip references/bibliography to avoid tagging entities in citations
+    full_text_clean = strip_references(full_text) if full_text else ""
 
     return PaperSections(
         title=paper.get("title", "") or "",
         abstract=paper.get("abstract", "") or "",
         methods=paper.get("methods", "") or "",
-        full_text=full_text,
+        full_text=full_text_clean,
         figures=figures,
         data_availability=data_availability,
         metadata=paper,
@@ -195,6 +218,27 @@ def _extract_data_availability(text: str) -> str:
     end_m = _next_heading.search(text, start)
     end = end_m.start() if end_m else min(start + 2000, len(text))
     return text[start:end].strip()
+
+
+# Patterns to detect the start of References/Bibliography section
+_REFERENCES_START_RE = re.compile(
+    r"\n\s*(?:\d+\.?\s*)?(?:references?|bibliography|works\s+cited|literature\s+cited)\s*\n",
+    re.IGNORECASE,
+)
+
+
+def strip_references(text: str) -> str:
+    """Remove the References/Bibliography section from the end of full text.
+
+    This prevents brand names, acronyms, and other entities mentioned
+    in citation titles/author names from being incorrectly tagged.
+    """
+    if not text:
+        return text
+    m = _REFERENCES_START_RE.search(text)
+    if m:
+        return text[:m.start()].rstrip()
+    return text
 
 
 def from_pdf(pdf_path: str, grobid_url: str = "http://localhost:8070") -> PaperSections:
