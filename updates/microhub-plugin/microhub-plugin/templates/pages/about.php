@@ -108,7 +108,50 @@ $urls = mh_get_all_urls();
         </section>
 
         <section class="mh-about-section">
-            <h2>🤝 Contributing</h2>
+            <h2>Data Sources &amp; APIs</h2>
+            <p>MicroHub enriches paper metadata using the following external services and APIs:</p>
+            <div class="mh-features-grid">
+                <div class="mh-feature-card">
+                    <h3>PubMed / PMC</h3>
+                    <p>Paper metadata, abstracts, and full-text articles via NCBI E-utilities and PMC Open Access.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>Semantic Scholar</h3>
+                    <p>Citation counts, influential citations, fields of study, and open access status.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>CrossRef</h3>
+                    <p>DOI validation, journal metadata, license information, and funder data.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>GitHub API</h3>
+                    <p>Repository metadata, health scores, activity metrics, and code availability.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>FPbase</h3>
+                    <p>Fluorescent protein validation and spectral properties.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>SciCrunch / RRID</h3>
+                    <p>Research Resource Identifier validation for antibodies, software, and cell lines.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>NCBI Taxonomy</h3>
+                    <p>Organism name validation and taxonomic classification.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>ROR (Research Organization Registry)</h3>
+                    <p>Institution and imaging facility identification and validation.</p>
+                </div>
+                <div class="mh-feature-card">
+                    <h3>PubTator 3.0</h3>
+                    <p>Supplemental NLP-based named entity recognition for organisms, chemicals, and genes.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mh-about-section">
+            <h2>Contributing</h2>
             <p>MicroHub is a community resource. You can contribute by:</p>
             <ul class="mh-contribute-list">
                 <li>📤 <a href="<?php echo esc_url($urls['upload-protocol']); ?>">Uploading protocols</a> you've developed</li>

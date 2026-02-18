@@ -593,7 +593,34 @@ function microhub_diagnostic_page() {
         
         <hr>
         
-        <h2>🔧 Quick Fix: Re-import with Update</h2>
+        <h2>External APIs Used by Pipeline</h2>
+        <p>The NLP enrichment pipeline relies on these external data sources:</p>
+        <table class="widefat striped" style="max-width: 800px;">
+            <thead>
+                <tr>
+                    <th>API / Service</th>
+                    <th>Purpose</th>
+                    <th>Auth Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>PubMed E-utilities</strong></td><td>Paper search, metadata, abstracts</td><td>Optional (NCBI API key for higher rate limits)</td></tr>
+                <tr><td><strong>PMC OAI</strong></td><td>Full-text article XML</td><td>No</td></tr>
+                <tr><td><strong>Semantic Scholar</strong></td><td>Citation counts, influential citations, fields of study</td><td>Optional (API key for higher rate limits)</td></tr>
+                <tr><td><strong>CrossRef</strong></td><td>DOI metadata, journal info, license, funders</td><td>No</td></tr>
+                <tr><td><strong>GitHub API (v3)</strong></td><td>Repository metrics, code availability validation</td><td>Optional (PAT for higher rate limits)</td></tr>
+                <tr><td><strong>FPbase</strong></td><td>Fluorescent protein validation</td><td>No</td></tr>
+                <tr><td><strong>SciCrunch RRID</strong></td><td>Research Resource Identifier validation</td><td>No</td></tr>
+                <tr><td><strong>NCBI Taxonomy</strong></td><td>Organism name validation</td><td>No</td></tr>
+                <tr><td><strong>ROR</strong></td><td>Institution / imaging facility lookup</td><td>No</td></tr>
+                <tr><td><strong>PubTator 3.0</strong></td><td>Supplemental NLP entity recognition</td><td>No</td></tr>
+                <tr><td><strong>Ollama (local)</strong></td><td>LLM-based Methods section verification</td><td>No (runs locally)</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>Quick Fix: Re-import with Update</h2>
         <p>If your data is missing fields, you can:</p>
         <ol>
             <li>Update your Python scraper to include the missing fields</li>
