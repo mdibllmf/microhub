@@ -22,7 +22,6 @@ from .pubmed_parser import (
     fetch_pmc_fulltext,
     fetch_pubmed_metadata,
 )
-from .scihub_fetcher import fetch_fulltext_via_scihub
 
 logger = logging.getLogger(__name__)
 
@@ -129,23 +128,12 @@ def from_sections_list(sections: List[Dict[str, str]],
 def from_pubmed_dict(paper: Dict) -> PaperSections:
     """Build PaperSections from a scraper-style dict (DB row or JSON record).
 
-    If the paper has a DOI but no full text, attempts to retrieve it
-    via SciHub as a last-resort fallback (for tag extraction only —
-    the SciHub text is never stored or displayed).
+    Full text should already be present in the paper dict — the scraper
+    (1_scrape.py) is responsible for fetching it from PMC or SciHub.
     """
     full_text = paper.get("full_text", "") or ""
     figures = ""
     data_availability = ""
-
-    # SciHub fallback: if we have a DOI but no full text, try to fetch it
-    if not full_text and paper.get("doi"):
-        scihub_text = fetch_fulltext_via_scihub(paper["doi"])
-        if scihub_text:
-            full_text = scihub_text
-            logger.info(
-                "SciHub fallback: retrieved full text for DOI %s (%d chars)",
-                paper["doi"], len(scihub_text),
-            )
 
     # Extract figure captions and data availability BEFORE stripping references
     if full_text:
