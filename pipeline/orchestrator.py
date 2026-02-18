@@ -187,16 +187,16 @@ class PipelineOrchestrator:
         results["reagent_suppliers"] = self._canonicals(
             [e for e in equipment_exts if e.label == "REAGENT_SUPPLIER"],
         )
-        results["objectives"] = self._canonicals(
+        results["objectives"] = self._structured_equipment(
             [e for e in equipment_exts if e.label == "OBJECTIVE"],
         )
-        results["lasers"] = self._canonicals(
+        results["lasers"] = self._structured_equipment(
             [e for e in equipment_exts if e.label == "LASER"],
         )
-        results["detectors"] = self._canonicals(
+        results["detectors"] = self._structured_equipment(
             [e for e in equipment_exts if e.label == "DETECTOR"],
         )
-        results["filters"] = self._canonicals(
+        results["filters"] = self._structured_equipment(
             [e for e in equipment_exts if e.label == "FILTER"],
         )
         results["image_analysis_software"] = self._canonicals(
@@ -303,6 +303,31 @@ class PipelineOrchestrator:
             result = self.tag_validator.filter_valid(
                 validation_category, result
             )
+        return result
+
+    @staticmethod
+    def _structured_equipment(extractions: List[Extraction]) -> List[Dict]:
+        """Build structured equipment dicts with brand/vendor metadata.
+
+        Returns a list of dicts, each containing at minimum 'canonical' and
+        'brand' keys, plus any additional metadata from the extraction
+        (e.g., magnification, na, immersion for objectives; wavelength_nm
+        for lasers; type for detectors/filters).
+        """
+        seen: Set[str] = set()
+        result: List[Dict] = []
+        for ext in extractions:
+            canonical = ext.canonical()
+            if canonical.lower() in seen:
+                continue
+            seen.add(canonical.lower())
+
+            entry = {"canonical": canonical}
+            # Copy all metadata keys except 'canonical' (already set)
+            for key, val in ext.metadata.items():
+                if key != "canonical" and val:
+                    entry[key] = val
+            result.append(entry)
         return result
 
     @staticmethod
