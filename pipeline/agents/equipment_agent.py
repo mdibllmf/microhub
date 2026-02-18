@@ -106,12 +106,26 @@ _PRIOR_PATTERNS = [
     re.compile(r"\bPrior\s+ProScan\b", re.I),
 ]
 
+# Short acronyms that MUST NOT be searched directly — they cause false
+# positives.  These are matched ONLY via their full expansion or via
+# context patterns in _BRAND_CONTEXT_PATTERNS.  The acronym is still the
+# canonical display name.
+_ACRONYM_ONLY_BRANDS: Set[str] = {
+    "asi", "pco", "fei", "3i", "jeol",
+}
+
 # Additional patterns that need context to avoid false positives
 _BRAND_CONTEXT_PATTERNS = [
     # "ASI" needs microscopy context
     (re.compile(r"\bASI\s+(?:stage|controller|MS-?\d|Tiger)", re.I), "ASI"),
     # "3i" needs context
     (re.compile(r"\b3i\s+(?:Marianas|SlideBook|spinning)", re.I), "3i (Intelligent Imaging)"),
+    # "PCO" needs context (common abbreviation)
+    (re.compile(r"\bpco\s*\.?\s*(?:edge|panda|dimax|pixelfly|flim|camera)", re.I), "PCO"),
+    # "FEI" needs context (now Thermo Fisher)
+    (re.compile(r"\bFEI\s+(?:Tecnai|Talos|Titan|Helios|Magellan|Quanta|Scios|Verios)", re.I), "Thermo Fisher"),
+    # "JEOL" needs context
+    (re.compile(r"\bJEOL\s+(?:JEM|JSM|ARM|JBIC|\d{3,4})", re.I), "JEOL"),
 ]
 
 # ======================================================================
@@ -543,8 +557,11 @@ class EquipmentAgent(BaseAgent):
             # Avoid false-positive "prior" in normal text
             if key == "prior":
                 continue  # handled by context patterns below
+            # Skip short acronyms — they are matched ONLY via full
+            # expansion or via _BRAND_CONTEXT_PATTERNS
+            if key in _ACRONYM_ONLY_BRANDS:
+                continue
             # Use word-boundary regex to avoid substring matches
-            # (e.g. "ASI" must not match inside "quasi" or "basis")
             pattern = re.compile(r"\b" + re.escape(key) + r"\b", re.I)
             m = pattern.search(text)
             if m:
