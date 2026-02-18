@@ -69,10 +69,90 @@ SOFTWARE_RENAMES: Dict[str, str] = {
     "SVI Huygens": "Huygens",
 }
 
+# ======================================================================
+# Organism grouping map
+# ======================================================================
+# Maps all variant forms (common names, full Latin, abbreviations) to a
+# single canonical display form.  Both the organism_agent and the scraper
+# may produce any of these — this map collapses them into one tag.
+
 ORGANISM_RENAMES: Dict[str, str] = {
+    # Common name → canonical
     "Nematode": "C. elegans",
     "Fruit Fly": "Drosophila",
     "Frog": "Xenopus",
+    "Worm": "C. elegans",
+    # Full Latin name → canonical (collapse to shorter display form)
+    "Caenorhabditis elegans": "C. elegans",
+    "Escherichia coli": "E. coli",
+    "Drosophila melanogaster": "Drosophila",
+    "Danio rerio": "Zebrafish",
+    "Mus musculus": "Mouse",
+    "Homo sapiens": "Human",
+    "Rattus norvegicus": "Rat",
+    "Xenopus laevis": "Xenopus",
+    "Xenopus tropicalis": "Xenopus",
+    "Arabidopsis thaliana": "Arabidopsis",
+    "Saccharomyces cerevisiae": "Yeast",
+    "Schizosaccharomyces pombe": "Yeast",
+    "Gallus gallus": "Chicken",
+    "Sus scrofa": "Pig",
+    "Canis familiaris": "Dog",
+    "Canis lupus familiaris": "Dog",
+    "Macaca mulatta": "Monkey",
+    "Macaca fascicularis": "Monkey",
+    "Callithrix jacchus": "Monkey",
+    "Oryctolagus cuniculus": "Rabbit",
+    "Nicotiana tabacum": "Tobacco",
+    "Nicotiana benthamiana": "Tobacco",
+    "Zea mays": "Maize",
+    "Oryza sativa": "Rice",
+    # Abbreviated forms → canonical
+    "D. melanogaster": "Drosophila",
+    "D. rerio": "Zebrafish",
+    "M. musculus": "Mouse",
+    "H. sapiens": "Human",
+    "R. norvegicus": "Rat",
+    "X. laevis": "Xenopus",
+    "X. tropicalis": "Xenopus",
+    "A. thaliana": "Arabidopsis",
+    "S. cerevisiae": "Yeast",
+    "S. pombe": "Yeast",
+    "G. gallus": "Chicken",
+    "S. scrofa": "Pig",
+    "C. familiaris": "Dog",
+    "M. mulatta": "Monkey",
+    "M. fascicularis": "Monkey",
+    "O. cuniculus": "Rabbit",
+    "N. tabacum": "Tobacco",
+    "N. benthamiana": "Tobacco",
+    "Z. mays": "Maize",
+    "O. sativa": "Rice",
+    # Common synonyms → canonical
+    "Mice": "Mouse",
+    "Murine": "Mouse",
+    "Rats": "Rat",
+    "Patient": "Human",
+    "Fruit flies": "Drosophila",
+    "Porcine": "Pig",
+    "Canine": "Dog",
+    "Primate": "Monkey",
+    "Macaque": "Monkey",
+    "Chick": "Chicken",
+    "Corn": "Maize",
+}
+
+# Tags that are NOT valid organisms and should be removed entirely
+_INVALID_ORGANISMS = {
+    "Organoid", "organoid",
+    "Spheroid", "spheroid",
+    "Plant", "plant",
+    "Plant cell", "plant cell",
+    "Plant tissue", "plant tissue",
+    "Bacteria", "bacteria",
+    "Bacterial", "bacterial",
+    # Taxonomic classifications that slip in from PubTator
+    "Bacteria Latreille et al. 1825",
 }
 
 # Regex-based catch-all for Alexa shortforms the exact map might miss
@@ -94,6 +174,9 @@ def normalize_tags(paper: Dict) -> Dict:
     _apply(paper, "image_analysis_software", SOFTWARE_RENAMES)
     _apply(paper, "organisms", ORGANISM_RENAMES)
 
+    # Remove invalid organism tags and deduplicate after renames
+    _clean_organisms(paper)
+
     # Structured equipment normalization (objectives, lasers)
     _normalize_objectives(paper)
     _normalize_lasers(paper)
@@ -114,6 +197,27 @@ _OBJECTIVE_PARSE_RE = re.compile(
     r"(?:\s+(oil|water|silicone|glycerol|air|dry|multi[- ]?immersion))?",  # optional immersion
     re.IGNORECASE,
 )
+
+
+def _clean_organisms(paper: Dict) -> None:
+    """Remove invalid organism tags and deduplicate after rename grouping."""
+    organisms = paper.get("organisms")
+    if not organisms or not isinstance(organisms, list):
+        return
+
+    seen = set()
+    result = []
+    for org in organisms:
+        # Remove invalid/non-organism entries
+        if org in _INVALID_ORGANISMS:
+            continue
+        # Case-insensitive dedup (after renaming, "Mouse" and "mouse" → same)
+        key = org.lower()
+        if key not in seen:
+            seen.add(key)
+            result.append(org)
+
+    paper["organisms"] = result
 
 
 def _normalize_objectives(paper: Dict) -> None:
@@ -169,55 +273,58 @@ def _normalize_objectives(paper: Dict) -> None:
 
 
 def _normalize_lasers(paper: Dict) -> None:
-    """Group duplicate lasers and remove generic wavelength-only tags.
+    """Aggressively filter and group laser tags.
 
-    - Removes lasers like '488 nm laser' that have no brand/model info.
-    - Groups lasers with the same brand+model into a single entry.
+    Only brand-specific laser SYSTEM MODELS are kept (e.g. "Coherent
+    Chameleon", "Spectra-Physics Mai Tai", "Toptica iBeam", "NKT SuperK").
+
+    Removes:
+    - Generic laser types (two-photon, multiphoton, pulsed, CW, diode, etc.)
+    - Wavelength-only lasers ("488 nm laser") even with brand prefix
+    - Brand-only lasers ("Coherent laser") without specific model
     """
     lasers = paper.get("lasers")
     if not lasers or not isinstance(lasers, list):
         return
 
-    # Filter out generic wavelength-only lasers (e.g. "488 nm laser")
-    # These are not useful for users searching for specific equipment
-    _WL_ONLY_RE = re.compile(r"^\d{3,4}\s*nm\s*laser$", re.I)
+    # Patterns for tags that should be REMOVED
+    _WL_LASER_RE = re.compile(r"^\d{3,4}\s*nm\s*laser$", re.I)
+    _BRAND_WL_RE = re.compile(r"^[\w\s&()-]+\s+\d{3,4}\s*nm\s*laser$", re.I)
+    _GENERIC_TYPE_RE = re.compile(
+        r"^(?:[\w\s&()-]+\s+)?"
+        r"(?:two[- ]?photon|multiphoton|femtosecond|picosecond|pulsed|CW|"
+        r"diode|DPSS|Ti[:-]?Sapph(?:ire)?|argon|krypton|HeNe|He-Ne|"
+        r"solid[- ]?state|gas|fiber|supercontinuum)"
+        r"(?:\s*laser)?$",
+        re.I,
+    )
+
     filtered = []
     for laser in lasers:
         if isinstance(laser, str):
             laser = {"canonical": laser}
         canonical = laser.get("canonical", "")
-        brand = laser.get("brand", "")
-        # Remove generic wavelength-only lasers without brand
-        if not brand and _WL_ONLY_RE.match(canonical):
+
+        # Remove generic wavelength-only lasers (with or without brand)
+        if _WL_LASER_RE.match(canonical) or _BRAND_WL_RE.match(canonical):
+            continue
+        # Remove generic laser type tags
+        if _GENERIC_TYPE_RE.match(canonical):
             continue
         filtered.append(laser)
 
-    # Group by brand+model (or brand+canonical if no model)
+    # Group remaining lasers by brand+canonical (dedup same model)
     groups: Dict[str, List[Dict]] = {}
     for laser in filtered:
         canonical = laser.get("canonical", "")
-        brand = laser.get("brand", "")
-        model = laser.get("model", "")
-        laser_type = laser.get("type", "")
-        # Build grouping key
-        if brand and model:
-            key = f"{brand}|{model}".lower()
-        elif brand and laser_type:
-            key = f"{brand}|{laser_type}".lower()
-        else:
-            key = canonical.lower()
+        key = canonical.lower().strip()
         groups.setdefault(key, []).append(laser)
 
     # For each group, keep the most specific entry
     result = []
-    seen_keys = set()
     for key, entries in groups.items():
-        if key in seen_keys:
-            continue
-        seen_keys.add(key)
         best = max(entries, key=lambda e: (
             1 if e.get("brand") else 0,
-            1 if e.get("model") else 0,
             len(e.get("canonical", "")),
         ))
         result.append(best)

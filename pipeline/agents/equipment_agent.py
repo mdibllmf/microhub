@@ -779,66 +779,11 @@ class EquipmentAgent(BaseAgent):
                     metadata=meta,
                 ))
 
-        # 2. Laser type mentions (argon, Ti:Sapphire, etc.) — with nearby brand
-        for m in _LASER_TYPE_RE.finditer(text):
-            matched = m.group(0).strip()
-            brand = self._find_nearby_brand(
-                    m.start(), brand_exts, max_distance=150)
-
-            canonical = ""
-            if brand:
-                canonical = f"{brand} "
-            canonical += matched
-
-            if canonical.lower() in seen_canonicals:
-                continue
-            seen_canonicals.add(canonical.lower())
-
-            meta = {"canonical": canonical}
-            if brand:
-                meta["brand"] = brand
-
-            extractions.append(Extraction(
-                text=matched,
-                label="LASER",
-                start=m.start(), end=m.end(),
-                confidence=get_confidence("LASER", section) * 0.9,
-                source_agent=self.name,
-                section=section or "",
-                metadata=meta,
-            ))
-
-        # 3. Wavelength-based lasers — include brand from context
-        seen_wavelengths: Set[str] = set()
-        for m in _LASER_WAVELENGTH_RE.finditer(text):
-            wl = m.group(1)
-            if wl not in _COMMON_LASER_LINES:
-                continue
-            if wl in seen_wavelengths:
-                continue
-            seen_wavelengths.add(wl)
-
-            brand = self._find_nearby_brand(
-                    m.start(), brand_exts, max_distance=150)
-
-            canonical = ""
-            if brand:
-                canonical = f"{brand} "
-            canonical += f"{wl} nm laser"
-
-            meta = {"canonical": canonical, "wavelength_nm": wl}
-            if brand:
-                meta["brand"] = brand
-
-            extractions.append(Extraction(
-                text=m.group(0).strip(),
-                label="LASER",
-                start=m.start(), end=m.end(),
-                confidence=get_confidence("LASER", section),
-                source_agent=self.name,
-                section=section or "",
-                metadata=meta,
-            ))
+        # NOTE: Generic laser type mentions (argon, Ti:Sapphire, two-photon,
+        # pulsed, diode, CW, etc.) and wavelength-only lasers (488 nm laser)
+        # are intentionally NOT extracted.  Only brand-specific laser system
+        # models (Coherent Chameleon, Mai Tai, OBIS, iBeam, SuperK, etc.) are
+        # useful tags for finding specific equipment.
 
         return extractions
 

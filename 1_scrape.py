@@ -93,6 +93,7 @@ def enrich_papers(
     from pipeline.orchestrator import PipelineOrchestrator
     from pipeline.normalization import normalize_tags
     from pipeline.validation.identifier_normalizer import IdentifierNormalizer
+    from pipeline.parsing.scihub_fetcher import fetch_fulltext_via_scihub
 
     dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
     orchestrator = PipelineOrchestrator(
@@ -155,6 +156,25 @@ def enrich_papers(
         pmid = paper.get("pmid", "?")
 
         try:
+            # SciHub fallback: if paper has DOI but no full text, try to
+            # retrieve it now so agents have full text to work with.
+            # The text is stored in the DB for tag extraction only.
+            full_text = paper.get("full_text") or ""
+            doi = paper.get("doi") or ""
+            if not full_text and doi:
+                scihub_text = fetch_fulltext_via_scihub(doi)
+                if scihub_text:
+                    paper["full_text"] = scihub_text
+                    conn.execute(
+                        "UPDATE papers SET full_text = ? WHERE id = ?",
+                        (scihub_text, paper["id"]),
+                    )
+                    conn.commit()
+                    logger.info(
+                        "SciHub: retrieved full text for DOI %s (%d chars)",
+                        doi, len(scihub_text),
+                    )
+
             # Parse JSON fields so the orchestrator gets proper lists
             for field in list_fields:
                 raw = paper.get(field)

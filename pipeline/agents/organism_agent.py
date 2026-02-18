@@ -112,13 +112,8 @@ _COMMON_WITH_CONTEXT: Dict[str, str] = {
     "chick": "Chicken",
     "rice": "Rice",
     "corn": "Maize",
-    "plant": "Plant",
-    "plant cell": "Plant",
-    "plant tissue": "Plant",
-    "organoid": "Organoid",
-    "spheroid": "Spheroid",
-    "bacteria": "Bacteria",
-    "bacterial": "Bacteria",
+    # NOTE: "plant", "organoid", "spheroid", "bacteria" are NOT organisms
+    # and should not be extracted as tags — they are too generic.
 }
 
 # Experimental context terms -- when a common name co-occurs with these,

@@ -192,9 +192,9 @@
     "wp_meta_key": null,
     "import_call": "wp_set_object_terms($post_id, $data['organisms'], 'mh_organism')",
     "all_valid_values": [
-      "Arabidopsis", "Bacteria", "C. elegans", "Chicken", "Dog", "Drosophila",
-      "E. coli", "Human", "Maize", "Monkey", "Mouse", "Organoid", "Pig", "Plant",
-      "Rabbit", "Rat", "Rice", "Spheroid", "Tobacco", "Xenopus", "Yeast", "Zebrafish"
+      "Arabidopsis", "C. elegans", "Chicken", "Dog", "Drosophila",
+      "E. coli", "Human", "Maize", "Monkey", "Mouse", "Pig",
+      "Rabbit", "Rat", "Rice", "Tobacco", "Xenopus", "Yeast", "Zebrafish"
     ]
   },
 
