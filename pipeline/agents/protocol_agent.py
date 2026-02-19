@@ -86,12 +86,37 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
     "Bitbucket": (re.compile(r"(?:https?://)?(?:www\.)?bitbucket\.org/[\w.-]+/[\w.-]+", re.I), 0.95),
 
     # --- Data repositories ---
-    "Zenodo": (re.compile(r"(?:https?://)?(?:www\.)?zenodo\.org/(?:record|doi|api)/[\w./]+", re.I), 0.95),
-    "Figshare": (re.compile(r"(?:https?://)?(?:www\.)?figshare\.com/[\w./]+", re.I), 0.95),
-    "Dryad": (re.compile(r"(?:https?://)?(?:www\.)?datadryad\.org/[\w./]+", re.I), 0.95),
+    # Zenodo: match URLs, DOI-based URLs, and bare DOI references (10.5281/zenodo.NNN)
+    "Zenodo": (re.compile(
+        r"(?:https?://)?(?:www\.)?zenodo\.org/(?:record|records|doi|api)/[\w./]+"
+        r"|(?:https?://)?doi\.org/10\.5281/zenodo\.\d+"
+        r"|\b10\.5281/zenodo\.\d+"
+        r"|\bzenodo\.\d{4,}\b",
+        re.I,
+    ), 0.95),
+    # Figshare: match URLs and DOI references (10.6084/m9.figshare.NNN)
+    "Figshare": (re.compile(
+        r"(?:https?://)?(?:www\.)?figshare\.com/[\w./]+"
+        r"|(?:https?://)?doi\.org/10\.6084/m9\.figshare\.\d+"
+        r"|\b10\.6084/m9\.figshare\.\d+",
+        re.I,
+    ), 0.95),
+    # Dryad: match URLs and DOI references (10.5061/dryad.xxx)
+    "Dryad": (re.compile(
+        r"(?:https?://)?(?:www\.)?datadryad\.org/[\w./]+"
+        r"|(?:https?://)?doi\.org/10\.5061/dryad\.[\w.]+"
+        r"|\b10\.5061/dryad\.[\w.]+",
+        re.I,
+    ), 0.95),
     "OSF": (re.compile(r"(?:https?://)?osf\.io/[\w]+", re.I), 0.9),
-    "Code Ocean": (re.compile(r"\bCode\s+Ocean\b|codeocean\.com", re.I), 0.9),
-    "Mendeley Data": (re.compile(r"\bMendeley\s+Data\b|data\.mendeley\.com", re.I), 0.9),
+    "Code Ocean": (re.compile(
+        r"\bCode\s+Ocean\b|(?:https?://)?codeocean\.com/[\w./]*",
+        re.I,
+    ), 0.9),
+    "Mendeley Data": (re.compile(
+        r"\bMendeley\s+Data\b|(?:https?://)?data\.mendeley\.com/[\w./]*",
+        re.I,
+    ), 0.9),
 
     # --- Structural biology ---
     "EMPIAR": (re.compile(r"\bEMPIAR[- ]?\d+\b|(?:https?://)?(?:www\.)?ebi\.ac\.uk/empiar/[\w./]+", re.I), 0.95),
@@ -101,7 +126,8 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
     # --- BioImaging repositories ---
     "BioImage Archive": (re.compile(
         r"\bBioImage\s+Archive\b|"
-        r"(?:https?://)?(?:www\.)?bioimage-archive\.ebi\.ac\.uk/[\w./]+",
+        r"(?:https?://)?(?:www\.)?bioimage-archive\.ebi\.ac\.uk/[\w./]+|"
+        r"\bS-BIAD\d+\b",
         re.I,
     ), 0.95),
     "IDR": (re.compile(
@@ -110,17 +136,21 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         re.I,
     ), 0.9),
     "OMERO": (re.compile(
-        # OMERO URLs (openmicroscopy.org or any domain with /omero/ path)
-        r"(?:https?://)?(?:[\w.-]+\.)?openmicroscopy\.org/omero[\w./]*|"
-        r"(?:https?://)?[\w.-]+/omero/(?:webclient|api|webgateway)[\w./]*|"
-        # OMERO with context words after (server, repository, public, etc.)
-        r"\bOMERO\b(?=.{0,30}(?:server|repositor|public|database|instance|gallery))|"
+        # OMERO URLs — any openmicroscopy.org URL (not just /omero path)
+        r"(?:https?://)?(?:[\w.-]+\.)?openmicroscopy\.org(?:/[\w./]*)?"
+        r"|(?:https?://)?[\w.-]+/omero/(?:webclient|api|webgateway)[\w./]*"
+        # OMERO with context words AFTER (server, repository, platform, etc.)
+        r"|\bOMERO\b(?=.{0,40}(?:server|repositor|public|database|instance|"
+        r"gallery|platform|client|image\s*manage))"
         # "OMERO" + component (OMERO.web, OMERO.figure, OMERO Plus)
-        r"\bOMERO\s*[.]?\s*(?:web|figure|Plus|insight|cli|server)\b|"
+        r"|\bOMERO\s*[.]?\s*(?:web|figure|Plus|insight|cli|server)\b"
         # OMERO with availability context after
-        r"\bOMERO\b(?=.{0,50}(?:https?://|available|deposited|hosted|stored|accessible))|"
+        r"|\bOMERO\b(?=.{0,50}(?:https?://|available|deposited|hosted|stored|accessible))"
         # Availability context before OMERO (e.g., "deposited in OMERO", "via OMERO")
-        r"(?:available|deposited|hosted|stored|accessible|uploaded|shared)\s+(?:in|on|via|through|at|to)\s+OMERO\b",
+        r"|(?:available|deposited|hosted|stored|accessible|uploaded|shared|import\w*"
+        r"|saving|saved|manage\w*)\s+(?:in|on|via|through|at|to|into)\s+OMERO\b"
+        # OMERO Public / OMERO server with preceding article
+        r"|\b(?:an?|the)\s+OMERO\s+(?:server|instance|database)\b",
         re.I | re.S,
     ), 0.85),
     "SSBD": (re.compile(
@@ -170,6 +200,44 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         r"(?:https?://)?huggingface\.co/[\w.-]+/[\w.-]+",
         re.I,
     ), 0.9),
+
+    # --- Neuroscience repositories ---
+    "DANDI": (re.compile(
+        r"(?:https?://)?dandiarchive\.org/[\w./]+"
+        r"|\bDANDI:\d+\b|\bDANDI\s+Archive\b",
+        re.I,
+    ), 0.9),
+    "NeuroMorpho": (re.compile(
+        r"(?:https?://)?neuromorpho\.org/[\w./]+"
+        r"|\bNeuroMorpho\b",
+        re.I,
+    ), 0.9),
+    "OpenNeuro": (re.compile(
+        r"(?:https?://)?openneuro\.org/[\w./]+"
+        r"|\bds\d{6}\b"
+        r"|\bOpenNeuro\b",
+        re.I,
+    ), 0.9),
+
+    # --- Synapse (Sage Bionetworks) ---
+    "Synapse": (re.compile(
+        r"(?:https?://)?(?:www\.)?synapse\.org/[\w#./]+"
+        r"|\bsyn\d{6,}\b",
+        re.I,
+    ), 0.9),
+
+    # --- ScienceDB / Science Data Bank ---
+    "ScienceDB": (re.compile(
+        r"(?:https?://)?(?:www\.)?sciencedb\.(?:cn|com)/[\w./]+"
+        r"|\bScience\s+Data\s+Bank\b",
+        re.I,
+    ), 0.85),
+
+    # --- Cloud storage with data ---
+    "AWS Open Data": (re.compile(
+        r"(?:https?://)?registry\.opendata\.aws/[\w/.-]+",
+        re.I,
+    ), 0.85),
 }
 
 # ======================================================================
@@ -209,6 +277,53 @@ _GITHUB_URL_PATTERN = re.compile(
 )
 
 
+# ======================================================================
+# Fallback: generic data-repository URL pattern
+# Catches any URL containing a known data-repository domain
+# ======================================================================
+
+_DATA_URL_FALLBACK = re.compile(
+    r"https?://"
+    r"(?:[\w.-]+\.)*"
+    r"(?:zenodo|figshare|dryad|datadryad|osf|omero|openmicroscopy|synapse|"
+    r"dandiarchive|bioimage-archive|idr|dataverse|huggingface|"
+    r"codeocean|openneuro|neuromorpho|sciencedb|empiar)"
+    r"(?:\.[\w]+)+"
+    r"(?:/[\w./%-]*)?",
+    re.I,
+)
+
+_URL_DOMAIN_TO_NAME = {
+    "zenodo": "Zenodo",
+    "figshare": "Figshare",
+    "dryad": "Dryad",
+    "datadryad": "Dryad",
+    "osf": "OSF",
+    "omero": "OMERO",
+    "openmicroscopy": "OMERO",
+    "synapse": "Synapse",
+    "dandiarchive": "DANDI",
+    "bioimage-archive": "BioImage Archive",
+    "idr": "IDR",
+    "dataverse": "Dataverse",
+    "huggingface": "Hugging Face",
+    "codeocean": "Code Ocean",
+    "openneuro": "OpenNeuro",
+    "neuromorpho": "NeuroMorpho",
+    "sciencedb": "ScienceDB",
+    "empiar": "EMPIAR",
+}
+
+
+def _url_to_repo_name(url: str) -> str:
+    """Determine repository name from a URL domain."""
+    url_lower = url.lower()
+    for domain, name in _URL_DOMAIN_TO_NAME.items():
+        if domain in url_lower:
+            return name
+    return ""
+
+
 class ProtocolAgent(BaseAgent):
     """Extract protocol references, data repositories, RRIDs, and RORs."""
 
@@ -246,11 +361,17 @@ class ProtocolAgent(BaseAgent):
         for repo_type, (pattern, base_conf) in REPOSITORY_PATTERNS.items():
             for m in pattern.finditer(text):
                 meta = {"canonical": repo_type}
-                # Extract URL if it looks like a URL
-                matched = m.group(0)
-                if "/" in matched:
-                    url = matched if matched.startswith("http") else f"https://{matched}"
-                    meta["url"] = url
+                matched = m.group(0).rstrip(".,;)")
+
+                # Construct proper URL from the match
+                if matched.startswith("http"):
+                    meta["url"] = matched
+                elif matched.startswith("10."):
+                    # Bare DOI reference → construct doi.org URL
+                    meta["url"] = f"https://doi.org/{matched}"
+                elif "/" in matched:
+                    meta["url"] = f"https://{matched}"
+
                 extractions.append(Extraction(
                     text=matched,
                     label="REPOSITORY",
@@ -260,6 +381,27 @@ class ProtocolAgent(BaseAgent):
                     section=section or "",
                     metadata=meta,
                 ))
+
+        # Fallback: scan for any URL containing a known data repo domain
+        for m in _DATA_URL_FALLBACK.finditer(text):
+            url = m.group(0)
+            # Skip if already captured by specific patterns above
+            if any(e.metadata.get("url", "").rstrip("/") == url.rstrip("/")
+                   for e in extractions):
+                continue
+            # Determine repo name from domain
+            name = _url_to_repo_name(url)
+            if name:
+                extractions.append(Extraction(
+                    text=url,
+                    label="REPOSITORY",
+                    start=m.start(), end=m.end(),
+                    confidence=0.8,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={"canonical": name, "url": url},
+                ))
+
         return extractions
 
     # ------------------------------------------------------------------

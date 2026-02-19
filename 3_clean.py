@@ -32,6 +32,134 @@ logger = logging.getLogger(__name__)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+def _rescan_repositories(paper, repo_scanner):
+    """Re-scan all text fields for repository references missed during step 1.
+
+    Merges newly found repositories into the paper's existing repositories
+    list, deduplicating by URL.  This is critical for catching Zenodo DOIs,
+    OMERO links, Figshare DOIs, and other repository references that may
+    appear only in the full text, data availability statements, or methods
+    sections.
+    """
+    # Gather all text to scan
+    texts_to_scan = []
+    for field in ("title", "abstract", "methods", "full_text"):
+        val = paper.get(field) or ""
+        if val and isinstance(val, str) and len(val) > 10:
+            texts_to_scan.append((val, field))
+
+    if not texts_to_scan:
+        return
+
+    # Run the protocol agent's repository + RRID + protocol matching
+    all_extractions = []
+    for text, section in texts_to_scan:
+        all_extractions.extend(repo_scanner.analyze(text, section))
+
+    if not all_extractions:
+        return
+
+    # --- Merge repositories ---
+    existing_repos = paper.get("repositories") or []
+    if isinstance(existing_repos, str):
+        try:
+            existing_repos = json.loads(existing_repos)
+        except (json.JSONDecodeError, TypeError):
+            existing_repos = []
+
+    existing_urls = set()
+    existing_names = set()
+    for r in existing_repos:
+        if isinstance(r, dict):
+            url = (r.get("url") or "").lower().rstrip("/")
+            if url:
+                existing_urls.add(url)
+            existing_names.add((r.get("name") or "").lower())
+
+    for ext in all_extractions:
+        if ext.label == "REPOSITORY":
+            url = ext.metadata.get("url", "")
+            name = ext.canonical()
+            url_lower = url.lower().rstrip("/") if url else ""
+
+            # Skip if we already have this URL
+            if url_lower and url_lower in existing_urls:
+                continue
+            # For non-URL repos (e.g., accession IDs), skip if name+text match
+            if not url and name.lower() in existing_names:
+                continue
+
+            entry = {"name": name}
+            if url:
+                entry["url"] = url
+            entry["source"] = "rescan"
+            existing_repos.append(entry)
+            if url_lower:
+                existing_urls.add(url_lower)
+            existing_names.add(name.lower())
+
+    paper["repositories"] = existing_repos
+
+    # --- Merge protocols ---
+    existing_protos = paper.get("protocols") or []
+    if isinstance(existing_protos, str):
+        try:
+            existing_protos = json.loads(existing_protos)
+        except (json.JSONDecodeError, TypeError):
+            existing_protos = []
+
+    existing_proto_names = set()
+    for proto in existing_protos:
+        if isinstance(proto, dict):
+            existing_proto_names.add((proto.get("name") or "").lower())
+
+    for ext in all_extractions:
+        if ext.label in ("PROTOCOL", "PROTOCOL_URL"):
+            name = ext.canonical()
+            if name.lower() not in existing_proto_names:
+                entry = {"name": name}
+                if ext.metadata.get("url"):
+                    entry["url"] = ext.metadata["url"]
+                entry["source"] = ext.section or "rescan"
+                existing_protos.append(entry)
+                existing_proto_names.add(name.lower())
+
+    paper["protocols"] = existing_protos
+
+    # --- Merge RRIDs ---
+    existing_rrids = paper.get("rrids") or []
+    if isinstance(existing_rrids, str):
+        try:
+            existing_rrids = json.loads(existing_rrids)
+        except (json.JSONDecodeError, TypeError):
+            existing_rrids = []
+
+    existing_rrid_ids = {
+        (r.get("id") or "").lower() for r in existing_rrids if isinstance(r, dict)
+    }
+
+    for ext in all_extractions:
+        if ext.label == "RRID":
+            rrid_id = ext.metadata.get("rrid_id", "")
+            full_id = f"RRID:{rrid_id}"
+            if full_id.lower() not in existing_rrid_ids:
+                existing_rrids.append({
+                    "id": full_id,
+                    "type": ext.metadata.get("rrid_type", ""),
+                    "url": ext.metadata.get("url", ""),
+                })
+                existing_rrid_ids.add(full_id.lower())
+
+    paper["rrids"] = existing_rrids
+
+    # --- Merge GitHub URL ---
+    if not paper.get("github_url"):
+        for ext in all_extractions:
+            if ext.label == "GITHUB_URL":
+                paper["github_url"] = ext.metadata.get("url")
+                break
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Step 3 — Clean and re-tag exported JSON",
@@ -62,8 +190,10 @@ def main():
     from pipeline.normalization import normalize_tags
     from pipeline.orchestrator import PipelineOrchestrator
     from pipeline.validation.identifier_normalizer import IdentifierNormalizer
+    from pipeline.agents.protocol_agent import ProtocolAgent
 
     id_normalizer = IdentifierNormalizer()
+    repo_scanner = ProtocolAgent()
 
     # --- Resolve input files ---
     if args.input:
@@ -186,6 +316,12 @@ def main():
 
             # Normalize tag names (scraper variants → canonical forms)
             normalize_tags(paper)
+
+            # Re-scan text fields for repository/protocol references that
+            # may have been missed during initial scraping.  This catches
+            # Zenodo DOIs, OMERO links, Figshare DOIs, etc. that appear in
+            # title, abstract, methods, or full_text.
+            _rescan_repositories(paper, repo_scanner)
 
             # Normalize all identifiers (DOIs, RRIDs, RORs, repo URLs)
             id_normalizer.normalize_paper(paper)

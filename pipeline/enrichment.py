@@ -451,6 +451,8 @@ class Enricher:
                 "zenodo.org", "figshare.com", "dryad", "osf.io",
                 "dataverse", "mendeley", "ebi.ac.uk", "ncbi.nlm.nih.gov/geo",
                 "biostudies", "bioimage-archive", "empiar", "idr.openmicroscopy",
+                "openmicroscopy.org", "codeocean.com", "ssbd.riken.jp",
+                "10.5281/zenodo", "10.6084/m9.figshare", "10.5061/dryad",
             ]
             domain_name_map = {
                 "zenodo": "Zenodo",
@@ -459,11 +461,17 @@ class Enricher:
                 "biostudies": "BioStudies",
                 "empiar": "EMPIAR",
                 "idr.openmicroscopy": "IDR",
+                "openmicroscopy.org": "OMERO",
                 "datadryad": "Dryad",
                 "osf.io": "OSF",
                 "dataverse": "Dataverse",
                 "mendeley": "Mendeley Data",
                 "ncbi.nlm.nih.gov/geo": "GEO",
+                "codeocean": "Code Ocean",
+                "ssbd.riken": "SSBD",
+                "10.5281/zenodo": "Zenodo",
+                "10.6084/m9.figshare": "Figshare",
+                "10.5061/dryad": "Dryad",
             }
 
             for link in message.get("link", []):

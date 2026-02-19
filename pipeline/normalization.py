@@ -43,15 +43,35 @@ FLUOROPHORE_RENAMES: Dict[str, str] = {
     "eCFP": "ECFP",
     "eYFP": "EYFP",
     "eBFP": "EBFP",
-    # Name mismatches
+    # Bare FP names → canonical prefixed form
     "Cyan": "CFP",
+    "Clover": "mClover",
+    "Emerald": "mEmerald",
+    "Ruby": "mRuby",
+    "Turquoise": "mTurquoise",
+    "Cerulean": "mCerulean",
+    "Scarlet": "mScarlet",
+    "Neon Green": "mNeonGreen",
+    # Incomplete names → canonical
     "mKate": "mKate2",
     "Dendra": "Dendra2",
-    "Emerald": "mEmerald",
+    "mEos": "mEos2",
+    "Archon": "Archon1",
+    # Janelia Fluor long forms → short canonical
     "Janelia Fluor 549": "JF549",
-    "Janelia Fluor 646": "JF646",
     "Janelia Fluor 585": "JF585",
+    "Janelia Fluor 646": "JF646",
     "Janelia Fluor 669": "JF669",
+    # GCaMP variants not in master dict → closest canonical
+    "GCaMP3": "GCaMP",
+    "GCaMP5": "GCaMP",
+    "GCaMP5G": "GCaMP",
+    "GCaMP2": "GCaMP",
+    "jGCaMP7b": "jGCaMP7",
+    "jGCaMP7c": "jGCaMP7",
+    "jGCaMP8f": "GCaMP8f",
+    "jGCaMP8m": "GCaMP8m",
+    "jGCaMP8s": "GCaMP8s",
 }
 
 TECHNIQUE_RENAMES: Dict[str, str] = {
@@ -288,8 +308,8 @@ def _normalize_lasers(paper: Dict) -> None:
         return
 
     # Patterns for tags that should be REMOVED
-    _WL_LASER_RE = re.compile(r"^\d{3,4}\s*nm\s*laser$", re.I)
-    _BRAND_WL_RE = re.compile(r"^[\w\s&()-]+\s+\d{3,4}\s*nm\s*laser$", re.I)
+    _WL_LASER_RE = re.compile(r"^\d{3,4}\s*nm\s*(?:laser)?$", re.I)
+    _BRAND_WL_RE = re.compile(r"^[\w\s&()-]+\s+\d{3,4}\s*nm\s*(?:laser)?$", re.I)
     _GENERIC_TYPE_RE = re.compile(
         r"^(?:[\w\s&()-]+\s+)?"
         r"(?:two[- ]?photon|multiphoton|femtosecond|picosecond|pulsed|CW|"
@@ -298,18 +318,46 @@ def _normalize_lasers(paper: Dict) -> None:
         r"(?:\s*laser)?$",
         re.I,
     )
+    # Standalone single-word generic terms (catch bare "gas", "diode", etc.)
+    _BARE_GENERIC_RE = re.compile(
+        r"^(?:gas|diode|DPSS|fiber|argon|krypton|pulsed|CW|laser|"
+        r"solid[- ]?state|supercontinuum|femtosecond|picosecond)$",
+        re.I,
+    )
+    # Brand-only entries without a specific model name (e.g., "Coherent laser")
+    _BRAND_ONLY_RE = re.compile(
+        r"^(?:Coherent|Spectra[- ]?Physics|Toptica|Cobolt|Oxxius|NKT|"
+        r"Melles\s+Griot|MPB|Luigs)\s*(?:laser|Photonics)?$",
+        re.I,
+    )
 
     filtered = []
     for laser in lasers:
         if isinstance(laser, str):
             laser = {"canonical": laser}
-        canonical = laser.get("canonical", "")
+        canonical = laser.get("canonical", "").strip()
 
+        # Skip empty
+        if not canonical:
+            continue
         # Remove generic wavelength-only lasers (with or without brand)
         if _WL_LASER_RE.match(canonical) or _BRAND_WL_RE.match(canonical):
             continue
         # Remove generic laser type tags
         if _GENERIC_TYPE_RE.match(canonical):
+            continue
+        # Remove bare generic terms ("gas", "diode", etc.)
+        if _BARE_GENERIC_RE.match(canonical):
+            continue
+        # Remove brand-only entries without a model
+        if _BRAND_ONLY_RE.match(canonical):
+            continue
+        # Remove if canonical equals the laser type metadata (e.g., canonical="gas")
+        laser_type = laser.get("type", "")
+        if laser_type and canonical.lower().strip() == laser_type.lower().strip():
+            continue
+        # Remove very short canonicals (likely junk)
+        if len(canonical.strip()) < 4:
             continue
         filtered.append(laser)
 
@@ -351,11 +399,16 @@ def _apply(
     if not values or not isinstance(values, list):
         return
 
+    # Build case-insensitive lookup for the rename map
+    lower_map = {k.lower(): v for k, v in rename_map.items()}
+
     seen = set()
     result = []
     for v in values:
-        # Exact rename
-        canonical = rename_map.get(v, v)
+        # Try exact rename first, then case-insensitive
+        canonical = rename_map.get(v)
+        if canonical is None:
+            canonical = lower_map.get(v.lower(), v)
         # Extra per-value normalization
         if extra_fn is not None:
             canonical = extra_fn(canonical)

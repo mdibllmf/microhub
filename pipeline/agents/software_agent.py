@@ -17,7 +17,6 @@ from .base_agent import BaseAgent, Extraction
 
 IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "imagej": "ImageJ",
-    "fiji": "Fiji",
     "fiji/imagej": "Fiji",
     "cellprofiler": "CellProfiler",
     "cell profiler": "CellProfiler",
@@ -29,10 +28,9 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "stardist": "StarDist",
     "deepcell": "DeepCell",
     "omero": "OMERO",
-    "dragonfly": "Dragonfly",
+    "dragonfly ors": "Dragonfly",
     "amira": "Amira",
     "huygens": "Huygens",
-    "icy": "Icy",
     "trackmate": "TrackMate",
     "thunderstorm": "ThunderSTORM",
     "deconvolutionlab": "DeconvolutionLab",
@@ -46,7 +44,8 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "chimera": "UCSF Chimera",  # bare chimera (ChimeraX handled separately)
     "pymol": "PyMOL",
     "neurolucida": "Neurolucida",
-    "halo": "HALO",
+    "halo image analysis": "HALO",
+    "indica labs halo": "HALO",
     "inform": "inForm",
     "autoquant": "AutoQuant",
     "digital micrograph": "Digital Micrograph",
@@ -60,8 +59,7 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "serialem": "SerialEM",
     "vaa3d": "Vaa3D",
     "aivia": "Aivia",
-    "sam": "SAM",
-    "segment anything": "SAM", "segment-anything": "SAM",
+    "segment anything model": "SAM", "segment anything": "SAM", "segment-anything": "SAM",
     "mask r-cnn": "Mask R-CNN",
     "mask rcnn": "Mask R-CNN",
     "u-net": "U-Net",
@@ -91,7 +89,8 @@ IMAGE_ACQUISITION_SOFTWARE: Dict[str, str] = {
     "slidebook": "SlideBook",
     "volocity": "Volocity",
     "volocity acquisition": "Volocity Acquisition",
-    "harmony": "Harmony",
+    "harmony software": "Harmony",
+    "perkinelmer harmony": "Harmony",
     "cellsens": "CellSens",
     "cell sens": "CellSens",
     "fluoview": "FluoView",
@@ -106,9 +105,18 @@ IMAGE_ACQUISITION_SOFTWARE: Dict[str, str] = {
     "hcimage": "HCImage",
     "imagexpress": "ImageXpress",
     "cellreporterxpress": "CellReporterXpress",
-    "in cell": "IN Cell",
+    "in cell analyzer": "IN Cell",
+    "in cell 1000": "IN Cell",
+    "in cell 2000": "IN Cell",
+    "in cell 2200": "IN Cell",
+    "in cell 6000": "IN Cell",
+    "in cell 6500": "IN Cell",
+    "ge in cell": "IN Cell",
+    "ge healthcare in cell": "IN Cell",
+    "cytiva in cell": "IN Cell",
     "opera phenix": "Opera Phenix",
-    "columbus": "Columbus",
+    "columbus image analysis": "Columbus",
+    "perkinelmer columbus": "Columbus",
     "arrayscan": "ArrayScan",
 }
 
@@ -119,6 +127,67 @@ _ZEN_CONTEXT = re.compile(
     re.IGNORECASE,
 )
 _ZEN_BRAND_CONTEXT = re.compile(r"\b(?:Zeiss|Carl Zeiss)\b.{0,50}\bZEN\b", re.I | re.S)
+
+# Context pattern for "IN Cell" to avoid matching generic "in cell" phrases
+_IN_CELL_CONTEXT = re.compile(
+    r"\b(?:GE|GE\s+Healthcare|Cytiva)\s+IN\s+Cell\b"
+    r"|\bIN\s+Cell\s+(?:Analyzer|Investigator|imaging|system|platform|\d{4})\b"
+    r"|\bIN\s+Cell\b(?=.{0,30}(?:high[- ]?content|screening|imager|system))",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Context patterns for ambiguous software names
+_AMBIGUOUS_ANALYSIS_PATTERNS = [
+    # SAM — "Segment Anything" model; bare "SAM" is too common (name/abbreviation)
+    (re.compile(
+        r"\bSAM\b(?=.{0,30}(?:segment|mask|model|instance|predict|inference))"
+        r"|\bSAM\s+(?:model|segmentation|predictor|mask)\b"
+        r"|\b(?:Meta|facebook)\s+SAM\b",
+        re.I | re.S,
+    ), "SAM"),
+    # HALO — Indica Labs image analysis; bare "HALO" matches the word/game
+    (re.compile(
+        r"\bHALO\b(?=.{0,40}(?:patholog|image|analy|quantif|Indica|software|platform|module))"
+        r"|\bIndica\s+Labs\s+HALO\b"
+        r"|\bHALO\s+(?:software|platform|AI|module)\b",
+        re.I | re.S,
+    ), "HALO"),
+    # Dragonfly — ORS Dragonfly 3D visualization; bare matches the insect
+    (re.compile(
+        r"\bDragonfly\b(?=.{0,40}(?:ORS|3D|visuali[sz]|render|image|software|reconstruct|volume))"
+        r"|\bORS\s+Dragonfly\b"
+        r"|\bDragonfly\s+(?:software|ORS|version|v?\d)\b",
+        re.I | re.S,
+    ), "Dragonfly"),
+    # Icy — bioimage analysis; bare "icy" matches common adjective
+    (re.compile(
+        r"\bIcy\b(?=.{0,40}(?:bioimage|plugin|image\s+analy|software|platform|spot\s+detect|active\s+contour))"
+        r"|\bIcy\s+(?:software|plugin|bioimage|platform)\b"
+        r"|\bde\s+Chaumont.{0,30}\bIcy\b",
+        re.I | re.S,
+    ), "Icy"),
+    # Fiji — ImageJ distribution; bare matches country name
+    (re.compile(
+        r"\bFiji\b(?=.{0,30}(?:ImageJ|macro|plugin|script|software|image\s+analy|processing|measure))"
+        r"|\bFiji/ImageJ\b|\bImageJ/Fiji\b"
+        r"|\bFiji\s+(?:software|macro|plugin|script|version|v?\d)\b",
+        re.I | re.S,
+    ), "Fiji"),
+    # Harmony — PerkinElmer HCS software; bare matches common word
+    (re.compile(
+        r"\bHarmony\b(?=.{0,40}(?:PerkinElmer|high[- ]?content|screening|HCS|software|Opera|image\s+analy))"
+        r"|\bPerkinElmer\s+Harmony\b"
+        r"|\bHarmony\s+(?:software|version|v?\d)\b",
+        re.I | re.S,
+    ), "Harmony"),
+    # Columbus — PerkinElmer image analysis; bare matches city/explorer
+    (re.compile(
+        r"\bColumbus\b(?=.{0,40}(?:PerkinElmer|image|analy|screen|software|platform|server))"
+        r"|\bPerkinElmer\s+Columbus\b"
+        r"|\bColumbus\s+(?:software|image|server|platform)\b",
+        re.I | re.S,
+    ), "Columbus"),
+]
 
 # ======================================================================
 # General-purpose software
@@ -182,6 +251,23 @@ class SoftwareAgent(BaseAgent):
                     section=section or "",
                     metadata={"canonical": canonical},
                 ))
+
+        # Context-requiring ambiguous software names (SAM, HALO, Dragonfly,
+        # Icy, Fiji, Harmony, Columbus) — these common words need nearby
+        # imaging/software context to avoid false positives.
+        for ctx_pattern, canonical in _AMBIGUOUS_ANALYSIS_PATTERNS:
+            for m in ctx_pattern.finditer(text):
+                conf = 0.85 if section in ("methods", "materials") else 0.7
+                extractions.append(Extraction(
+                    text=m.group(0),
+                    label="IMAGE_ANALYSIS_SOFTWARE",
+                    start=m.start(), end=m.end(),
+                    confidence=conf,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={"canonical": canonical},
+                ))
+
         return extractions
 
     # ------------------------------------------------------------------
@@ -225,6 +311,17 @@ class SoftwareAgent(BaseAgent):
                     section=section or "",
                     metadata={"canonical": "ZEN"},
                 ))
+
+        # Handle "IN Cell" with context (avoid matching generic "in cell" phrases)
+        for m in _IN_CELL_CONTEXT.finditer(text):
+            extractions.append(Extraction(
+                text=m.group(0),
+                label="IMAGE_ACQUISITION_SOFTWARE",
+                start=m.start(), end=m.end(),
+                confidence=0.85, source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": "IN Cell"},
+            ))
 
         return extractions
 

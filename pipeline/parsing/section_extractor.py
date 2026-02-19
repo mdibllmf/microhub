@@ -169,10 +169,19 @@ _FIGURE_CAPTION_RE = re.compile(
 _DATA_AVAIL_RE = re.compile(
     r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:"
     r"data\s+(?:and\s+(?:code|software|materials?)\s+)?availability"
-    r"|code\s+availability"
+    r"|code\s+(?:and\s+data\s+)?availability"
     r"|data\s+(?:access|deposition|sharing)"
     r"|(?:availability\s+of\s+(?:data|code|materials?))"
     r"|accession\s+(?:codes?|numbers?)"
+    r"|resource\s+availability"
+    r"|data\s+and\s+resource\s+sharing"
+    r"|materials?\s+availability"
+    r"|supplementary\s+(?:data|information|materials?)\s+availability"
+    r"|data\s+(?:repositor(?:y|ies)|archiv\w*)"
+    r"|associated\s+content"
+    r"|related\s+(?:data|datasets?)"
+    r"|data\s+records?"
+    r"|data\s+statement"
     r")\s*\n",
     re.IGNORECASE,
 )
