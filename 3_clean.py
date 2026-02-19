@@ -6,10 +6,10 @@ Reads the chunked JSON from step 2, applies protocol classification, syncs
 field aliases, sets boolean flags, strips full_text, and writes final
 WordPress-ready files.
 
-    python 3_clean.py                                     # defaults (includes API enrichment)
+    python 3_clean.py                                     # defaults (enrichment + API calls)
     python 3_clean.py --input-dir raw_export/             # read from step 2 output
     python 3_clean.py --output-dir cleaned_export/        # write here
-    python 3_clean.py --enrich                            # also re-run agents during cleanup
+    python 3_clean.py --no-enrich                         # skip agent pipeline (NOT recommended)
     python 3_clean.py --skip-api                          # skip GitHub/S2/CrossRef API enrichment
 
 Input:  raw_export/*_chunk_*.json   (from step 2)
@@ -110,7 +110,7 @@ def _mine_data_availability(paper):
         paper["repositories"] = repos
 
 
-def _rescan_repositories(paper, repo_scanner):
+def _rescan_repositories(paper, repo_scanner, institution_scanner=None):
     """Re-scan all text fields for repository references missed during step 1.
 
     Merges newly found repositories into the paper's existing repositories
@@ -118,6 +118,10 @@ def _rescan_repositories(paper, repo_scanner):
     OMERO links, Figshare DOIs, and other repository references that may
     appear only in the full text, data availability statements, or methods
     sections.
+
+    Also re-extracts institutions and RORs from affiliations via the
+    institution_scanner (if provided), ensuring ROR IDs are generated even
+    when the initial enrichment pass missed them.
     """
     # Gather all text to scan
     texts_to_scan = []
@@ -126,16 +130,10 @@ def _rescan_repositories(paper, repo_scanner):
         if val and isinstance(val, str) and len(val) > 10:
             texts_to_scan.append((val, field))
 
-    if not texts_to_scan:
-        return
-
     # Run the protocol agent's repository + RRID + protocol matching
     all_extractions = []
     for text, section in texts_to_scan:
         all_extractions.extend(repo_scanner.analyze(text, section))
-
-    if not all_extractions:
-        return
 
     # --- Merge repositories ---
     existing_repos = paper.get("repositories") or []
@@ -252,6 +250,7 @@ def _rescan_repositories(paper, repo_scanner):
         elif isinstance(r, str):
             existing_ror_ids.add(r.lower())
 
+    # RORs from explicit ROR URLs/IDs found in text (via ProtocolAgent)
     for ext in all_extractions:
         if ext.label == "ROR":
             ror_id = ext.metadata.get("canonical", "")
@@ -262,6 +261,42 @@ def _rescan_repositories(paper, repo_scanner):
                     "url": url,
                 })
                 existing_ror_ids.add(ror_id.lower())
+
+    # RORs from affiliations (via InstitutionAgent) — critical fallback
+    # The orchestrator extracts RORs from affiliations, but if that step
+    # was skipped or affiliations were malformed, re-extract here.
+    if institution_scanner is not None:
+        affiliations = paper.get("affiliations") or []
+        if isinstance(affiliations, str):
+            try:
+                affiliations = json.loads(affiliations)
+            except (json.JSONDecodeError, TypeError):
+                affiliations = []
+        if isinstance(affiliations, list) and affiliations:
+            inst_exts = institution_scanner.analyze_affiliations(affiliations)
+            for ext in inst_exts:
+                ror_id = ext.metadata.get("ror_id", "")
+                ror_url = ext.metadata.get("ror_url", "")
+                if ror_id and ror_id.lower() not in existing_ror_ids:
+                    existing_rors.append({
+                        "id": ror_id,
+                        "url": ror_url,
+                        "source": "affiliation_rescan",
+                    })
+                    existing_ror_ids.add(ror_id.lower())
+
+                # Also merge institutions list
+                inst_name = ext.metadata.get("canonical", ext.text)
+                if inst_name:
+                    existing_insts = paper.get("institutions") or []
+                    if isinstance(existing_insts, str):
+                        try:
+                            existing_insts = json.loads(existing_insts)
+                        except (json.JSONDecodeError, TypeError):
+                            existing_insts = []
+                    if inst_name not in existing_insts:
+                        existing_insts.append(inst_name)
+                    paper["institutions"] = existing_insts
 
     paper["rors"] = existing_rors
 
@@ -275,8 +310,8 @@ def main():
     parser.add_argument("--input-dir", help="Input directory (default: raw_export/)")
     parser.add_argument("--output-dir", default="cleaned_export",
                         help="Output directory (default: cleaned_export/)")
-    parser.add_argument("--enrich", action="store_true",
-                        help="Re-run agent pipeline during cleanup")
+    parser.add_argument("--no-enrich", action="store_true",
+                        help="Skip agent pipeline enrichment (NOT recommended)")
     parser.add_argument("--skip-api", action="store_true",
                         help="Skip all API enrichment (GitHub/S2/CrossRef)")
     parser.add_argument("--no-github", action="store_true",
@@ -297,9 +332,11 @@ def main():
     from pipeline.orchestrator import PipelineOrchestrator
     from pipeline.validation.identifier_normalizer import IdentifierNormalizer
     from pipeline.agents.protocol_agent import ProtocolAgent
+    from pipeline.agents.institution_agent import InstitutionAgent
 
     id_normalizer = IdentifierNormalizer()
     repo_scanner = ProtocolAgent()
+    institution_scanner = InstitutionAgent()
 
     # --- Resolve input files ---
     if args.input:
@@ -308,9 +345,17 @@ def main():
             input_path = os.path.join(SCRIPT_DIR, input_path)
         input_files = [input_path]
     else:
-        input_dir = args.input_dir or "raw_export"
-        if not os.path.isabs(input_dir):
-            input_dir = os.path.join(SCRIPT_DIR, input_dir)
+        input_dir = args.input_dir
+        if input_dir:
+            if not os.path.isabs(input_dir):
+                input_dir = os.path.join(SCRIPT_DIR, input_dir)
+        else:
+            # Auto-detect: prefer raw_export/, fall back to project root
+            raw_export_dir = os.path.join(SCRIPT_DIR, "raw_export")
+            if os.path.isdir(raw_export_dir) and glob.glob(os.path.join(raw_export_dir, "*.json")):
+                input_dir = raw_export_dir
+            else:
+                input_dir = SCRIPT_DIR
         # Try several naming patterns
         input_files = sorted(glob.glob(os.path.join(input_dir, "*_chunk_*.json")))
         if not input_files:
@@ -326,9 +371,9 @@ def main():
         out_dir = os.path.join(SCRIPT_DIR, out_dir)
     os.makedirs(out_dir, exist_ok=True)
 
-    # --- Optional agent enrichment ---
+    # --- Agent enrichment (always on by default) ---
     enricher = None
-    if args.enrich:
+    if not args.no_enrich:
         dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
         enricher = PipelineOrchestrator(
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None,
@@ -348,7 +393,7 @@ def main():
     logger.info("=" * 60)
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
-    logger.info("Enrich:      %s", "yes" if args.enrich else "no")
+    logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
     logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")
     logger.info("")
@@ -424,6 +469,17 @@ def main():
                         if not paper.get(key):
                             paper[key] = val
 
+            # Log ROR extraction results for diagnostics
+            pmid = paper.get("pmid", "?")
+            affs = paper.get("affiliations") or []
+            rors_after_enrich = paper.get("rors") or []
+            if rors_after_enrich:
+                logger.info("  PMID %s: enricher found %d ROR(s) from %d affiliation(s)",
+                            pmid, len(rors_after_enrich), len(affs))
+            elif affs:
+                logger.debug("  PMID %s: no RORs found despite %d affiliation(s)",
+                             pmid, len(affs))
+
             # Safety: never downgrade rors to empty if we had them before
             # (institution lookup depends on affiliations which may be absent in rescan)
             if not paper.get("rors") and original_rors:
@@ -436,7 +492,7 @@ def main():
             # may have been missed during initial scraping.  This catches
             # Zenodo DOIs, OMERO links, Figshare DOIs, etc. that appear in
             # title, abstract, methods, or full_text.
-            _rescan_repositories(paper, repo_scanner)
+            _rescan_repositories(paper, repo_scanner, institution_scanner)
 
             # Mine data-availability sections for unlinked repositories
             # (fallback for papers with "deposited in X" prose but no URLs)

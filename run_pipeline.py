@@ -12,9 +12,10 @@ The pipeline has 4 distinct steps, each with its own script:
                     while steps 2-4 process previously scraped data.
 
     2_export.py   — Export DB to chunked JSON (raw_export/).
-                    Optionally re-runs agents with --enrich.
+                    Raw dump only — no enrichment.
 
-    3_clean.py    — Clean/re-tag JSON, set flags, strip full_text.
+    3_clean.py    — Clean, enrich, re-tag JSON, set flags, strip full_text.
+                    Runs all agents by default (RORs, repos, software, etc.).
                     Produces WordPress-ready files (cleaned_export/).
 
     4_validate.py — Validate cleaned JSON against MASTER_TAG_DICTIONARY.
@@ -22,14 +23,14 @@ The pipeline has 4 distinct steps, each with its own script:
 Typical workflow (scraper runs in background):
 
     python 1_scrape.py --limit 500 &       # background
-    python 2_export.py --enrich             # on existing DB
-    python 3_clean.py                       # raw_export/ → cleaned_export/
-    python 4_validate.py                    # check cleaned_export/
+    python 2_export.py                     # raw DB dump → raw_export/
+    python 3_clean.py                      # enrich + clean → cleaned_export/
+    python 4_validate.py                   # check cleaned_export/
 
 This file still works as a unified entry point for backward compatibility:
 
     python run_pipeline.py scrape --limit 100
-    python run_pipeline.py export --enrich
+    python run_pipeline.py export
     python run_pipeline.py cleanup
     python run_pipeline.py validate
 """
@@ -66,8 +67,8 @@ def main():
         epilog="""
 Preferred usage (individual scripts):
     python 1_scrape.py [--limit N] [--priority-only] ...
-    python 2_export.py [--enrich] [--chunk-size 500] ...
-    python 3_clean.py  [--input-dir raw_export/] ...
+    python 2_export.py [--chunk-size 500] ...
+    python 3_clean.py  [--input-dir raw_export/] [--no-enrich] ...
     python 4_validate.py [--input-dir cleaned_export/] [--strict]
 """,
     )
@@ -92,8 +93,6 @@ Preferred usage (individual scripts):
     p_export.add_argument("--min-citations", type=int, default=0)
     p_export.add_argument("--methods-only", action="store_true")
     p_export.add_argument("--chunk-size", type=int, default=500)
-    p_export.add_argument("--enrich", action="store_true",
-                          help="Re-run agent pipeline for fresh tag extraction")
 
     # ---- cleanup ----
     p_cleanup = subparsers.add_parser(
@@ -101,8 +100,8 @@ Preferred usage (individual scripts):
     p_cleanup.add_argument("--input", "-i", help="Input JSON file")
     p_cleanup.add_argument("--input-dir", help="Input directory")
     p_cleanup.add_argument("--output-dir", default="cleaned_export")
-    p_cleanup.add_argument("--enrich", action="store_true",
-                           help="Re-run agent pipeline during cleanup")
+    p_cleanup.add_argument("--no-enrich", action="store_true",
+                           help="Skip agent pipeline (NOT recommended)")
     p_cleanup.add_argument("--skip-api", action="store_true",
                            help="Skip GitHub/S2/CrossRef API enrichment")
 
@@ -142,8 +141,6 @@ Preferred usage (individual scripts):
             fwd.append("--methods-only")
         if args.chunk_size != 500:
             fwd += ["--chunk-size", str(args.chunk_size)]
-        if args.enrich:
-            fwd.append("--enrich")
         _delegate("2_export.py", fwd)
 
     elif args.command == "cleanup":
@@ -154,8 +151,8 @@ Preferred usage (individual scripts):
             fwd += ["--input-dir", args.input_dir]
         if args.output_dir != "cleaned_export":
             fwd += ["--output-dir", args.output_dir]
-        if args.enrich:
-            fwd.append("--enrich")
+        if args.no_enrich:
+            fwd.append("--no-enrich")
         if args.skip_api:
             fwd.append("--skip-api")
         _delegate("3_clean.py", fwd)
