@@ -207,6 +207,63 @@ class MicroHub_Taxonomies {
             'rewrite' => array('slug' => 'cell-line'),
         ));
         
+        // Register Reagent Supplier taxonomy (v6)
+        register_taxonomy('mh_reagent_supplier', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Reagent Suppliers', 'microhub'),
+                'singular_name' => __('Reagent Supplier', 'microhub'),
+                'search_items' => __('Search Reagent Suppliers', 'microhub'),
+                'all_items' => __('All Reagent Suppliers', 'microhub'),
+                'edit_item' => __('Edit Reagent Supplier', 'microhub'),
+                'update_item' => __('Update Reagent Supplier', 'microhub'),
+                'add_new_item' => __('Add New Reagent Supplier', 'microhub'),
+                'new_item_name' => __('New Reagent Supplier Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'reagent-supplier'),
+        ));
+
+        // Register Antibody Source taxonomy (v6)
+        register_taxonomy('mh_antibody_source', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Antibody Sources', 'microhub'),
+                'singular_name' => __('Antibody Source', 'microhub'),
+                'search_items' => __('Search Antibody Sources', 'microhub'),
+                'all_items' => __('All Antibody Sources', 'microhub'),
+                'edit_item' => __('Edit Antibody Source', 'microhub'),
+                'update_item' => __('Update Antibody Source', 'microhub'),
+                'add_new_item' => __('Add New Antibody Source', 'microhub'),
+                'new_item_name' => __('New Antibody Source Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'antibody-source'),
+        ));
+
+        // Register Facility taxonomy (for institutions / imaging facilities)
+        register_taxonomy('mh_facility', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Facilities', 'microhub'),
+                'singular_name' => __('Facility', 'microhub'),
+                'search_items' => __('Search Facilities', 'microhub'),
+                'all_items' => __('All Facilities', 'microhub'),
+                'edit_item' => __('Edit Facility', 'microhub'),
+                'update_item' => __('Update Facility', 'microhub'),
+                'add_new_item' => __('Add New Facility', 'microhub'),
+                'new_item_name' => __('New Facility Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'facility'),
+        ));
+
         // Register Protocol Type taxonomy (hierarchical)
         register_taxonomy('mh_protocol_type', array('mh_protocol'), array(
             'labels' => array(

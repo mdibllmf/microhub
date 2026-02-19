@@ -298,6 +298,25 @@ class MicroHub_Taxonomies {
             'rewrite' => array('slug' => 'general-software'),
         ));
 
+        // Register Antibody Source taxonomy (non-hierarchical)
+        register_taxonomy('mh_antibody_source', array('mh_paper', 'mh_protocol'), array(
+            'labels' => array(
+                'name' => __('Antibody Sources', 'microhub'),
+                'singular_name' => __('Antibody Source', 'microhub'),
+                'search_items' => __('Search Antibody Sources', 'microhub'),
+                'all_items' => __('All Antibody Sources', 'microhub'),
+                'edit_item' => __('Edit Antibody Source', 'microhub'),
+                'update_item' => __('Update Antibody Source', 'microhub'),
+                'add_new_item' => __('Add New Antibody Source', 'microhub'),
+                'new_item_name' => __('New Antibody Source Name', 'microhub'),
+            ),
+            'hierarchical' => false,
+            'show_ui' => true,
+            'show_admin_column' => false,
+            'show_in_rest' => true,
+            'rewrite' => array('slug' => 'antibody-source'),
+        ));
+
         // Register Laser taxonomy (non-hierarchical)
         register_taxonomy('mh_laser', array('mh_paper', 'mh_protocol'), array(
             'labels' => array(
