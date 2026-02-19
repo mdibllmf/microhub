@@ -658,9 +658,9 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
             );
         }, $data['protocols']);
         
-        // Filter out protocols with empty URLs
+        // Filter out protocols with neither a URL nor a name
         $protocols = array_filter($protocols, function($p) {
-            return !empty($p['url']);
+            return !empty($p['url']) || !empty($p['name']);
         });
         
         if (!empty($protocols)) {
@@ -746,9 +746,9 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
             );
         }, $repos_data);
         
-        // Filter out repos with empty URLs
+        // Filter out repos with neither a URL nor a name
         $repositories = array_filter($repositories, function($r) {
-            return !empty($r['url']);
+            return !empty($r['url']) || !empty($r['name']);
         });
 
         // Deduplicate repositories by URL
@@ -818,13 +818,19 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         $rors = array_filter($rors, function($r) { return !empty($r['id']); });
         if (!empty($rors)) {
             update_post_meta($post_id, '_mh_rors', wp_json_encode(array_values($rors)));
+            update_post_meta($post_id, '_mh_has_rors', '1');
             $enrichment_stats['rors'] = ($enrichment_stats['rors'] ?? 0) + count($rors);
         }
+    }
+    // Also check has_rors flag from JSON data
+    if (!empty($data['has_rors'])) {
+        update_post_meta($post_id, '_mh_has_rors', '1');
     }
 
     // Save antibody sources (species used for antibodies, not model organisms)
     if (!empty($data['antibody_sources']) && is_array($data['antibody_sources'])) {
         $antibody_sources = array_map('sanitize_text_field', $data['antibody_sources']);
+        wp_set_object_terms($post_id, $antibody_sources, 'mh_antibody_source');
         update_post_meta($post_id, '_mh_antibody_sources', wp_json_encode($antibody_sources));
     }
 

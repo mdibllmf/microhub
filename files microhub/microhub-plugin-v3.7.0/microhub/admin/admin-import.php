@@ -582,11 +582,11 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
             );
         }, $data['protocols']);
         
-        // Filter out protocols with empty URLs
+        // Filter out protocols with neither a URL nor a name
         $protocols = array_filter($protocols, function($p) {
-            return !empty($p['url']);
+            return !empty($p['url']) || !empty($p['name']);
         });
-        
+
         if (!empty($protocols)) {
             update_post_meta($post_id, '_mh_protocols', wp_json_encode(array_values($protocols)));
             update_post_meta($post_id, '_mh_has_protocols', '1');
@@ -670,11 +670,11 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
             );
         }, $repos_data);
         
-        // Filter out repos with empty URLs
+        // Filter out repos with neither a URL nor a name
         $repositories = array_filter($repositories, function($r) {
-            return !empty($r['url']);
+            return !empty($r['url']) || !empty($r['name']);
         });
-        
+
         if (!empty($repositories)) {
             update_post_meta($post_id, '_mh_repositories', wp_json_encode(array_values($repositories)));
             update_post_meta($post_id, '_mh_has_data', '1');
@@ -728,13 +728,19 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         $rors = array_filter($rors, function($r) { return !empty($r['id']); });
         if (!empty($rors)) {
             update_post_meta($post_id, '_mh_rors', wp_json_encode(array_values($rors)));
+            update_post_meta($post_id, '_mh_has_rors', '1');
             $enrichment_stats['rors'] = ($enrichment_stats['rors'] ?? 0) + count($rors);
         }
+    }
+    // Also check has_rors flag from JSON data
+    if (!empty($data['has_rors'])) {
+        update_post_meta($post_id, '_mh_has_rors', '1');
     }
 
     // Save antibody sources (species used for antibodies, not model organisms)
     if (!empty($data['antibody_sources']) && is_array($data['antibody_sources'])) {
         $antibody_sources = array_map('sanitize_text_field', $data['antibody_sources']);
+        wp_set_object_terms($post_id, $antibody_sources, 'mh_antibody_source');
         update_post_meta($post_id, '_mh_antibody_sources', wp_json_encode($antibody_sources));
     }
 
@@ -1044,6 +1050,18 @@ function microhub_import_paper($data, $skip_existing, $update_existing, &$enrich
         wp_set_object_terms($post_id, $data['cell_lines'], 'mh_cell_line');
         // Also save as JSON meta for theme compatibility
         update_post_meta($post_id, '_mh_cell_lines', wp_json_encode($data['cell_lines']));
+    }
+
+    // v6 scraper fields - reagent suppliers
+    if (!empty($data['reagent_suppliers']) && is_array($data['reagent_suppliers'])) {
+        wp_set_object_terms($post_id, $data['reagent_suppliers'], 'mh_reagent_supplier');
+        update_post_meta($post_id, '_mh_reagent_suppliers', wp_json_encode($data['reagent_suppliers']));
+    }
+
+    // v6 scraper fields - general software (MATLAB, Python, R, etc.)
+    if (!empty($data['general_software']) && is_array($data['general_software'])) {
+        wp_set_object_terms($post_id, $data['general_software'], 'mh_software', true); // append to software taxonomy
+        update_post_meta($post_id, '_mh_general_software', wp_json_encode($data['general_software']));
     }
 
     // ============================================

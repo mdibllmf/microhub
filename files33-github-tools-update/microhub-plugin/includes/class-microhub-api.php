@@ -320,6 +320,7 @@ class MicroHub_API {
         $protocols_json = get_post_meta($id, '_mh_protocols', true);
         $repos_json = get_post_meta($id, '_mh_repositories', true);
         $rrids_json = get_post_meta($id, '_mh_rrids', true);
+        $rors_json = get_post_meta($id, '_mh_rors', true);
         $figure_urls_json = get_post_meta($id, '_mh_figure_urls', true);
         $thumbnail_url = get_post_meta($id, '_mh_thumbnail_url', true);
         $github_tools_json = get_post_meta($id, '_mh_github_tools', true);
@@ -349,6 +350,7 @@ class MicroHub_API {
             'protocols' => $protocols_json ? json_decode($protocols_json, true) : array(),
             'repositories' => $repos_json ? json_decode($repos_json, true) : array(),
             'rrids' => $rrids_json ? json_decode($rrids_json, true) : array(),
+            'rors' => $rors_json ? json_decode($rors_json, true) : array(),
             'github_tools' => $github_tools_json ? json_decode($github_tools_json, true) : array(),
             'comments_count' => get_comments_number($id),
         );
@@ -783,13 +785,14 @@ class MicroHub_API {
             if (!is_array($repos)) continue;
             
             foreach ($repos as $repo) {
-                if (empty($repo['url'])) continue;
+                // Skip entries with neither a name nor a URL
+                if (empty($repo['url']) && empty($repo['name'])) continue;
                 // Skip GitHub - it has its own section
-                if (stripos($repo['url'], 'github.com') !== false) continue;
-                
+                if (!empty($repo['url']) && stripos($repo['url'], 'github.com') !== false) continue;
+
                 $all_repos[] = array(
                     'name' => $repo['name'] ?? 'Repository',
-                    'url' => esc_url($repo['url']),
+                    'url' => !empty($repo['url']) ? esc_url($repo['url']) : '',
                     'accession_id' => $repo['accession_id'] ?? '',
                     'paper_title' => $row->post_title,
                     'paper_id' => $row->ID,
