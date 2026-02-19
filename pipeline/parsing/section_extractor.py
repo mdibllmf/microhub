@@ -2,10 +2,17 @@
 Unified section extractor that works with multiple input formats.
 
 Supports:
+  - Europe PMC JATS XML (Tier 1 — preferred, pre-parsed with section tags)
   - GROBID TEI XML (via GrobidParser)
   - PMC NXML full-text (via pubmed_parser)
+  - Unpaywall + GROBID (Tier 2 — OA PDF discovery + PDF processing)
   - Plain text with heuristic section detection
   - Pre-parsed PubMed metadata dicts
+
+Implements a three-tier waterfall strategy for full-text acquisition:
+  Tier 1: Europe PMC JATS XML (no PDF processing needed)
+  Tier 2: Unpaywall OA PDF → GROBID processing
+  Tier 3: Abstract-only fallback
 
 Normalises everything into a common ``PaperSections`` object consumed
 by the extraction agents.
@@ -22,6 +29,8 @@ from .pubmed_parser import (
     fetch_pmc_fulltext,
     fetch_pubmed_metadata,
 )
+from .europepmc_fetcher import EuropePMCFetcher
+from .unpaywall_client import UnpaywallClient
 
 logger = logging.getLogger(__name__)
 
@@ -264,3 +273,123 @@ def from_pmc(pmc_id: str) -> PaperSections:
         return PaperSections()
     sections = extract_pmc_sections(xml_text)
     return from_sections_list(sections)
+
+
+def from_europe_pmc(pmc_id: str, metadata: Dict = None) -> PaperSections:
+    """Fetch and parse via Europe PMC JATS XML (Tier 1).
+
+    Europe PMC provides pre-parsed JATS XML with explicit section tags,
+    covering 9M+ full-text articles.  This is the preferred source
+    because it eliminates PDF processing entirely.
+    """
+    fetcher = EuropePMCFetcher()
+    sections = fetcher.fetch_fulltext_sections(pmc_id)
+    if not sections:
+        logger.debug("Europe PMC: no full text for %s", pmc_id)
+        return PaperSections()
+
+    ps = from_sections_list(sections, metadata)
+    logger.info("Europe PMC: parsed %d sections from %s", len(sections), pmc_id)
+    return ps
+
+
+def from_unpaywall_pdf(doi: str, metadata: Dict = None,
+                       grobid_url: str = "http://localhost:8070",
+                       email: str = "microhub@example.com") -> PaperSections:
+    """Discover OA PDF via Unpaywall + parse with GROBID (Tier 2).
+
+    For articles without PMCIDs, Unpaywall finds open-access PDF URLs.
+    GROBID processes these PDFs into structured TEI XML.
+    """
+    client = UnpaywallClient(email=email)
+    pdf_url = client.find_pdf_url(doi)
+    if not pdf_url:
+        logger.debug("Unpaywall: no OA PDF for DOI %s", doi)
+        return PaperSections()
+
+    # Download and parse with GROBID
+    pdf_content = client.download_pdf(pdf_url)
+    if not pdf_content:
+        logger.debug("Unpaywall: failed to download PDF from %s", pdf_url)
+        return PaperSections()
+
+    parser = GrobidParser(grobid_url)
+    if not parser.is_available():
+        logger.warning("GROBID not available at %s for Unpaywall PDF", grobid_url)
+        return PaperSections()
+
+    # Write to temporary file for GROBID
+    import tempfile
+    import os
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        f.write(pdf_content)
+        tmp_path = f.name
+
+    try:
+        tei = parser.parse_pdf_raw(tmp_path)
+        if not tei:
+            return PaperSections()
+        grobid_meta = parser.extract_metadata(tei)
+        sections = parser.parse_pdf(tmp_path)
+        if metadata:
+            grobid_meta.update({k: v for k, v in metadata.items() if v})
+        ps = from_sections_list(sections, grobid_meta)
+        logger.info("Unpaywall+GROBID: parsed %d sections for DOI %s",
+                     len(sections), doi)
+        return ps
+    finally:
+        os.unlink(tmp_path)
+
+
+def three_tier_waterfall(paper: Dict,
+                         grobid_url: str = "http://localhost:8070",
+                         email: str = "microhub@example.com") -> PaperSections:
+    """Three-tier waterfall strategy for full-text acquisition.
+
+    Tier 1: Europe PMC JATS XML (preferred — pre-parsed, no PDF needed)
+    Tier 2: Unpaywall OA PDF discovery + GROBID processing
+    Tier 3: Abstract-only fallback (from paper dict)
+
+    Parameters
+    ----------
+    paper : dict
+        Paper dict with at minimum: title, abstract.
+        May also have: pmc_id, doi, full_text, methods.
+    grobid_url : str
+        GROBID service URL for Tier 2 PDF processing.
+    email : str
+        Email for Unpaywall API.
+
+    Returns
+    -------
+    PaperSections
+        Best available parsed sections.
+    """
+    pmc_id = paper.get("pmc_id", "") or ""
+    doi = paper.get("doi", "") or ""
+    metadata = paper
+
+    # Tier 1: Europe PMC JATS XML
+    if pmc_id:
+        ps = from_europe_pmc(pmc_id, metadata)
+        if ps.has_methods or ps.full_text:
+            return ps
+        # Fallback to NCBI PMC
+        ps = from_pmc(pmc_id)
+        if ps.has_methods or ps.full_text:
+            if metadata:
+                ps.metadata = metadata
+                ps.title = ps.title or metadata.get("title", "")
+                ps.abstract = ps.abstract or metadata.get("abstract", "")
+            return ps
+
+    # Tier 2: Unpaywall + GROBID
+    if doi:
+        ps = from_unpaywall_pdf(doi, metadata, grobid_url, email)
+        if ps.has_methods or ps.full_text:
+            return ps
+
+    # Tier 3: Abstract-only fallback
+    logger.debug("Waterfall: falling back to abstract-only for %s",
+                 doi or pmc_id or paper.get("title", "?")[:50])
+    return from_pubmed_dict(paper)

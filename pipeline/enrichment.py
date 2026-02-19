@@ -2,18 +2,21 @@
 API-based enrichment for the cleanup step (step 3).
 
 Ports the critical enrichment logic from the original cleanup_and_retag.py:
+  - OpenAlex API:         First-call enrichment (institutions, topics, citations, OA)
   - GitHub API:           Repository metadata, health scores, activity metrics
   - Semantic Scholar API: Citation updates, fields of study  (batch endpoint)
   - CrossRef API:         Additional data repositories via links & DOI relations
+  - DataCite + OpenAIRE:  Dataset-publication link discovery
+  - ROR v2 API:           Dynamic institution affiliation matching
 
 API keys are loaded from:
-  1. Environment variables  (GITHUB_TOKEN, SEMANTIC_SCHOLAR_API_KEY)
+  1. Environment variables  (GITHUB_TOKEN, SEMANTIC_SCHOLAR_API_KEY, OPENALEX_API_KEY)
   2. .env file in the project root
 
 Usage in 3_clean.py:
     from pipeline.enrichment import Enricher
     enricher = Enricher()                   # loads keys from env / .env
-    enricher.enrich_batch(papers)           # batch S2 + per-paper GH/CrossRef
+    enricher.enrich_batch(papers)           # batch OA + S2 + per-paper GH/CrossRef
 """
 
 import json
@@ -78,6 +81,9 @@ class Enricher:
     def __init__(self):
         self.github_token = _get_key("GITHUB_TOKEN")
         self.s2_api_key = _get_key("SEMANTIC_SCHOLAR_API_KEY")
+        self.openalex_email = _get_key("OPENALEX_EMAIL") or "microhub@example.com"
+        self.openalex_api_key = _get_key("OPENALEX_API_KEY")
+        self.ror_client_id = _get_key("ROR_CLIENT_ID")
 
         self._last_github_call = 0.0
         self._last_s2_call = 0.0
@@ -89,6 +95,11 @@ class Enricher:
         self._s2_exhausted = False
         self._gh_exhausted = False
 
+        # Lazy-initialize optional agents
+        self._openalex_agent = None
+        self._datacite_agent = None
+        self._ror_client = None
+
         if not self.github_token:
             logger.info("No GITHUB_TOKEN found — GitHub API calls will be "
                         "limited to 60/hour.  Set GITHUB_TOKEN in .env for 5000/hour.")
@@ -96,33 +107,73 @@ class Enricher:
             logger.info("No SEMANTIC_SCHOLAR_API_KEY found — S2 API calls will be "
                         "heavily rate-limited.  Set SEMANTIC_SCHOLAR_API_KEY in .env.")
 
+    @property
+    def openalex_agent(self):
+        """Lazy-initialize OpenAlex agent."""
+        if self._openalex_agent is None:
+            from .agents.openalex_agent import OpenAlexAgent
+            self._openalex_agent = OpenAlexAgent(
+                email=self.openalex_email,
+                api_key=self.openalex_api_key,
+            )
+        return self._openalex_agent
+
+    @property
+    def datacite_agent(self):
+        """Lazy-initialize DataCite linker agent."""
+        if self._datacite_agent is None:
+            from .agents.datacite_linker_agent import DataCiteLinkerAgent
+            self._datacite_agent = DataCiteLinkerAgent()
+        return self._datacite_agent
+
+    @property
+    def ror_client(self):
+        """Lazy-initialize ROR v2 client."""
+        if self._ror_client is None:
+            from .validation.ror_v2_client import RORv2Client
+            self._ror_client = RORv2Client(client_id=self.ror_client_id)
+        return self._ror_client
+
     # ------------------------------------------------------------------
     # Public: batch enrichment (called from 3_clean.py)
     # ------------------------------------------------------------------
 
     def enrich_batch(self, papers: List[Dict], *,
+                     fetch_openalex: bool = True,
                      fetch_github: bool = True,
                      fetch_citations: bool = True,
-                     fetch_crossref_repos: bool = True) -> None:
+                     fetch_crossref_repos: bool = True,
+                     fetch_datacite: bool = True,
+                     fetch_ror: bool = True) -> None:
         """Enrich a list of papers.  Mutates each paper in-place.
 
-        Uses S2 batch endpoint for citations (500 papers per request),
-        then per-paper GitHub and CrossRef calls only where needed.
+        Pipeline order follows the recommended architecture:
+          1. OpenAlex first-call enrichment (institutions, topics, citations, OA)
+          2. Semantic Scholar batch citations (supplemental, 500/request)
+          3. Per-paper GitHub, CrossRef, DataCite, ROR (where needed)
         """
         if not HAS_REQUESTS:
             logger.warning("requests library not installed — skipping API enrichment")
             return
 
-        # 1. Batch citation enrichment via Semantic Scholar
+        # 1. OpenAlex first-call enrichment (free singleton lookups)
+        if fetch_openalex:
+            self._batch_enrich_openalex(papers)
+
+        # 2. Batch citation enrichment via Semantic Scholar (supplemental)
         if fetch_citations and not self._s2_exhausted:
             self._batch_enrich_citations(papers)
 
-        # 2. Per-paper GitHub + CrossRef (only where needed)
+        # 3. Per-paper GitHub + CrossRef + DataCite + ROR (only where needed)
         for paper in papers:
             if fetch_github and not self._gh_exhausted:
                 self._enrich_github_tools(paper)
             if fetch_crossref_repos:
                 self._enrich_crossref_repos(paper)
+            if fetch_datacite:
+                self._enrich_datacite(paper)
+            if fetch_ror:
+                self._enrich_ror_affiliations(paper)
 
     # ------------------------------------------------------------------
     # Semantic Scholar — batch endpoint
@@ -426,6 +477,209 @@ class Enricher:
 
         paper["repositories"] = existing
         paper["has_data"] = bool(existing)
+
+    # ------------------------------------------------------------------
+    # OpenAlex first-call enrichment
+    # ------------------------------------------------------------------
+
+    def _batch_enrich_openalex(self, papers: List[Dict]) -> None:
+        """Enrich papers using OpenAlex API (first-call enrichment).
+
+        OpenAlex provides institution resolution (ROR), topics, citations,
+        OA status, and referenced works in a single API call per paper.
+        Singleton lookups are free.
+        """
+        dois = []
+        doi_to_papers: Dict[str, List[Dict]] = {}
+        for paper in papers:
+            doi = paper.get("doi")
+            if doi:
+                doi_clean = self._clean_doi_str(doi)
+                if doi_clean:
+                    dois.append(doi_clean)
+                    doi_to_papers.setdefault(doi_clean, []).append(paper)
+
+        if not dois:
+            return
+
+        logger.info("  OpenAlex: enriching %d papers...", len(dois))
+
+        # Batch in groups of 50
+        for i in range(0, len(dois), 50):
+            batch = dois[i:i + 50]
+            try:
+                results = self.openalex_agent.enrich_batch(batch)
+            except Exception as exc:
+                logger.warning("  OpenAlex batch error: %s", exc)
+                continue
+
+            for doi_key, oa_data in results.items():
+                for paper in doi_to_papers.get(doi_key, []):
+                    self._apply_openalex_data(paper, oa_data)
+
+        done = len(dois)
+        logger.info("  OpenAlex: enriched %d papers", done)
+
+    @staticmethod
+    def _apply_openalex_data(paper: Dict, oa_data: Dict) -> None:
+        """Apply OpenAlex data to a paper dict."""
+        # Citations — use OpenAlex if higher than existing
+        oa_citations = oa_data.get("cited_by_count", 0) or 0
+        current = paper.get("citation_count", 0) or 0
+        if oa_citations > current:
+            paper["citation_count"] = oa_citations
+            paper["citation_source"] = "openalex"
+
+        # FWCI (Field-Weighted Citation Impact)
+        fwci = oa_data.get("fwci")
+        if fwci is not None:
+            paper["fwci"] = fwci
+
+        # OA status
+        if oa_data.get("is_oa") and not paper.get("oa_status"):
+            paper["oa_status"] = oa_data.get("oa_status", "")
+            paper["oa_url"] = oa_data.get("oa_url", "")
+
+        # OpenAlex ID
+        if oa_data.get("openalex_id") and not paper.get("openalex_id"):
+            paper["openalex_id"] = oa_data["openalex_id"]
+
+        # PMC ID (if we didn't have it)
+        if oa_data.get("pmcid") and not paper.get("pmc_id"):
+            paper["pmc_id"] = oa_data["pmcid"]
+
+        # Topics (4-level hierarchy)
+        topics = oa_data.get("topics", [])
+        if topics and not paper.get("openalex_topics"):
+            paper["openalex_topics"] = topics
+
+        # Institutions with ROR IDs
+        institutions = oa_data.get("institutions", [])
+        if institutions and not paper.get("openalex_institutions"):
+            paper["openalex_institutions"] = institutions
+            # Also populate ROR IDs if not already present
+            existing_rors = paper.get("rors") or []
+            seen_rors = {r.get("id", "") for r in existing_rors if isinstance(r, dict)}
+            for inst in institutions:
+                ror_id = inst.get("ror_id", "")
+                if ror_id and ror_id not in seen_rors:
+                    existing_rors.append({
+                        "id": ror_id,
+                        "url": f"https://ror.org/{ror_id}" if not ror_id.startswith("http") else ror_id,
+                        "name": inst.get("name", ""),
+                        "source": "openalex",
+                    })
+                    seen_rors.add(ror_id)
+            if existing_rors:
+                paper["rors"] = existing_rors
+
+        # Fields of study (from OpenAlex topics)
+        if topics and not paper.get("fields_of_study"):
+            fields = list(dict.fromkeys(
+                t.get("field", "") for t in topics if t.get("field")
+            ))
+            if fields:
+                paper["fields_of_study"] = fields
+
+    # ------------------------------------------------------------------
+    # DataCite + OpenAIRE dataset linking
+    # ------------------------------------------------------------------
+
+    def _enrich_datacite(self, paper: Dict) -> None:
+        """Discover dataset links via DataCite and OpenAIRE."""
+        doi = paper.get("doi")
+        data_avail = paper.get("data_availability", "") or ""
+        if not doi and not data_avail:
+            return
+
+        try:
+            links = self.datacite_agent.find_dataset_links(
+                doi=doi, text=data_avail
+            )
+        except Exception as exc:
+            logger.debug("DataCite error for %s: %s", doi, exc)
+            return
+
+        if not links:
+            return
+
+        existing = paper.get("repositories") or []
+        if isinstance(existing, str):
+            try:
+                existing = json.loads(existing)
+            except (json.JSONDecodeError, TypeError):
+                existing = []
+
+        existing_keys = {
+            (r.get("url") or r.get("accession", "")).lower().rstrip("/")
+            for r in existing if isinstance(r, dict)
+        }
+
+        for link in links:
+            key = (link.get("url") or link.get("accession", "")).lower().rstrip("/")
+            if key and key not in existing_keys:
+                existing.append({
+                    "name": link.get("repository", "Dataset"),
+                    "url": link.get("url", ""),
+                    "accession": link.get("accession", ""),
+                    "source": link.get("source", "datacite"),
+                })
+                existing_keys.add(key)
+
+        paper["repositories"] = existing
+        paper["has_data"] = bool(existing)
+
+    # ------------------------------------------------------------------
+    # ROR v2 dynamic affiliation matching
+    # ------------------------------------------------------------------
+
+    def _enrich_ror_affiliations(self, paper: Dict) -> None:
+        """Match paper affiliations to ROR IDs using the ROR v2 API."""
+        affiliations = paper.get("affiliations")
+        if not affiliations:
+            return
+
+        if isinstance(affiliations, str):
+            affiliations = [affiliations]
+        if not isinstance(affiliations, list):
+            return
+
+        existing_rors = paper.get("rors") or []
+        seen_rors = {r.get("id", "") for r in existing_rors if isinstance(r, dict)}
+
+        for aff in affiliations:
+            if not isinstance(aff, str) or not aff.strip():
+                continue
+            try:
+                match = self.ror_client.match_affiliation(aff)
+            except Exception:
+                continue
+
+            if match and match.get("ror_id") and match["ror_id"] not in seen_rors:
+                existing_rors.append({
+                    "id": match["ror_id"],
+                    "url": match.get("ror_url", ""),
+                    "name": match.get("name", ""),
+                    "country": match.get("country", ""),
+                    "source": "ror_v2_affiliation",
+                })
+                seen_rors.add(match["ror_id"])
+
+        if existing_rors:
+            paper["rors"] = existing_rors
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _clean_doi_str(doi: str) -> str:
+        """Clean a DOI string."""
+        doi = (doi or "").strip()
+        for prefix in ["https://doi.org/", "http://doi.org/", "doi:", "DOI:"]:
+            if doi.lower().startswith(prefix.lower()):
+                doi = doi[len(prefix):]
+        return doi.strip()
 
     @staticmethod
     def _find_data_via_crossref(doi: str) -> List[Dict]:
