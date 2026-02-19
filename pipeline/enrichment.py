@@ -453,6 +453,12 @@ class Enricher:
                 "biostudies", "bioimage-archive", "empiar", "idr.openmicroscopy",
                 "openmicroscopy.org", "codeocean.com", "ssbd.riken.jp",
                 "10.5281/zenodo", "10.6084/m9.figshare", "10.5061/dryad",
+                "10.17605/OSF.IO",
+                "rcsb.org", "github.com", "gitlab.com", "bitbucket.org",
+                "cellimagelibrary.org", "bioimage.io",
+                "ncbi.nlm.nih.gov/sra", "ncbi.nlm.nih.gov/bioproject",
+                "dandiarchive.org", "openneuro.org", "neuromorpho.org",
+                "synapse.org", "jcb-dataviewer.rupress.org",
             ]
             domain_name_map = {
                 "zenodo": "Zenodo",
@@ -467,11 +473,25 @@ class Enricher:
                 "dataverse": "Dataverse",
                 "mendeley": "Mendeley Data",
                 "ncbi.nlm.nih.gov/geo": "GEO",
+                "ncbi.nlm.nih.gov/sra": "SRA",
+                "ncbi.nlm.nih.gov/bioproject": "SRA",
                 "codeocean": "Code Ocean",
                 "ssbd.riken": "SSBD",
                 "10.5281/zenodo": "Zenodo",
                 "10.6084/m9.figshare": "Figshare",
                 "10.5061/dryad": "Dryad",
+                "10.17605/OSF.IO": "OSF",
+                "rcsb.org": "PDB",
+                "github.com": "GitHub",
+                "gitlab.com": "GitLab",
+                "bitbucket.org": "Bitbucket",
+                "cellimagelibrary": "Cell Image Library",
+                "bioimage.io": "BioImage Model Zoo",
+                "dandiarchive": "DANDI",
+                "openneuro": "OpenNeuro",
+                "neuromorpho": "NeuroMorpho",
+                "synapse.org": "Synapse",
+                "jcb-dataviewer": "JCB DataViewer",
             }
 
             for link in message.get("link", []):

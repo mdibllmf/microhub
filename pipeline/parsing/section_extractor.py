@@ -209,7 +209,10 @@ def _extract_data_availability(text: str) -> str:
     _next_heading = re.compile(
         r"\n\s*(?:\d+\.?\s*)?(?:acknowledge?ments?|references?|funding|"
         r"supplementary|author\s+contributions?|competing\s+interests?|"
-        r"conflict\s+of\s+interest)\s*\n",
+        r"conflict\s+of\s+interest|ethics\s+(?:statement|approval)|"
+        r"extended\s+data|reporting\s+summary|online\s+methods|"
+        r"additional\s+information|key\s+resources?\s+table|"
+        r"star\s+methods|(?:experimental|materials?\s+and)\s+methods?)\s*\n",
         re.IGNORECASE,
     )
     end_m = _next_heading.search(text, start)

@@ -288,11 +288,12 @@
       "accession_id": "string (optional identifier)"
     },
     "all_valid_types": [
-      "ArrayExpress", "AWS Open Data", "BioImage Archive", "BioStudies", "Bitbucket",
-      "Code Ocean", "DANDI", "Dataverse", "Dryad",
+      "ArrayExpress", "AWS Open Data", "BioImage Archive", "BioImage Model Zoo",
+      "BioModels", "BioStudies", "Bitbucket",
+      "Cell Image Library", "Code Ocean", "DANDI", "Dataverse", "Dryad",
       "EMDB", "EMPIAR", "ENA", "Figshare", "GEO", "GitHub", "GitLab",
       "Hugging Face", "IDR", "IDR Dataset", "IDR Image", "IDR Project",
-      "Mendeley Data", "NeuroMorpho", "OMERO", "OMERO Public",
+      "JCB DataViewer", "Mendeley Data", "NeuroMorpho", "OMERO", "OMERO Public",
       "OpenNeuro", "OSF", "PDB", "PRIDE", "ProteomeXchange",
       "ScienceDB", "SRA", "SSBD", "Synapse", "Zenodo"
     ]
