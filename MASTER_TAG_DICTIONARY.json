@@ -79,7 +79,7 @@
     "import_call": "wp_set_object_terms($post_id, $data['image_analysis_software'], 'mh_analysis_software')",
     "all_valid_values": [
       "Aivia", "Amira", "Arivis", "AutoQuant", "BigDataViewer", "Bio-Formats",
-      "BioImage Suite", "CellProfiler", "CellSens", "Cellpose", "ChimeraX",
+      "BioImage Suite", "CellProfiler", "CellSens", "Cellpose", "ChimeraX", "Columbus",
       "DeconvolutionLab", "DeepCell", "Definiens", "Digital Micrograph", "Dragonfly",
       "EMAN2", "FluoView", "HALO", "Harmony", "Huygens", "IMOD", "Icy", "ImageJ", "Fiji",
       "Imaris", "LAS X", "MATLAB", "Mask R-CNN", "MetaMorph", "MicroManager",
@@ -223,15 +223,21 @@
     "import_call": "wp_set_object_terms($post_id, $data['sample_preparation'], 'mh_sample_prep')",
     "all_valid_values": [
       "3D Culture", "3DISCO", "AAV", "Adenoviral", "Antigen Retrieval", "Blocking",
+      "Brain Organoid", "Cardiac Organoid",
       "CLARITY", "CRISPR", "Cell Culture", "Co-culture", "Cryosectioning", "CUBIC",
       "eFLASH", "Electroporation", "Expansion Microscopy", "FISH", "Fixation",
-      "Flat Mount", "Glutaraldehyde", "H&E", "In Situ Hybridization",
+      "Flat Mount", "Gastric Organoid", "Glutaraldehyde", "H&E", "In Situ Hybridization",
       "Immunofluorescence", "Immunohistochemistry", "Immunostaining",
-      "Knockdown", "Knockout", "Lentiviral", "Lipofection", "Live Imaging",
-      "MERFISH", "Methanol Fixation", "Microtome", "Monolayer",
-      "OCT Embedding", "Organoid", "PACT", "Paraffin Embedding", "PEGASOS",
-      "Permeabilization", "Primary Culture", "RNAscope", "seqFISH", "SHIELD",
+      "Intestinal Organoid",
+      "Kidney Organoid", "Knockdown", "Knockout",
+      "Lentiviral", "Lipofection", "Live Imaging", "Liver Organoid", "Lung Organoid",
+      "Mammary Organoid", "MERFISH", "Methanol Fixation", "Microtome", "Monolayer",
+      "OCT Embedding", "Organoid", "PACT", "Pancreatic Organoid",
+      "Paraffin Embedding", "PEGASOS",
+      "Permeabilization", "Primary Culture", "Prostate Organoid",
+      "RNAscope", "Retinal Organoid", "seqFISH", "SHIELD",
       "Spheroid", "TUNEL", "Tissue Clearing", "Transfection", "Transduction",
+      "Tumor Organoid", "Tumor Spheroid",
       "Ultramicrotome", "Vibratome", "Whole Mount", "iDISCO", "smFISH", "uDISCO",
       "PFA Fixation"
     ]
@@ -282,10 +288,14 @@
       "accession_id": "string (optional identifier)"
     },
     "all_valid_types": [
-      "ArrayExpress", "BioImage Archive", "BioStudies", "Code Ocean", "Dryad",
-      "EMDB", "EMPIAR", "Figshare", "GEO", "GitHub", "GitLab", "IDR",
-      "IDR Dataset", "IDR Image", "IDR Project", "Mendeley Data", "OMERO",
-      "OMERO Public", "OSF", "PDB", "PRIDE", "SRA", "SSBD", "Zenodo"
+      "ArrayExpress", "AWS Open Data", "BioImage Archive", "BioImage Model Zoo",
+      "BioModels", "BioStudies", "Bitbucket",
+      "Cell Image Library", "Code Ocean", "DANDI", "Dataverse", "Dryad",
+      "EMDB", "EMPIAR", "ENA", "Figshare", "GEO", "GitHub", "GitLab",
+      "Hugging Face", "IDR", "IDR Dataset", "IDR Image", "IDR Project",
+      "JCB DataViewer", "Mendeley Data", "NeuroMorpho", "OMERO", "OMERO Public",
+      "OpenNeuro", "OSF", "PDB", "PRIDE", "ProteomeXchange",
+      "ScienceDB", "SRA", "SSBD", "Synapse", "Zenodo"
     ]
   },
 

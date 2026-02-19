@@ -23,7 +23,17 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "Glutaraldehyde": (re.compile(r"\bglutaraldehyde\b", re.I), 0.9),
 
     # Tissue clearing
-    "CLARITY": (re.compile(r"\bCLARITY\b"), 0.95),
+    # CLARITY requires tissue-clearing context to avoid matching the common
+    # English word (e.g. "with greater clarity").  Must appear near clearing-
+    # related terms or be explicitly described as a protocol/method.
+    "CLARITY": (re.compile(
+        r"\bCLARITY\b(?=.{0,60}(?:clear|tissue|brain|organ|hydrogel|protocol|method|label|immunostain|mouse|sample|intact|transparen))"
+        r"|(?:clear|tissue|brain|organ|hydrogel|protocol|method|transparen)\w*.{0,60}\bCLARITY\b"
+        r"|\bCLARITY[- ]?(?:protocol|method|clearing|based|optimized|compatible)\b"
+        r"|\b(?:modified|optimized|adapted)\s+CLARITY\b"
+        r"|\bCLARITY\s+SPIM\b",
+        re.I | re.S,
+    ), 0.95),
     "CUBIC": (re.compile(r"\bCUBIC\b"), 0.9),
     "iDISCO": (re.compile(r"\biDISCO\+?\b"), 0.95),
     "3DISCO": (re.compile(r"\b3DISCO\b"), 0.95),
@@ -78,8 +88,22 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "Flat Mount": (re.compile(r"\bflat[- ]?mount\b", re.I), 0.85),
     "Monolayer": (re.compile(r"\bmonolayer\b", re.I), 0.7),
 
-    # 3D cultures
+    # 3D cultures — specific organoid/spheroid types
+    "Brain Organoid": (re.compile(r"\b(?:brain|cerebral)\s+organoid\w*\b", re.I), 0.95),
+    "Kidney Organoid": (re.compile(r"\b(?:kidney|renal)\s+organoid\w*\b", re.I), 0.95),
+    "Intestinal Organoid": (re.compile(r"\b(?:intestin\w*|gut|colon|colonic)\s+organoid\w*\b", re.I), 0.95),
+    "Liver Organoid": (re.compile(r"\b(?:liver|hepatic)\s+organoid\w*\b", re.I), 0.95),
+    "Lung Organoid": (re.compile(r"\b(?:lung|pulmonary|airway)\s+organoid\w*\b", re.I), 0.95),
+    "Cardiac Organoid": (re.compile(r"\b(?:cardiac|heart)\s+organoid\w*\b", re.I), 0.95),
+    "Retinal Organoid": (re.compile(r"\b(?:retinal|retina)\s+organoid\w*\b", re.I), 0.95),
+    "Tumor Organoid": (re.compile(r"\b(?:tumor|tumour|cancer)\s+organoid\w*\b", re.I), 0.95),
+    "Pancreatic Organoid": (re.compile(r"\bpancreat\w+\s+organoid\w*\b", re.I), 0.95),
+    "Prostate Organoid": (re.compile(r"\bprostat\w+\s+organoid\w*\b", re.I), 0.95),
+    "Mammary Organoid": (re.compile(r"\b(?:mammary|breast)\s+organoid\w*\b", re.I), 0.95),
+    "Gastric Organoid": (re.compile(r"\b(?:gastric|stomach)\s+organoid\w*\b", re.I), 0.95),
+    # Generic organoid/spheroid (catch-all for untyped mentions)
     "Organoid": (re.compile(r"\borganoid\w*\b", re.I), 0.9),
+    "Tumor Spheroid": (re.compile(r"\b(?:tumor|tumour|cancer)\s+spheroid\w*\b", re.I), 0.95),
     "Spheroid": (re.compile(r"\bspheroid\w*\b", re.I), 0.9),
     "3D Culture": (re.compile(r"\b3D\s+(?:cell\s+)?cultur\w*\b", re.I), 0.85),
     "Co-culture": (re.compile(r"\bco[- ]?cultur\w*\b", re.I), 0.85),
@@ -87,6 +111,15 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     # Expansion microscopy (both technique and prep)
     "Expansion Microscopy": (re.compile(r"\bexpansion\s+microscop\w*\b", re.I), 0.9),
 }
+
+
+# Negative context for CLARITY — disqualify matches that are
+# the common English word, not the tissue-clearing protocol
+_CLARITY_NEGATIVE = re.compile(
+    r"(?:for|with|of|improved?|greater|more|less|optical|visual|provide|"
+    r"ensure|enhance|image|spatial|lack(?:s|ing)?)\s+clarity",
+    re.I,
+)
 
 
 class SamplePrepAgent(BaseAgent):
@@ -98,6 +131,14 @@ class SamplePrepAgent(BaseAgent):
         results: List[Extraction] = []
         for canonical, (pattern, base_conf) in SAMPLE_PREP_PATTERNS.items():
             for m in pattern.finditer(text):
+                # Extra check for CLARITY: reject if the surrounding text
+                # is using the common English word, not the protocol
+                if canonical == "CLARITY":
+                    start = max(0, m.start() - 30)
+                    context = text[start:m.end() + 20]
+                    if _CLARITY_NEGATIVE.search(context):
+                        continue
+
                 conf = base_conf
                 if section in ("methods", "materials"):
                     conf = min(conf + 0.1, 1.0)

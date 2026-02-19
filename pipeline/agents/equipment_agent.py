@@ -368,9 +368,14 @@ _LASER_SYSTEM_PATTERNS = [
     # Luigs & Neumann
     (re.compile(r"\bLuigs\s+(?:&|and)\s+Neumann\b", re.I), "Luigs & Neumann", "Luigs & Neumann", None),
 
-    # Generic branded laser mentions
-    (re.compile(r"\b(Coherent|Spectra[- ]?Physics|Toptica|Cobolt|Oxxius)\s+\w+\s*(?:laser)\b", re.I),
-     None, None, None),  # Brand captured in group 1
+    # Generic branded laser mentions — require model name (2+ chars) and
+    # exclude generic type words (laser, diode, gas, fiber, DPSS, CW)
+    (re.compile(
+        r"\b(Coherent|Spectra[- ]?Physics|Toptica|Cobolt|Oxxius)\s+"
+        r"(?!(?:laser|diode|gas|fiber|DPSS|CW|pulsed|femtosecond)\b)"
+        r"(\w{2,})\s*(?:laser)\b",
+        re.I,
+    ), None, None, None),  # Brand captured in group 1
 ]
 
 _LASER_WAVELENGTH_RE = re.compile(

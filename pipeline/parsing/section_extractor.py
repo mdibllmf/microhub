@@ -169,10 +169,19 @@ _FIGURE_CAPTION_RE = re.compile(
 _DATA_AVAIL_RE = re.compile(
     r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:"
     r"data\s+(?:and\s+(?:code|software|materials?)\s+)?availability"
-    r"|code\s+availability"
+    r"|code\s+(?:and\s+data\s+)?availability"
     r"|data\s+(?:access|deposition|sharing)"
     r"|(?:availability\s+of\s+(?:data|code|materials?))"
     r"|accession\s+(?:codes?|numbers?)"
+    r"|resource\s+availability"
+    r"|data\s+and\s+resource\s+sharing"
+    r"|materials?\s+availability"
+    r"|supplementary\s+(?:data|information|materials?)\s+availability"
+    r"|data\s+(?:repositor(?:y|ies)|archiv\w*)"
+    r"|associated\s+content"
+    r"|related\s+(?:data|datasets?)"
+    r"|data\s+records?"
+    r"|data\s+statement"
     r")\s*\n",
     re.IGNORECASE,
 )
@@ -200,7 +209,10 @@ def _extract_data_availability(text: str) -> str:
     _next_heading = re.compile(
         r"\n\s*(?:\d+\.?\s*)?(?:acknowledge?ments?|references?|funding|"
         r"supplementary|author\s+contributions?|competing\s+interests?|"
-        r"conflict\s+of\s+interest)\s*\n",
+        r"conflict\s+of\s+interest|ethics\s+(?:statement|approval)|"
+        r"extended\s+data|reporting\s+summary|online\s+methods|"
+        r"additional\s+information|key\s+resources?\s+table|"
+        r"star\s+methods|(?:experimental|materials?\s+and)\s+methods?)\s*\n",
         re.IGNORECASE,
     )
     end_m = _next_heading.search(text, start)
