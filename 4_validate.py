@@ -68,10 +68,16 @@ def main():
     tag_categories = [
         ("microscopy_techniques", "microscopy_techniques"),
         ("microscope_brands", "microscope_brands"),
+        ("microscope_models", "microscope_models"),
         ("fluorophores", "fluorophores"),
         ("organisms", "organisms"),
         ("cell_lines", "cell_lines"),
         ("sample_preparation", "sample_preparation"),
+        ("image_analysis_software", "image_analysis_software"),
+        ("image_acquisition_software", "image_acquisition_software"),
+        ("general_software", "general_software"),
+        ("reagent_suppliers", "reagent_suppliers"),
+        ("antibody_sources", "antibody_sources"),
     ]
 
     total_papers = 0

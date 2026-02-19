@@ -21,6 +21,7 @@ import glob
 import json
 import logging
 import os
+import re
 import sys
 
 logging.basicConfig(
@@ -30,6 +31,83 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# ======================================================================
+# Natural-language data-availability patterns
+# ======================================================================
+# Match prose like "deposited in Zenodo" / "available from Dryad" etc.
+# Used as a fallback when URL-based repository detection finds nothing.
+
+_DEPOSITION_VERBS = (
+    r"(?:deposited|available|stored|hosted|uploaded|shared|accessible)"
+)
+_PREPOSITIONS = r"(?:in|on|at|to|via|through|from)"
+
+_DATA_AVAIL_REPOS = {
+    "Zenodo": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?Zenodo\b", re.I),
+    "Dryad": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?Dryad\b", re.I),
+    "Figshare": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?[Ff]ig[Ss]hare\b", re.I),
+    "GEO": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:GEO|Gene Expression Omnibus)\b", re.I),
+    "SRA": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:SRA|Sequence Read Archive)\b", re.I),
+    "ArrayExpress": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?ArrayExpress\b", re.I),
+    "EMPIAR": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?EMPIAR\b", re.I),
+    "EMDB": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:EMDB|Electron Microscopy Data Bank)\b", re.I),
+    "PDB": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:PDB|Protein Data Bank)\b", re.I),
+    "BioImage Archive": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?BioImage Archive\b", re.I),
+    "IDR": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:Image Data Resource|IDR)\b", re.I),
+    "OMERO": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:an?\s+|and\s+)?OMERO\b", re.I),
+    "SSBD": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?SSBD\b", re.I),
+    "OSF": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:OSF|Open Science Framework)\b", re.I),
+    "PRIDE": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?PRIDE\b", re.I),
+    "ENA": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:ENA|European Nucleotide Archive)\b", re.I),
+    "BioStudies": re.compile(
+        _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?BioStudies\b", re.I),
+}
+
+
+def _mine_data_availability(paper):
+    """Scan text fields for natural-language repository references.
+
+    Used as a fallback when no repositories were found by URL-based
+    extraction.  Produces repository entries without URLs (name only) —
+    URLs can be filled in later via DOI lookup or manual curation.
+    """
+    # Gather text to scan (prefer full_text, fall back to abstract)
+    text = paper.get("full_text") or paper.get("abstract") or ""
+    methods = paper.get("methods") or ""
+    if methods:
+        text = text + "\n" + methods
+    if not text:
+        return
+
+    repos = []
+    seen = set()
+    for repo_name, pattern in _DATA_AVAIL_REPOS.items():
+        if pattern.search(text) and repo_name not in seen:
+            seen.add(repo_name)
+            repos.append({
+                "name": repo_name,
+                "source": "data_availability_mining",
+            })
+
+    if repos:
+        paper["repositories"] = repos
 
 
 def _rescan_repositories(paper, repo_scanner):
@@ -159,6 +237,34 @@ def _rescan_repositories(paper, repo_scanner):
                 paper["github_url"] = ext.metadata.get("url")
                 break
 
+    # --- Merge RORs ---
+    existing_rors = paper.get("rors") or []
+    if isinstance(existing_rors, str):
+        try:
+            existing_rors = json.loads(existing_rors)
+        except (json.JSONDecodeError, TypeError):
+            existing_rors = []
+
+    existing_ror_ids = set()
+    for r in existing_rors:
+        if isinstance(r, dict):
+            existing_ror_ids.add((r.get("id") or "").lower())
+        elif isinstance(r, str):
+            existing_ror_ids.add(r.lower())
+
+    for ext in all_extractions:
+        if ext.label == "ROR":
+            ror_id = ext.metadata.get("canonical", "")
+            url = ext.metadata.get("url", "")
+            if ror_id.lower() not in existing_ror_ids:
+                existing_rors.append({
+                    "id": ror_id,
+                    "url": url,
+                })
+                existing_ror_ids.add(ror_id.lower())
+
+    paper["rors"] = existing_rors
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -282,6 +388,10 @@ def main():
                     except (json.JSONDecodeError, TypeError):
                         paper[field] = []
 
+            # Preserve original RORs in case rescan can't re-derive them
+            # (institution lookup depends on affiliations which may be absent in rescan)
+            original_rors = list(paper.get("rors") or [])
+
             # Optionally re-run agents — merge results with existing data
             if enricher is not None:
                 agent_results = enricher.process_paper(paper)
@@ -314,6 +424,11 @@ def main():
                         if not paper.get(key):
                             paper[key] = val
 
+            # Safety: never downgrade rors to empty if we had them before
+            # (institution lookup depends on affiliations which may be absent in rescan)
+            if not paper.get("rors") and original_rors:
+                paper["rors"] = original_rors
+
             # Normalize tag names (scraper variants → canonical forms)
             normalize_tags(paper)
 
@@ -322,6 +437,11 @@ def main():
             # Zenodo DOIs, OMERO links, Figshare DOIs, etc. that appear in
             # title, abstract, methods, or full_text.
             _rescan_repositories(paper, repo_scanner)
+
+            # Mine data-availability sections for unlinked repositories
+            # (fallback for papers with "deposited in X" prose but no URLs)
+            if not paper.get("repositories"):
+                _mine_data_availability(paper)
 
             # Normalize all identifiers (DOIs, RRIDs, RORs, repo URLs)
             id_normalizer.normalize_paper(paper)

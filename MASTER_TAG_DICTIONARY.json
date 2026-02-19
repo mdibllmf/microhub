@@ -170,7 +170,7 @@
       "Venus", "Voltron",
       "WGA", "X-Rhod-1",
       "YFP", "YPet",
-      "dLight", "eFluor", "jRGECO",
+      "eFluor",
       "AcGFP", "AmCyan", "mEGFP", "ZsGreen",
       "Ace2N", "VARNAM", "FlicR1", "MacQ", "paQuasAr",
       "GACh", "iAChSnFR", "iSeroSnFR", "FLEX sensors",
@@ -178,8 +178,7 @@
       "DsRed-Express", "DsRed-Monomer",
       "CFP-YFP FRET", "mTurquoise-Venus", "Cerulean-Venus",
       "SCFP", "SBFP", "SYFP2", "PhiYFP", "mBanana", "Azurite", "mKalama1",
-      "mGrape", "mMaroon", "IFP", "mIrisFP", "mClavGR2", "mGeos",
-      "dLight", "GRAB-DA"
+      "mGrape", "mMaroon", "IFP", "mIrisFP", "mClavGR2", "mGeos"
     ]
   },
 
@@ -270,7 +269,7 @@
       "Bio-protocol", "Biotechniques", "Cold Spring Harbor Protocols",
       "Current Protocols", "JoVE", "MethodsX", "Methods in Enzymology",
       "Methods in Molecular Biology", "Nature Protocols", "Protocol Exchange",
-      "STAR Protocols"
+      "STAR Protocols", "protocols.io"
     ]
   },
 
@@ -292,8 +291,8 @@
       "BioModels", "BioStudies", "Bitbucket",
       "Cell Image Library", "Code Ocean", "DANDI", "Dataverse", "Dryad",
       "EMDB", "EMPIAR", "ENA", "Figshare", "GEO", "GitHub", "GitLab",
-      "Hugging Face", "IDR", "IDR Dataset", "IDR Image", "IDR Project",
-      "JCB DataViewer", "Mendeley Data", "NeuroMorpho", "OMERO", "OMERO Public",
+      "Hugging Face", "IDR",
+      "JCB DataViewer", "Mendeley Data", "NeuroMorpho", "OMERO",
       "OpenNeuro", "OSF", "PDB", "PRIDE", "ProteomeXchange",
       "ScienceDB", "SRA", "SSBD", "Synapse", "Zenodo"
     ]
@@ -355,5 +354,57 @@
       "source": "string (institution_lookup, text, url)"
     },
     "notes": "ROR IDs are primarily looked up from institution names via INSTITUTION_ROR_IDS dictionary, not extracted from paper text"
+  },
+
+  "general_software": {
+    "scraper_key": null,
+    "cleanup_key": null,
+    "cleanup_extraction_dict": null,
+    "export_field": "general_software",
+    "wp_taxonomy": "mh_software",
+    "wp_meta_key": "_mh_general_software",
+    "import_call": "wp_set_object_terms($post_id, $data['general_software'], 'mh_software')",
+    "all_valid_values": [
+      "Excel", "GraphPad Prism", "Igor Pro", "JMP", "Julia",
+      "LabVIEW", "Maple", "Mathematica", "MATLAB", "MEGA",
+      "MetaMorph", "Origin", "Perl", "Prism", "Python", "R",
+      "RStudio", "SAS", "SPSS", "Stata", "Wolfram"
+    ]
+  },
+
+  "reagent_suppliers": {
+    "scraper_key": null,
+    "cleanup_key": null,
+    "cleanup_extraction_dict": null,
+    "export_field": "reagent_suppliers",
+    "wp_taxonomy": "mh_reagent_supplier",
+    "wp_meta_key": "_mh_reagent_suppliers",
+    "import_call": "wp_set_object_terms($post_id, $data['reagent_suppliers'], 'mh_reagent_supplier')",
+    "all_valid_values": [
+      "Abcam", "Addgene", "BD Biosciences", "Bio-Rad",
+      "BioLegend", "Cell Signaling Technology", "Corning",
+      "Cytiva", "Dako", "eBioscience", "EMD Millipore",
+      "GeneTex", "Gibco", "IDT", "Invitrogen", "Jackson ImmunoResearch",
+      "Life Technologies", "Merck", "Millipore", "Molecular Probes",
+      "New England Biolabs", "Novus Biologicals", "PerkinElmer",
+      "Promega", "QIAGEN", "R&D Systems", "Roche",
+      "Santa Cruz Biotechnology", "Sigma-Aldrich", "Thermo Fisher",
+      "Tocris", "VWR"
+    ]
+  },
+
+  "antibody_sources": {
+    "scraper_key": null,
+    "cleanup_key": null,
+    "cleanup_extraction_dict": null,
+    "export_field": "antibody_sources",
+    "wp_taxonomy": "mh_antibody_source",
+    "wp_meta_key": "_mh_antibody_sources",
+    "import_call": "wp_set_object_terms($post_id, $data['antibody_sources'], 'mh_antibody_source')",
+    "all_valid_values": [
+      "Armenian Hamster", "Chicken", "Donkey", "Goat", "Guinea Pig",
+      "Hamster", "Horse", "Human", "Llama", "Mouse",
+      "Rabbit", "Rat", "Sheep"
+    ]
   }
 }
