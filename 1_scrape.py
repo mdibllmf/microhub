@@ -148,6 +148,7 @@ def enrich_papers(
         "cell_lines", "sample_preparation", "protocols",
         "repositories", "rrids", "rors", "institutions",
         "objectives", "lasers", "detectors", "filters",
+        "affiliations",
     ]
     scalar_fields = ["github_url", "tag_source"]
 
