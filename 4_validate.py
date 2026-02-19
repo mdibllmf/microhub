@@ -75,6 +75,9 @@ def main():
         ("sample_preparation", "sample_preparation"),
         ("image_analysis_software", "image_analysis_software"),
         ("image_acquisition_software", "image_acquisition_software"),
+        ("general_software", "general_software"),
+        ("reagent_suppliers", "reagent_suppliers"),
+        ("antibody_sources", "antibody_sources"),
     ]
 
     total_papers = 0
