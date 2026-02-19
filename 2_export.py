@@ -54,8 +54,8 @@ def main():
                         help="Only methods-extracted tags")
     parser.add_argument("--chunk-size", type=int, default=500,
                         help="Papers per JSON file (default: 500)")
-    parser.add_argument("--enrich", action="store_true",
-                        help="Re-run agent pipeline for fresh tag extraction")
+    parser.add_argument("--no-enrich", action="store_true",
+                        help="Skip agent pipeline enrichment (NOT recommended)")
 
     args = parser.parse_args()
 
@@ -72,14 +72,16 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     output = os.path.join(out_dir, os.path.basename(output))
 
-    # Optional agent enrichment
+    # Agent enrichment (always on by default)
     enricher = None
-    if args.enrich:
-        logger.info("Agent enrichment enabled — tags will be refreshed")
+    if not args.no_enrich:
+        logger.info("Agent enrichment enabled — tags will be extracted fresh")
         dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
         enricher = PipelineOrchestrator(
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None
         )
+    else:
+        logger.info("Agent enrichment DISABLED (--no-enrich) — using raw DB values")
 
     logger.info("=" * 60)
     logger.info("STEP 2 — EXPORT (DB → chunked JSON)")
@@ -87,7 +89,7 @@ def main():
     logger.info("Database:   %s", db_path)
     logger.info("Output dir: %s", out_dir)
     logger.info("Chunk size: %d", args.chunk_size)
-    logger.info("Enrich:     %s", "yes" if args.enrich else "no")
+    logger.info("Enrich:     %s", "no (--no-enrich)" if args.no_enrich else "yes")
     logger.info("")
 
     exporter = JsonExporter(db_path=db_path)

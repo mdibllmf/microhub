@@ -275,8 +275,8 @@ def main():
     parser.add_argument("--input-dir", help="Input directory (default: raw_export/)")
     parser.add_argument("--output-dir", default="cleaned_export",
                         help="Output directory (default: cleaned_export/)")
-    parser.add_argument("--enrich", action="store_true",
-                        help="Re-run agent pipeline during cleanup")
+    parser.add_argument("--no-enrich", action="store_true",
+                        help="Skip agent pipeline enrichment (NOT recommended)")
     parser.add_argument("--skip-api", action="store_true",
                         help="Skip all API enrichment (GitHub/S2/CrossRef)")
     parser.add_argument("--no-github", action="store_true",
@@ -326,9 +326,9 @@ def main():
         out_dir = os.path.join(SCRIPT_DIR, out_dir)
     os.makedirs(out_dir, exist_ok=True)
 
-    # --- Optional agent enrichment ---
+    # --- Agent enrichment (always on by default) ---
     enricher = None
-    if args.enrich:
+    if not args.no_enrich:
         dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
         enricher = PipelineOrchestrator(
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None,
@@ -348,7 +348,7 @@ def main():
     logger.info("=" * 60)
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
-    logger.info("Enrich:      %s", "yes" if args.enrich else "no")
+    logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
     logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")
     logger.info("")
