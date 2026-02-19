@@ -308,9 +308,17 @@ def main():
             input_path = os.path.join(SCRIPT_DIR, input_path)
         input_files = [input_path]
     else:
-        input_dir = args.input_dir or "raw_export"
-        if not os.path.isabs(input_dir):
-            input_dir = os.path.join(SCRIPT_DIR, input_dir)
+        input_dir = args.input_dir
+        if input_dir:
+            if not os.path.isabs(input_dir):
+                input_dir = os.path.join(SCRIPT_DIR, input_dir)
+        else:
+            # Auto-detect: prefer raw_export/, fall back to project root
+            raw_export_dir = os.path.join(SCRIPT_DIR, "raw_export")
+            if os.path.isdir(raw_export_dir) and glob.glob(os.path.join(raw_export_dir, "*.json")):
+                input_dir = raw_export_dir
+            else:
+                input_dir = SCRIPT_DIR
         # Try several naming patterns
         input_files = sorted(glob.glob(os.path.join(input_dir, "*_chunk_*.json")))
         if not input_files:
