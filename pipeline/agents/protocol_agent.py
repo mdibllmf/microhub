@@ -181,7 +181,11 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         r"|(?:available|deposited|hosted|stored|accessible|uploaded|shared|import\w*"
         r"|saving|saved|manage\w*)\s+(?:in|on|via|through|at|to|into)\s+OMERO\b"
         # OMERO Public / OMERO server with preceding article
-        r"|\b(?:an?|the)\s+OMERO\s+(?:server|instance|database)\b",
+        r"|\b(?:an?|the)\s+OMERO\s+(?:server|instance|database)\b"
+        # OME/OMERO compound reference (e.g., "OME/OMERO ... software used")
+        r"|\bOME\s*/\s*OMERO\b"
+        # OMERO with "used" or "software" context (e.g., "OMERO ... software used in this paper")
+        r"|\bOMERO\b(?=.{0,50}(?:software|used\s+in|used\s+for|used\s+to))",
         re.I | re.S,
     ), 0.85),
     "SSBD": (re.compile(

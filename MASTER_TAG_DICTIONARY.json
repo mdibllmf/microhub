@@ -170,7 +170,7 @@
       "Venus", "Voltron",
       "WGA", "X-Rhod-1",
       "YFP", "YPet",
-      "dLight", "eFluor", "jRGECO",
+      "eFluor",
       "AcGFP", "AmCyan", "mEGFP", "ZsGreen",
       "Ace2N", "VARNAM", "FlicR1", "MacQ", "paQuasAr",
       "GACh", "iAChSnFR", "iSeroSnFR", "FLEX sensors",
@@ -178,8 +178,7 @@
       "DsRed-Express", "DsRed-Monomer",
       "CFP-YFP FRET", "mTurquoise-Venus", "Cerulean-Venus",
       "SCFP", "SBFP", "SYFP2", "PhiYFP", "mBanana", "Azurite", "mKalama1",
-      "mGrape", "mMaroon", "IFP", "mIrisFP", "mClavGR2", "mGeos",
-      "dLight", "GRAB-DA"
+      "mGrape", "mMaroon", "IFP", "mIrisFP", "mClavGR2", "mGeos"
     ]
   },
 
@@ -270,7 +269,7 @@
       "Bio-protocol", "Biotechniques", "Cold Spring Harbor Protocols",
       "Current Protocols", "JoVE", "MethodsX", "Methods in Enzymology",
       "Methods in Molecular Biology", "Nature Protocols", "Protocol Exchange",
-      "STAR Protocols"
+      "STAR Protocols", "protocols.io"
     ]
   },
 
@@ -292,8 +291,8 @@
       "BioModels", "BioStudies", "Bitbucket",
       "Cell Image Library", "Code Ocean", "DANDI", "Dataverse", "Dryad",
       "EMDB", "EMPIAR", "ENA", "Figshare", "GEO", "GitHub", "GitLab",
-      "Hugging Face", "IDR", "IDR Dataset", "IDR Image", "IDR Project",
-      "JCB DataViewer", "Mendeley Data", "NeuroMorpho", "OMERO", "OMERO Public",
+      "Hugging Face", "IDR",
+      "JCB DataViewer", "Mendeley Data", "NeuroMorpho", "OMERO",
       "OpenNeuro", "OSF", "PDB", "PRIDE", "ProteomeXchange",
       "ScienceDB", "SRA", "SSBD", "Synapse", "Zenodo"
     ]

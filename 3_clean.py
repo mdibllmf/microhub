@@ -159,6 +159,34 @@ def _rescan_repositories(paper, repo_scanner):
                 paper["github_url"] = ext.metadata.get("url")
                 break
 
+    # --- Merge RORs ---
+    existing_rors = paper.get("rors") or []
+    if isinstance(existing_rors, str):
+        try:
+            existing_rors = json.loads(existing_rors)
+        except (json.JSONDecodeError, TypeError):
+            existing_rors = []
+
+    existing_ror_ids = set()
+    for r in existing_rors:
+        if isinstance(r, dict):
+            existing_ror_ids.add((r.get("id") or "").lower())
+        elif isinstance(r, str):
+            existing_ror_ids.add(r.lower())
+
+    for ext in all_extractions:
+        if ext.label == "ROR":
+            ror_id = ext.metadata.get("canonical", "")
+            url = ext.metadata.get("url", "")
+            if ror_id.lower() not in existing_ror_ids:
+                existing_rors.append({
+                    "id": ror_id,
+                    "url": url,
+                })
+                existing_ror_ids.add(ror_id.lower())
+
+    paper["rors"] = existing_rors
+
 
 def main():
     parser = argparse.ArgumentParser(
