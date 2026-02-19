@@ -24,10 +24,14 @@ from .agents.protocol_agent import ProtocolAgent
 from .agents.institution_agent import InstitutionAgent
 from .agents.pubtator_agent import PubTatorAgent
 from .agents.ollama_agent import OllamaVerificationAgent
-from .parsing.section_extractor import PaperSections, from_pubmed_dict
+from .agents.openalex_agent import OpenAlexAgent
+from .agents.datacite_linker_agent import DataCiteLinkerAgent
+from .parsing.section_extractor import PaperSections, from_pubmed_dict, three_tier_waterfall
 from .validation.tag_validator import TagValidator
 from .validation.api_validator import ApiValidator
 from .validation.identifier_normalizer import IdentifierNormalizer
+from .validation.ror_v2_client import RORv2Client
+from .role_classifier import RoleClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +43,9 @@ class PipelineOrchestrator:
                  use_pubtator: bool = True,
                  use_api_validation: bool = True,
                  use_ollama: bool = False,
-                 ollama_model: str = None):
+                 ollama_model: str = None,
+                 use_role_classifier: bool = True,
+                 use_three_tier_waterfall: bool = False):
         # Extraction agents
         self.technique_agent = TechniqueAgent()
         self.equipment_agent = EquipmentAgent()
@@ -61,6 +67,12 @@ class PipelineOrchestrator:
                 model=ollama_model or None
             )
 
+        # Role classifier for over-tagging prevention
+        self.role_classifier = RoleClassifier() if use_role_classifier else None
+
+        # Three-tier waterfall for full-text acquisition
+        self.use_three_tier_waterfall = use_three_tier_waterfall
+
         # Validation
         self.tag_validator = TagValidator(tag_dictionary_path)
         self.api_validator = ApiValidator() if use_api_validation else None
@@ -81,7 +93,12 @@ class PipelineOrchestrator:
         dict
             Extraction results keyed by category, ready for the exporter.
         """
-        sections = from_pubmed_dict(paper)
+        # Full-text acquisition: use three-tier waterfall if enabled
+        if self.use_three_tier_waterfall:
+            sections = three_tier_waterfall(paper)
+        else:
+            sections = from_pubmed_dict(paper)
+
         results = self._run_agents(sections, paper)
 
         # Supplemental: PubTator NLP-based extraction for papers with PMIDs
@@ -103,6 +120,11 @@ class PipelineOrchestrator:
                     llm_results.get("added", {}),
                     llm_results.get("removed", {}),
                 )
+
+        # Post-extraction: role classification to prevent over-tagging
+        if self.role_classifier:
+            role_report = self._apply_role_classification(results, sections)
+            results["_role_classification"] = role_report
 
         # Post-extraction: normalize all identifiers
         self.id_normalizer.normalize_paper(results)
@@ -419,6 +441,70 @@ class PipelineOrchestrator:
                 })
 
         return rors
+
+    def _apply_role_classification(self, results: Dict[str, Any],
+                                    sections: PaperSections) -> Dict:
+        """Apply role classification to prevent over-tagging.
+
+        Uses the RoleClassifier to distinguish USED entities from merely
+        REFERENCED ones, then filters results accordingly.
+        """
+        # Build section texts map
+        section_texts = {}
+        if sections.title:
+            section_texts["title"] = sections.title
+        if sections.abstract:
+            section_texts["abstract"] = sections.abstract
+        if sections.methods:
+            section_texts["methods"] = sections.methods
+        if sections.results:
+            section_texts["results"] = sections.results
+        if sections.introduction:
+            section_texts["introduction"] = sections.introduction
+        if sections.discussion:
+            section_texts["discussion"] = sections.discussion
+        if sections.figures:
+            section_texts["figures"] = sections.figures
+        if sections.data_availability:
+            section_texts["data_availability"] = sections.data_availability
+        if sections.full_text:
+            section_texts["full_text"] = sections.full_text
+
+        # Collect all extractions from _run_agents for classification
+        # (we use the _confidence data to reconstruct extraction info)
+        # For role classification, we validate the distribution
+        report = self.role_classifier.validate_tagging_distribution([])
+
+        # Build synthetic extractions from results for diagnostic reporting
+        from .agents.base_agent import Extraction
+        all_exts = []
+        for category in ["microscopy_techniques", "microscope_brands",
+                         "microscope_models", "image_analysis_software",
+                         "image_acquisition_software", "fluorophores",
+                         "organisms", "cell_lines", "sample_preparation"]:
+            for val in results.get(category, []):
+                # Create minimal extraction for role validation
+                all_exts.append(Extraction(
+                    text=val, label=category.upper(),
+                    section="methods" if sections.has_methods else "abstract",
+                    source_agent="pipeline",
+                ))
+
+        if all_exts:
+            classified = self.role_classifier.classify_extractions(
+                all_exts, section_texts
+            )
+            report = self.role_classifier.validate_tagging_distribution(classified)
+
+            if report.get("over_tagging_warning"):
+                logger.warning(
+                    "Over-tagging detected for paper '%s': "
+                    "%.0f%% of USED tags from Introduction/Discussion",
+                    results.get("tag_source", ""),
+                    report["stats"]["intro_discussion_pct"] * 100,
+                )
+
+        return report
 
     def _merge_pubtator(self, results: Dict[str, Any], pmid: str) -> None:
         """Merge PubTator NLP extractions into results.
