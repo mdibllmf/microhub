@@ -490,6 +490,9 @@ class JsonExporter:
             "cell_lines", "sample_preparation", "protocols",
             "repositories", "rrids", "rors", "institutions",
             "objectives", "lasers", "detectors", "filters",
+            "imaging_modalities", "staining_methods",
+            "embedding_methods", "fixation_methods", "mounting_media",
+            "antibodies", "affiliations",
             "github_url", "tag_source",
         ]
 
