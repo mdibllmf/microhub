@@ -569,7 +569,11 @@ def main():
             paper["has_openalex"] = bool(paper.get("openalex_id"))
             paper["has_oa"] = bool(paper.get("oa_status"))
             paper["has_fwci"] = paper.get("fwci") is not None and paper.get("fwci") != ""
-            paper["has_datasets"] = bool(paper.get("repositories"))
+            paper["has_datasets"] = bool([
+                r for r in paper.get("repositories", [])
+                if isinstance(r, dict) and r.get("source") in ("datacite", "openaire", "crossref-relation", "text_pattern")
+            ])
+            paper["is_open_access"] = paper.get("is_open_access", False)
             paper["has_openalex_topics"] = bool(paper.get("openalex_topics"))
             paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions"))
             paper["has_fields_of_study"] = bool(paper.get("fields_of_study"))

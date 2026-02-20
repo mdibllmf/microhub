@@ -31,7 +31,7 @@ from .validation.tag_validator import TagValidator
 from .validation.api_validator import ApiValidator
 from .validation.identifier_normalizer import IdentifierNormalizer
 from .validation.ror_v2_client import RORv2Client
-from .role_classifier import RoleClassifier
+from .role_classifier import RoleClassifier, EntityRole
 
 logger = logging.getLogger(__name__)
 
@@ -121,10 +121,9 @@ class PipelineOrchestrator:
                     llm_results.get("removed", {}),
                 )
 
-        # Post-extraction: role classification to prevent over-tagging
-        if self.role_classifier:
-            role_report = self._apply_role_classification(results, sections)
-            results["_role_classification"] = role_report
+        # Role classification is now applied inside _run_agents() where
+        # raw extractions with position data are still available.
+        # The _role_classification report is already in results if enabled.
 
         # Post-extraction: normalize all identifiers
         self.id_normalizer.normalize_paper(results)
@@ -191,6 +190,40 @@ class PipelineOrchestrator:
             institution_exts = self.institution_agent.analyze_affiliations(affiliations)
         elif isinstance(affiliations, str) and affiliations:
             institution_exts = self.institution_agent.analyze(affiliations, "affiliation")
+
+        # ---- Role classification: filter REFERENCED entities ----
+        if self.role_classifier:
+            section_texts = {}
+            for text, sec_type in self._section_texts(sections):
+                section_texts[sec_type] = text
+
+            # Classify all classifiable extractions (not protocols/institutions)
+            all_classifiable = (
+                technique_exts + equipment_exts + fluorophore_exts +
+                organism_exts + software_exts + sample_prep_exts +
+                cell_line_exts
+            )
+
+            classified = self.role_classifier.classify_extractions(
+                all_classifiable, section_texts
+            )
+            filtered = self.role_classifier.filter_used_entities(classified)
+
+            # Replace technique_exts with filtered version
+            # (start with techniques — highest over-tagging rate)
+            filtered_technique_canonicals = {
+                c.canonical.lower() for c in filtered
+                if c.label == "MICROSCOPY_TECHNIQUE"
+            }
+            technique_exts = [
+                e for e in technique_exts
+                if e.canonical().lower() in filtered_technique_canonicals
+            ]
+
+            # Store role classification stats in results
+            role_report = self.role_classifier.validate_tagging_distribution(classified)
+        else:
+            role_report = None
 
         # ---- Collect canonical values by category ----
         results: Dict[str, Any] = {}
@@ -270,6 +303,10 @@ class PipelineOrchestrator:
             organism_exts + software_exts + sample_prep_exts +
             cell_line_exts + protocol_exts + institution_exts
         )
+
+        # Role classification report (if classifier was used)
+        if role_report:
+            results["_role_classification"] = role_report
 
         return results
 
@@ -441,70 +478,6 @@ class PipelineOrchestrator:
                 })
 
         return rors
-
-    def _apply_role_classification(self, results: Dict[str, Any],
-                                    sections: PaperSections) -> Dict:
-        """Apply role classification to prevent over-tagging.
-
-        Uses the RoleClassifier to distinguish USED entities from merely
-        REFERENCED ones, then filters results accordingly.
-        """
-        # Build section texts map
-        section_texts = {}
-        if sections.title:
-            section_texts["title"] = sections.title
-        if sections.abstract:
-            section_texts["abstract"] = sections.abstract
-        if sections.methods:
-            section_texts["methods"] = sections.methods
-        if sections.results:
-            section_texts["results"] = sections.results
-        if sections.introduction:
-            section_texts["introduction"] = sections.introduction
-        if sections.discussion:
-            section_texts["discussion"] = sections.discussion
-        if sections.figures:
-            section_texts["figures"] = sections.figures
-        if sections.data_availability:
-            section_texts["data_availability"] = sections.data_availability
-        if sections.full_text:
-            section_texts["full_text"] = sections.full_text
-
-        # Collect all extractions from _run_agents for classification
-        # (we use the _confidence data to reconstruct extraction info)
-        # For role classification, we validate the distribution
-        report = self.role_classifier.validate_tagging_distribution([])
-
-        # Build synthetic extractions from results for diagnostic reporting
-        from .agents.base_agent import Extraction
-        all_exts = []
-        for category in ["microscopy_techniques", "microscope_brands",
-                         "microscope_models", "image_analysis_software",
-                         "image_acquisition_software", "fluorophores",
-                         "organisms", "cell_lines", "sample_preparation"]:
-            for val in results.get(category, []):
-                # Create minimal extraction for role validation
-                all_exts.append(Extraction(
-                    text=val, label=category.upper(),
-                    section="methods" if sections.has_methods else "abstract",
-                    source_agent="pipeline",
-                ))
-
-        if all_exts:
-            classified = self.role_classifier.classify_extractions(
-                all_exts, section_texts
-            )
-            report = self.role_classifier.validate_tagging_distribution(classified)
-
-            if report.get("over_tagging_warning"):
-                logger.warning(
-                    "Over-tagging detected for paper '%s': "
-                    "%.0f%% of USED tags from Introduction/Discussion",
-                    results.get("tag_source", ""),
-                    report["stats"]["intro_discussion_pct"] * 100,
-                )
-
-        return report
 
     def _merge_pubtator(self, results: Dict[str, Any], pmid: str) -> None:
         """Merge PubTator NLP extractions into results.

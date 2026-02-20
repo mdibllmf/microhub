@@ -6,10 +6,20 @@ Extracts research institutions ONLY from author affiliation strings
 citation mentions).  Maps institutions to ROR IDs where known.
 """
 
+import logging
 import re
+import time
 from typing import Dict, List, Optional
 
 from .base_agent import BaseAgent, Extraction
+
+logger = logging.getLogger(__name__)
+
+try:
+    import requests as _requests_lib
+    _HAS_REQUESTS = True
+except ImportError:
+    _HAS_REQUESTS = False
 
 # ======================================================================
 # Known institutions with ROR IDs
@@ -227,14 +237,89 @@ class InstitutionAgent(BaseAgent):
                 # Skip very short matches (likely false positives)
                 if len(name) < 5:
                     continue
+                # Try ROR v2 API lookup for this institution
+                ror_result = self.resolve_ror_via_api(name)
+                metadata = {"canonical": name}
+                conf = 0.7
+                if ror_result:
+                    metadata["ror_id"] = ror_result["ror_id"]
+                    metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
+                    metadata["canonical"] = ror_result["name"]  # Use official name
+                    conf = 0.85  # Higher confidence with API confirmation
+
                 extractions.append(Extraction(
                     text=name,
                     label="INSTITUTION",
                     start=m.start(), end=m.end(),
-                    confidence=0.7,
+                    confidence=conf,
                     source_agent=self.name,
                     section=section or "",
-                    metadata={"canonical": name},
+                    metadata=metadata,
                 ))
 
         return extractions
+
+    # ------------------------------------------------------------------
+    # ROR v2 API fallback for institutions not in the hardcoded map
+    # ------------------------------------------------------------------
+
+    _ror_api_cache: Dict[str, Optional[Dict]] = {}
+    _last_ror_call: float = 0.0
+    _ROR_DELAY: float = 0.15  # 2000 req/5min = ~6.6/sec
+
+    def resolve_ror_via_api(self, institution_name: str) -> Optional[Dict]:
+        """Look up ROR ID for an institution name via ROR v2 API.
+
+        Only called for institutions NOT in the hardcoded INSTITUTION_ROR_IDS.
+        Results are cached for the lifetime of this agent instance.
+        """
+        if not _HAS_REQUESTS:
+            return None
+
+        cache_key = institution_name.lower().strip()
+        if cache_key in self._ror_api_cache:
+            return self._ror_api_cache[cache_key]
+
+        elapsed = time.time() - self._last_ror_call
+        if elapsed < self._ROR_DELAY:
+            time.sleep(self._ROR_DELAY - elapsed)
+
+        try:
+            resp = _requests_lib.get(
+                "https://api.ror.org/v2/organizations",
+                params={"query": institution_name},
+                timeout=10,
+            )
+            InstitutionAgent._last_ror_call = time.time()
+
+            if resp.status_code != 200:
+                self._ror_api_cache[cache_key] = None
+                return None
+
+            data = resp.json()
+            items = data.get("items", [])
+            if not items:
+                self._ror_api_cache[cache_key] = None
+                return None
+
+            # Take the top result — ROR's search is relevance-ranked
+            top = items[0]
+            ror_id_full = top.get("id", "")  # e.g. "https://ror.org/0xxxxxxxx"
+            ror_id = ror_id_full.replace("https://ror.org/", "").strip()
+            official_name = ""
+            for name_entry in top.get("names", []):
+                if "ror_display" in name_entry.get("types", []):
+                    official_name = name_entry.get("value", "")
+                    break
+            if not official_name:
+                names = top.get("names", [])
+                official_name = names[0].get("value", institution_name) if names else institution_name
+
+            result = {"ror_id": ror_id, "name": official_name}
+            self._ror_api_cache[cache_key] = result
+            return result
+
+        except Exception as exc:
+            logger.debug("ROR API error for '%s': %s", institution_name, exc)
+            self._ror_api_cache[cache_key] = None
+            return None

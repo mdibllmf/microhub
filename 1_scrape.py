@@ -180,10 +180,16 @@ def enrich_papers(
                     sections = three_tier_waterfall(paper)
                     if sections and sections.full_text:
                         paper["full_text"] = sections.full_text
-                        conn.execute(
-                            "UPDATE papers SET full_text = ? WHERE id = ?",
-                            (sections.full_text, paper["id"]),
-                        )
+                        if sections.methods:
+                            paper["methods"] = sections.methods
+                        updates_sql = "UPDATE papers SET full_text = ?"
+                        params_sql = [sections.full_text]
+                        if sections.methods:
+                            updates_sql += ", methods = ?"
+                            params_sql.append(sections.methods)
+                        updates_sql += " WHERE id = ?"
+                        params_sql.append(paper["id"])
+                        conn.execute(updates_sql, params_sql)
                         conn.commit()
                         logger.info(
                             "Three-tier waterfall: retrieved full text for DOI %s (%d chars, source=%s)",
