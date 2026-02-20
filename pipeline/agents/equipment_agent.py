@@ -41,9 +41,7 @@ MICROSCOPE_BRANDS: Dict[str, str] = {
     "hamamatsu": "Hamamatsu",
     "hamamatsu photonics": "Hamamatsu",
     "jeol": "JEOL",
-    "thermo fisher": "Thermo Fisher",
-    "thermofisher": "Thermo Fisher",
-    "fei": "Thermo Fisher",
+    "fei": "FEI",
     "bruker": "Bruker",
     "coherent": "Coherent",
     "thorlabs": "Thorlabs",
@@ -122,8 +120,8 @@ _BRAND_CONTEXT_PATTERNS = [
     (re.compile(r"\b3i\s+(?:Marianas|SlideBook|spinning)", re.I), "3i (Intelligent Imaging)"),
     # "PCO" needs context (common abbreviation)
     (re.compile(r"\bpco\s*\.?\s*(?:edge|panda|dimax|pixelfly|flim|camera)", re.I), "PCO"),
-    # "FEI" needs context (now Thermo Fisher)
-    (re.compile(r"\bFEI\s+(?:Tecnai|Talos|Titan|Helios|Magellan|Quanta|Scios|Verios)", re.I), "Thermo Fisher"),
+    # "FEI" needs context (electron microscope brand, now owned by Thermo Fisher)
+    (re.compile(r"\bFEI\s+(?:Tecnai|Talos|Titan|Helios|Magellan|Quanta|Scios|Verios)", re.I), "FEI"),
     # "JEOL" needs context
     (re.compile(r"\bJEOL\s+(?:JEM|JSM|ARM|JBIC|\d{3,4})", re.I), "JEOL"),
 ]
@@ -167,12 +165,12 @@ MODEL_PATTERNS: List[tuple] = [
     (re.compile(r"\bBX63\b"), lambda m: "BX63", "Olympus"),
     (re.compile(r"\bVS120\b"), lambda m: "VS120", "Olympus"),
 
-    # Electron microscope models
-    (re.compile(r"\bTitan\s*(?:Krios)?\b", re.I), lambda m: "Titan", "Thermo Fisher"),
-    (re.compile(r"\bGlacios\b", re.I), lambda m: "Glacios", "Thermo Fisher"),
-    (re.compile(r"\bTalos\b", re.I), lambda m: "Talos", "Thermo Fisher"),
-    (re.compile(r"\bTecnai\b", re.I), lambda m: "Tecnai", "Thermo Fisher"),
-    (re.compile(r"\bCM200\b"), lambda m: "CM200", "Thermo Fisher"),
+    # Electron microscope models (FEI brand, now owned by Thermo Fisher)
+    (re.compile(r"\bTitan\s*(?:Krios)?\b", re.I), lambda m: "Titan", "FEI"),
+    (re.compile(r"\bGlacios\b", re.I), lambda m: "Glacios", "FEI"),
+    (re.compile(r"\bTalos\b", re.I), lambda m: "Talos", "FEI"),
+    (re.compile(r"\bTecnai\b", re.I), lambda m: "Tecnai", "FEI"),
+    (re.compile(r"\bCM200\b"), lambda m: "CM200", "FEI"),
     (re.compile(r"\bJEM-?(?:1400|2100)\b"), lambda m: m.group(0), "JEOL"),
 
     # SPIM systems (these are specific microscope systems)
