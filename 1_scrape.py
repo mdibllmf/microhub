@@ -22,6 +22,8 @@ Usage:
     python 1_scrape.py --enrich-limit 500    # only enrich 500 papers
     python 1_scrape.py --ollama              # include Ollama LLM verification
     python 1_scrape.py --no-pubtator         # skip PubTator NLP extraction
+    python 1_scrape.py --three-tier          # use Europe PMC → Unpaywall+GROBID → abstract waterfall
+    python 1_scrape.py --no-role-classifier  # disable over-tagging prevention
 
 Scraper flags (forwarded to backup/microhub_scraper.py):
     --db PATH               Database path (default: microhub.db)
@@ -69,6 +71,8 @@ def enrich_papers(
     use_pubtator: bool = True,
     use_ollama: bool = False,
     ollama_model: str = None,
+    use_three_tier_waterfall: bool = False,
+    use_role_classifier: bool = True,
 ) -> int:
     """Run pipeline agents on papers in the DB and update with results.
 
@@ -84,6 +88,11 @@ def enrich_papers(
         Enable Ollama LLM verification of Methods sections.
     ollama_model : str, optional
         Ollama model name override.
+    use_three_tier_waterfall : bool
+        Use three-tier waterfall (Europe PMC → Unpaywall+GROBID → abstract)
+        for full-text acquisition instead of SciHub fallback.
+    use_role_classifier : bool
+        Enable multi-stage role classification for over-tagging prevention.
 
     Returns
     -------
@@ -93,7 +102,6 @@ def enrich_papers(
     from pipeline.orchestrator import PipelineOrchestrator
     from pipeline.normalization import normalize_tags
     from pipeline.validation.identifier_normalizer import IdentifierNormalizer
-    from pipeline.parsing.scihub_fetcher import fetch_fulltext_via_scihub
 
     dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
     orchestrator = PipelineOrchestrator(
@@ -102,6 +110,8 @@ def enrich_papers(
         use_api_validation=True,
         use_ollama=use_ollama,
         ollama_model=ollama_model,
+        use_role_classifier=use_role_classifier,
+        use_three_tier_waterfall=use_three_tier_waterfall,
     )
     id_normalizer = IdentifierNormalizer()
 
@@ -132,8 +142,10 @@ def enrich_papers(
     logger.info("PHASE B — AGENT ENRICHMENT")
     logger.info("=" * 60)
     logger.info("Papers to enrich: %d", total)
-    logger.info("PubTator:  %s", "yes" if use_pubtator else "no")
-    logger.info("Ollama:    %s", "yes" if use_ollama else "no")
+    logger.info("PubTator:        %s", "yes" if use_pubtator else "no")
+    logger.info("Ollama:          %s", "yes" if use_ollama else "no")
+    logger.info("Three-tier:      %s", "yes" if use_three_tier_waterfall else "no")
+    logger.info("Role classifier: %s", "yes" if use_role_classifier else "no")
     logger.info("")
 
     enriched_count = 0
@@ -157,24 +169,41 @@ def enrich_papers(
         pmid = paper.get("pmid", "?")
 
         try:
-            # SciHub fallback: if paper has DOI but no full text, try to
+            # Full-text acquisition: if paper has no full text, try to
             # retrieve it now so agents have full text to work with.
-            # The text is stored in the DB for tag extraction only.
             full_text = paper.get("full_text") or ""
             doi = paper.get("doi") or ""
             if not full_text and doi:
-                scihub_text = fetch_fulltext_via_scihub(doi)
-                if scihub_text:
-                    paper["full_text"] = scihub_text
-                    conn.execute(
-                        "UPDATE papers SET full_text = ? WHERE id = ?",
-                        (scihub_text, paper["id"]),
-                    )
-                    conn.commit()
-                    logger.info(
-                        "SciHub: retrieved full text for DOI %s (%d chars)",
-                        doi, len(scihub_text),
-                    )
+                if use_three_tier_waterfall:
+                    # Three-tier waterfall: Europe PMC → Unpaywall+GROBID → abstract
+                    from pipeline.parsing.section_extractor import three_tier_waterfall
+                    sections = three_tier_waterfall(paper)
+                    if sections and sections.full_text:
+                        paper["full_text"] = sections.full_text
+                        conn.execute(
+                            "UPDATE papers SET full_text = ? WHERE id = ?",
+                            (sections.full_text, paper["id"]),
+                        )
+                        conn.commit()
+                        logger.info(
+                            "Three-tier waterfall: retrieved full text for DOI %s (%d chars, source=%s)",
+                            doi, len(sections.full_text), sections.source or "unknown",
+                        )
+                else:
+                    # Legacy SciHub fallback
+                    from pipeline.parsing.scihub_fetcher import fetch_fulltext_via_scihub
+                    scihub_text = fetch_fulltext_via_scihub(doi)
+                    if scihub_text:
+                        paper["full_text"] = scihub_text
+                        conn.execute(
+                            "UPDATE papers SET full_text = ? WHERE id = ?",
+                            (scihub_text, paper["id"]),
+                        )
+                        conn.commit()
+                        logger.info(
+                            "SciHub: retrieved full text for DOI %s (%d chars)",
+                            doi, len(scihub_text),
+                        )
 
             # Parse JSON fields so the orchestrator gets proper lists
             for field in list_fields:
@@ -305,6 +334,11 @@ def main():
                         help="Ollama model name (default: llama3.1)")
     parser.add_argument("--no-pubtator", action="store_true",
                         help="Skip PubTator NLP extraction during enrichment")
+    parser.add_argument("--three-tier", action="store_true",
+                        help="Use three-tier waterfall (Europe PMC → Unpaywall+GROBID → abstract) "
+                             "for full-text acquisition instead of SciHub fallback")
+    parser.add_argument("--no-role-classifier", action="store_true",
+                        help="Disable role classifier (over-tagging prevention)")
     parser.add_argument("--db", default="microhub.db",
                         help="Database path (default: microhub.db)")
 
@@ -351,6 +385,8 @@ def main():
             use_pubtator=not known.no_pubtator,
             use_ollama=known.ollama,
             ollama_model=known.ollama_model,
+            use_three_tier_waterfall=known.three_tier,
+            use_role_classifier=not known.no_role_classifier,
         )
 
     logger.info("")

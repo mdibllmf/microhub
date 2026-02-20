@@ -10,7 +10,10 @@ WordPress-ready files.
     python 3_clean.py --input-dir raw_export/             # read from step 2 output
     python 3_clean.py --output-dir cleaned_export/        # write here
     python 3_clean.py --no-enrich                         # skip agent pipeline (NOT recommended)
-    python 3_clean.py --skip-api                          # skip GitHub/S2/CrossRef API enrichment
+    python 3_clean.py --skip-api                          # skip all API enrichment
+    python 3_clean.py --no-openalex                       # skip OpenAlex enrichment
+    python 3_clean.py --no-datacite                       # skip DataCite/OpenAIRE dataset linking
+    python 3_clean.py --no-ror                            # skip ROR v2 affiliation matching
 
 Input:  raw_export/*_chunk_*.json   (from step 2)
 Output: cleaned_export/*_chunk_*.json (ready for step 4 and WordPress)
@@ -320,6 +323,12 @@ def main():
                         help="Skip Semantic Scholar API calls")
     parser.add_argument("--no-crossref", action="store_true",
                         help="Skip CrossRef API calls")
+    parser.add_argument("--no-openalex", action="store_true",
+                        help="Skip OpenAlex API enrichment")
+    parser.add_argument("--no-datacite", action="store_true",
+                        help="Skip DataCite/OpenAIRE dataset link discovery")
+    parser.add_argument("--no-ror", action="store_true",
+                        help="Skip ROR v2 affiliation matching")
     parser.add_argument("--ollama", action="store_true",
                         help="Use local Ollama LLM to verify Methods section tags")
     parser.add_argument("--ollama-model", default=None,
@@ -396,6 +405,13 @@ def main():
     logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
     logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")
+    if api_enrich:
+        logger.info("  OpenAlex:  %s", "no" if args.no_openalex else "yes")
+        logger.info("  DataCite:  %s", "no" if args.no_datacite else "yes")
+        logger.info("  ROR v2:    %s", "no" if args.no_ror else "yes")
+        logger.info("  GitHub:    %s", "no" if args.no_github else "yes")
+        logger.info("  S2 cites:  %s", "no" if args.no_citations else "yes")
+        logger.info("  CrossRef:  %s", "no" if args.no_crossref else "yes")
     logger.info("")
 
     total_papers = 0
@@ -549,18 +565,30 @@ def main():
             paper["has_detectors"] = bool(paper.get("detectors"))
             paper["has_filters"] = bool(paper.get("filters"))
 
+            # New enrichment boolean flags (v6.1)
+            paper["has_openalex"] = bool(paper.get("openalex_id"))
+            paper["has_oa"] = bool(paper.get("oa_status"))
+            paper["has_fwci"] = paper.get("fwci") is not None and paper.get("fwci") != ""
+            paper["has_datasets"] = bool(paper.get("repositories"))
+            paper["has_openalex_topics"] = bool(paper.get("openalex_topics"))
+            paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions"))
+            paper["has_fields_of_study"] = bool(paper.get("fields_of_study"))
+
             # Remove full_text from output (tags already extracted)
             paper.pop("full_text", None)
 
             cleaned.append(paper)
 
-        # Batch API enrichment (S2 citations in bulk, then per-paper GH/CrossRef)
+        # Batch API enrichment (OpenAlex first, S2 citations, then per-paper GH/CrossRef/DataCite/ROR)
         if enricher_api is not None:
             enricher_api.enrich_batch(
                 cleaned,
+                fetch_openalex=not args.no_openalex,
                 fetch_github=not args.no_github,
                 fetch_citations=not args.no_citations,
                 fetch_crossref_repos=not args.no_crossref,
+                fetch_datacite=not args.no_datacite,
+                fetch_ror=not args.no_ror,
             )
 
         # Write output
