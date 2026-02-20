@@ -106,6 +106,15 @@ class PipelineOrchestrator:
         if self.pubtator_agent and pmid:
             self._merge_pubtator(results, pmid)
 
+        # Post-PubTator: re-validate tags to ensure PubTator additions
+        # conform to the master dictionary (prevents over-tagging with
+        # organisms, cell lines, or fluorophores not in our taxonomy)
+        for category in ("organisms", "fluorophores", "cell_lines"):
+            if category in results and results[category]:
+                results[category] = self.tag_validator.filter_valid(
+                    category, results[category]
+                )
+
         # Post-extraction: validate tags against authoritative APIs
         if self.api_validator:
             self.api_validator.validate_paper(results)
@@ -209,16 +218,38 @@ class PipelineOrchestrator:
             )
             filtered = self.role_classifier.filter_used_entities(classified)
 
-            # Replace technique_exts with filtered version
-            # (start with techniques — highest over-tagging rate)
-            filtered_technique_canonicals = {
-                c.canonical.lower() for c in filtered
-                if c.label == "MICROSCOPY_TECHNIQUE"
-            }
-            technique_exts = [
-                e for e in technique_exts
-                if e.canonical().lower() in filtered_technique_canonicals
+            # Build per-label sets of canonicals that passed role classification
+            filtered_by_label = {}
+            for c in filtered:
+                filtered_by_label.setdefault(c.label, set()).add(c.canonical.lower())
+
+            # Filter ALL entity types through the role classifier
+            # (prevents over-tagging from Introduction/Discussion references)
+            def _role_filter(exts, label):
+                allowed = filtered_by_label.get(label)
+                if allowed is None:
+                    return exts  # label not classified → pass through
+                return [e for e in exts if e.canonical().lower() in allowed]
+
+            technique_exts = _role_filter(technique_exts, "MICROSCOPY_TECHNIQUE")
+            # Equipment has multiple sub-labels — filter each independently
+            equipment_exts = [
+                e for e in equipment_exts
+                if e.canonical().lower() in filtered_by_label.get(
+                    e.label, {e.canonical().lower()}  # pass through if label not classified
+                )
             ]
+            fluorophore_exts = _role_filter(fluorophore_exts, "FLUOROPHORE")
+            organism_exts = _role_filter(organism_exts, "ORGANISM")
+            # Software has multiple sub-labels — filter each independently
+            software_exts = [
+                e for e in software_exts
+                if e.canonical().lower() in filtered_by_label.get(
+                    e.label, {e.canonical().lower()}  # pass through if label not classified
+                )
+            ]
+            sample_prep_exts = _role_filter(sample_prep_exts, "SAMPLE_PREPARATION")
+            cell_line_exts = _role_filter(cell_line_exts, "CELL_LINE")
 
             # Store role classification stats in results
             role_report = self.role_classifier.validate_tagging_distribution(classified)

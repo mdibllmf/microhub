@@ -213,6 +213,30 @@ ORGANISM_RENAMES: Dict[str, str] = {
     # Full Latin names that need species-level normalization
     "Canis familiaris": "Canis lupus familiaris",
     "Callithrix jacchus": "Callithrix jacchus",
+    # New organisms
+    "Cow": "Bos taurus",
+    "Cattle": "Bos taurus",
+    "Bovine": "Bos taurus",
+    "Sheep": "Ovis aries",
+    "Ovine": "Ovis aries",
+    "Horse": "Equus caballus",
+    "Equine": "Equus caballus",
+    "Dictyostelium": "Dictyostelium discoideum",
+    "Neurospora": "Neurospora crassa",
+    "Chlamydomonas": "Chlamydomonas reinhardtii",
+    "Trypanosome": "Trypanosoma brucei",
+    "Trypanosoma": "Trypanosoma brucei",
+    "Plasmodium": "Plasmodium falciparum",
+    "Ciona": "Ciona intestinalis",
+    "Tunicate": "Ciona intestinalis",
+    "Hydra": "Hydra vulgaris",
+    "Nematostella": "Nematostella vectensis",
+    "Aedes": "Aedes aegypti",
+    "Honeybee": "Apis mellifera",
+    "Honey bee": "Apis mellifera",
+    "Daphnia": "Daphnia magna",
+    "Planarian": "Schmidtea mediterranea",
+    "Planaria": "Schmidtea mediterranea",
 }
 
 # ======================================================================
@@ -238,6 +262,105 @@ CELL_LINE_RENAMES: Dict[str, str] = {
     "MEF": "Mouse Embryonic Fibroblast",
     "iPSC": "Induced Pluripotent Stem Cell",
     "ESC": "Embryonic Stem Cell",
+    # New immortalized lines
+    "Jurkat": "Human T-cell Leukemia Jurkat",
+    "K562": "Human Chronic Myelogenous Leukemia K562",
+    "HepG2": "Human Hepatocellular Carcinoma HepG2",
+    "Hep G2": "Human Hepatocellular Carcinoma HepG2",
+    "Caco-2": "Human Colorectal Adenocarcinoma Caco-2",
+    "Caco2": "Human Colorectal Adenocarcinoma Caco-2",
+    "HUVEC": "Human Umbilical Vein Endothelial Cell",
+    "HUVECs": "Human Umbilical Vein Endothelial Cell",
+    "HT-29": "Human Colorectal Adenocarcinoma HT-29",
+    "HT29": "Human Colorectal Adenocarcinoma HT-29",
+    "HCT116": "Human Colorectal Carcinoma HCT116",
+    "HCT-116": "Human Colorectal Carcinoma HCT116",
+    "MDA-MB-231": "Human Breast Adenocarcinoma MDA-MB-231",
+    "THP-1": "Human Acute Monocytic Leukemia THP-1",
+    "THP1": "Human Acute Monocytic Leukemia THP-1",
+    "HL-60": "Human Promyelocytic Leukemia HL-60",
+    "HL60": "Human Promyelocytic Leukemia HL-60",
+    "N2a": "Mouse Neuroblastoma Neuro-2a",
+    "Neuro-2a": "Mouse Neuroblastoma Neuro-2a",
+    "Neuro2a": "Mouse Neuroblastoma Neuro-2a",
+    "C2C12": "Mouse Myoblast C2C12",
+    "L929": "Mouse Fibroblast L929",
+    "BHK-21": "Baby Hamster Kidney BHK-21",
+    "BHK21": "Baby Hamster Kidney BHK-21",
+    "DLD-1": "Human Colorectal Adenocarcinoma DLD-1",
+    "SW480": "Human Colorectal Adenocarcinoma SW480",
+    "SW-480": "Human Colorectal Adenocarcinoma SW480",
+    "SK-BR-3": "Human Breast Carcinoma SK-BR-3",
+    "SKBR3": "Human Breast Carcinoma SK-BR-3",
+    "PANC-1": "Human Pancreatic Carcinoma PANC-1",
+    "PANC1": "Human Pancreatic Carcinoma PANC-1",
+    "MCF-10A": "Human Mammary Epithelial MCF-10A",
+    "MCF10A": "Human Mammary Epithelial MCF-10A",
+    "IMR-90": "Human Fetal Lung Fibroblast IMR-90",
+    "IMR90": "Human Fetal Lung Fibroblast IMR-90",
+    "WI-38": "Human Fetal Lung Fibroblast WI-38",
+    "WI38": "Human Fetal Lung Fibroblast WI-38",
+    "4T1": "Mouse Mammary Carcinoma 4T1",
+    "B16": "Mouse Melanoma B16",
+    "B16-F10": "Mouse Melanoma B16",
+    "CT26": "Mouse Colon Carcinoma CT26",
+    "RAW264.7": "Mouse Macrophage RAW 264.7",
+    "RAW 264.7": "Mouse Macrophage RAW 264.7",
+    "SiHa": "Human Cervical Carcinoma SiHa",
+    "ARPE-19": "Human Retinal Pigment Epithelium ARPE-19",
+    "C6": "Rat Glioma C6",
+    "MDCK-II": "Dog Kidney MDCK-II",
+    "PC-3": "Human Prostate Cancer PC-3",
+    "PC3": "Human Prostate Cancer PC-3",
+    "LNCaP": "Human Prostate Cancer LNCaP",
+    "U-87 MG": "Human Glioblastoma U-87 MG",
+    "U87": "Human Glioblastoma U-87 MG",
+    "U-251 MG": "Human Glioblastoma U-251 MG",
+    "U251": "Human Glioblastoma U-251 MG",
+    "NCI-H460": "Human Non-Small Cell Lung Cancer NCI-H460",
+    "CCRF-CEM": "Human T Lymphoblast CCRF-CEM",
+    # Cell type abbreviations
+    "MSC": "Primary Mesenchymal Stem Cells",
+    "MSCs": "Primary Mesenchymal Stem Cells",
+    "NSC": "Neural Stem Cells",
+    "NSCs": "Neural Stem Cells",
+    "HSC": "Hematopoietic Stem Cells",
+    "HSCs": "Hematopoietic Stem Cells",
+    "NK cells": "Primary Natural Killer Cells",
+}
+
+# ======================================================================
+# Sample preparation rename map (acronyms → full names)
+# ======================================================================
+
+SAMPLE_PREP_RENAMES: Dict[str, str] = {
+    # Tissue clearing acronyms → full names
+    "CLARITY": "Clear Lipid-exchanged Acrylamide-hybridized Rigid Imaging-compatible Tissue-hydrogel",
+    "CUBIC": "Clear Unobstructed Brain Imaging Cocktails and Computational analysis",
+    "3DISCO": "Three-Dimensional Imaging of Solvent-Cleared Organs",
+    "iDISCO": "Immunolabeling-enabled Three-Dimensional Imaging of Solvent-Cleared Organs",
+    "iDISCO+": "Immunolabeling-enabled Three-Dimensional Imaging of Solvent-Cleared Organs",
+    "uDISCO": "Ultimate Three-Dimensional Imaging of Solvent-Cleared Organs",
+    "SHIELD": "Stabilization to Harsh conditions via Intramolecular Epoxide Linkages to prevent Degradation",
+    "PACT": "Passive CLARITY Technique",
+    "PEGASOS": "Polyethylene Glycol-Associated Solvent System",
+    "eFLASH": "Enhanced Fluorescence-Assisted Shotgun Histology",
+    # Molecular biology acronyms → full names
+    "AAV": "Adeno-Associated Virus",
+    "CRISPR": "Clustered Regularly Interspaced Short Palindromic Repeats",
+    "FISH": "Fluorescence In Situ Hybridization",
+    "MERFISH": "Multiplexed Error-Robust Fluorescence In Situ Hybridization",
+    "seqFISH": "Sequential Fluorescence In Situ Hybridization",
+    "smFISH": "Single-Molecule Fluorescence In Situ Hybridization",
+    "TUNEL": "Terminal Deoxynucleotidyl Transferase dUTP Nick End Labeling",
+    "H&E": "Hematoxylin and Eosin",
+    # Embedding/fixation acronyms
+    "OCT Embedding": "Optimal Cutting Temperature Embedding",
+    "PFA Fixation": "Paraformaldehyde Fixation",
+    "PFA": "Paraformaldehyde Fixation",
+    # Immunochemistry abbreviations
+    "IHC": "Immunohistochemistry",
+    "IF": "Immunofluorescence",
 }
 
 # Tags that are NOT valid organisms and should be removed entirely
@@ -272,6 +395,7 @@ def normalize_tags(paper: Dict) -> Dict:
     _apply(paper, "image_analysis_software", SOFTWARE_RENAMES)
     _apply(paper, "organisms", ORGANISM_RENAMES)
     _apply(paper, "cell_lines", CELL_LINE_RENAMES)
+    _apply(paper, "sample_preparation", SAMPLE_PREP_RENAMES)
 
     # Remove invalid organism tags and deduplicate after renames
     _clean_organisms(paper)

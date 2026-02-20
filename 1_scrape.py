@@ -161,6 +161,10 @@ def enrich_papers(
         "repositories", "rrids", "rors", "institutions",
         "objectives", "lasers", "detectors", "filters",
         "affiliations",
+        "imaging_modalities", "staining_methods",
+        "embedding_methods", "fixation_methods", "mounting_media",
+        "antibodies", "figures", "references",
+        "supplementary_materials",
     ]
     scalar_fields = ["github_url", "tag_source"]
 
