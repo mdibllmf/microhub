@@ -18,6 +18,7 @@ Usage:
 
 import logging
 import re
+import threading
 import time
 from typing import Any, Dict, List, Optional, Set
 from urllib.parse import quote
@@ -106,6 +107,7 @@ class DataCiteLinkerAgent:
     def __init__(self):
         self._last_call = 0.0
         self._delay = 0.3
+        self._lock = threading.Lock()
 
     def find_dataset_links(self, *, doi: str = None,
                            text: str = None) -> List[Dict[str, Any]]:
@@ -174,7 +176,6 @@ class DataCiteLinkerAgent:
                 f"{_DATACITE_BASE}/dois/{quote(doi, safe='')}",
                 timeout=15,
             )
-            self._last_call = time.time()
 
             if resp.status_code != 200:
                 return []
@@ -259,7 +260,6 @@ class DataCiteLinkerAgent:
                 },
                 timeout=15,
             )
-            self._last_call = time.time()
 
             if resp.status_code != 200:
                 return []
@@ -359,7 +359,6 @@ class DataCiteLinkerAgent:
                     f"{_DATACITE_BASE}/dois/{quote(doi, safe='')}",
                     timeout=10,
                 )
-                self._last_call = time.time()
                 if resp.status_code == 200:
                     resource_type = (
                         resp.json()
@@ -388,9 +387,11 @@ class DataCiteLinkerAgent:
         return "Unknown"
 
     def _rate_limit(self):
-        elapsed = time.time() - self._last_call
-        if elapsed < self._delay:
-            time.sleep(self._delay - elapsed)
+        with self._lock:
+            elapsed = time.time() - self._last_call
+            if elapsed < self._delay:
+                time.sleep(self._delay - elapsed)
+            self._last_call = time.time()
 
     @staticmethod
     def _clean_doi(doi: str) -> str:
