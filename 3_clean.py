@@ -530,11 +530,9 @@ def main():
             # Sync aliases
             paper["techniques"] = paper.get("microscopy_techniques", [])
             paper["tags"] = paper.get("microscopy_techniques", [])
-            paper["software"] = list(set(
-                (paper.get("image_analysis_software") or []) +
-                (paper.get("image_acquisition_software") or []) +
-                (paper.get("general_software") or [])
-            ))
+            # software = acquisition software only (microscope control: ZEN, LAS X, etc.)
+            # Analysis and general software have their own dedicated fields
+            paper["software"] = paper.get("image_acquisition_software") or []
 
             # Boolean flags — preserve has_full_text before stripping
             paper["has_full_text"] = (
