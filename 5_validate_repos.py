@@ -80,6 +80,7 @@ def main():
     from pipeline.agents.github_health_agent import GitHubHealthAgent
     from pipeline.agents.rrid_validation_agent import RRIDValidationAgent
     from pipeline.agents.crossref_agent import CrossRefValidationAgent
+    from pipeline.agents.datacite_linker_agent import DataCiteLinkerAgent
 
     # --- Resolve input ---
     input_dir = args.input_dir
@@ -116,12 +117,17 @@ def main():
         agent_names.append("GitHub Health")
 
     if not args.skip_rrids:
-        agents.append(RRIDValidationAgent())
+        rrid_cache_path = os.path.join(SCRIPT_DIR, ".rrid_cache.json")
+        rrid_agent = RRIDValidationAgent(cache_path=rrid_cache_path)
+        agents.append(rrid_agent)
         agent_names.append("RRID Validation")
 
     if not args.skip_crossref:
         agents.append(CrossRefValidationAgent(s2_api_key=s2_key))
         agent_names.append("CrossRef Validation")
+
+    # Dataset linking is always on (cheap API calls, high value)
+    dataset_linker = DataCiteLinkerAgent()
 
     if not agents:
         logger.warning("All agents skipped — nothing to do!")
@@ -158,6 +164,30 @@ def main():
             for agent in agents:
                 agent.validate(paper)
 
+            # Also run dataset linker to discover linked datasets
+            doi = paper.get("doi", "")
+            text = paper.get("data_availability", "") or paper.get("full_text", "")
+            if doi or text:
+                ds_links = dataset_linker.find_dataset_links(doi=doi, text=text)
+                if ds_links:
+                    existing_repos = paper.get("repositories") or []
+                    if not isinstance(existing_repos, list):
+                        existing_repos = []
+                    existing_urls = {
+                        (r.get("url") or "").lower().rstrip("/")
+                        for r in existing_repos if isinstance(r, dict)
+                    }
+                    for link in ds_links:
+                        url = (link.get("url") or "").lower().rstrip("/")
+                        if url and url not in existing_urls:
+                            existing_repos.append({
+                                "url": link.get("url", ""),
+                                "name": link.get("repository", "Linked Dataset"),
+                                "source": link.get("source", "datacite"),
+                            })
+                            existing_urls.add(url)
+                    paper["repositories"] = existing_repos
+
             # Count stats
             for repo in paper.get("repositories", []):
                 if isinstance(repo, dict):
@@ -187,12 +217,20 @@ def main():
 
         logger.info("  → %d papers → %s", len(papers), os.path.basename(out_file))
 
+    # Save RRID cache for future runs
+    if not args.skip_rrids:
+        try:
+            rrid_agent.save_cache()
+        except Exception:
+            pass
+
     logger.info("")
     logger.info("=" * 60)
     logger.info("STEP 5 COMPLETE: %d papers validated", validated_count)
     logger.info("  Repos confirmed: %d", repos_confirmed)
     logger.info("  Repos dead:      %d", repos_dead)
     logger.info("  RRIDs validated:  %d", rrids_validated)
+    logger.info("  Datasets linked:  (see repositories with source=datacite/openaire)")
     logger.info("=" * 60)
 
 

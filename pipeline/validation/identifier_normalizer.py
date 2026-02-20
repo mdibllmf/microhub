@@ -27,6 +27,7 @@ class IdentifierNormalizer:
         self._normalize_pmid(paper)
         self._normalize_rrids(paper)
         self._normalize_rors(paper)
+        self._validate_ror_preservation(paper)
         self._normalize_repositories(paper)
         self._normalize_github_tools(paper)
         self._normalize_accession_ids(paper)
@@ -178,6 +179,52 @@ class IdentifierNormalizer:
             normalized.append(ror_entry)
 
         paper["rors"] = normalized
+
+    # ------------------------------------------------------------------
+    # ROR preservation — ensure institution ROR IDs exist in rors list
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _validate_ror_preservation(paper: Dict) -> None:
+        """Ensure ROR IDs from institutions are preserved in the rors list.
+
+        Checks that every institution with a known ROR ID has a
+        corresponding entry in the paper's 'rors' list.
+        """
+        institutions = paper.get("institutions", [])
+        rors = paper.get("rors", [])
+
+        if not institutions or not isinstance(institutions, list):
+            return
+
+        # Build set of existing ROR IDs
+        existing_ror_ids = set()
+        if isinstance(rors, list):
+            for ror in rors:
+                if isinstance(ror, dict):
+                    ror_id = ror.get("id", "")
+                    if ror_id:
+                        existing_ror_ids.add(ror_id.lower())
+
+        # Cross-reference: for any institution dict with ror_id metadata,
+        # ensure it appears in the rors list
+        added = False
+        for inst in institutions:
+            if isinstance(inst, dict):
+                ror_id = inst.get("ror_id", "")
+                if ror_id and ror_id.lower() not in existing_ror_ids:
+                    if not isinstance(rors, list):
+                        rors = []
+                    rors.append({
+                        "id": ror_id,
+                        "url": f"https://ror.org/{ror_id}",
+                        "source": "institution_recovery",
+                    })
+                    existing_ror_ids.add(ror_id.lower())
+                    added = True
+
+        if added:
+            paper["rors"] = rors
 
     # ------------------------------------------------------------------
     # Repository URLs

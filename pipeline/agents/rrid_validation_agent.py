@@ -17,7 +17,9 @@ Cross-referencing:
   - If an RRID resolves to software, checks against the software tags
 """
 
+import json
 import logging
+import os
 import time
 from typing import Any, Dict, List, Optional, Set
 
@@ -35,11 +37,32 @@ class RRIDValidationAgent:
 
     name = "rrid_validation"
 
-    def __init__(self):
+    def __init__(self, cache_path: str = None):
         self._cache: Dict[str, Optional[Dict]] = {}
+        self._cache_path = cache_path
         self._last_call = 0.0
         self._delay = 0.5
         self._exhausted = False
+
+        # Load persistent cache if available
+        if cache_path and os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r") as f:
+                    self._cache = json.load(f)
+                logger.info("RRID cache loaded: %d entries", len(self._cache))
+            except Exception:
+                pass
+
+    def save_cache(self):
+        """Persist the RRID validation cache to disk."""
+        if not self._cache_path:
+            return
+        try:
+            with open(self._cache_path, "w") as f:
+                json.dump(self._cache, f, indent=2)
+            logger.info("RRID cache saved: %d entries", len(self._cache))
+        except Exception as exc:
+            logger.debug("Failed to save RRID cache: %s", exc)
 
     def validate(self, paper: Dict[str, Any]) -> Dict[str, Any]:
         """Validate all RRIDs in a paper.  Mutates in-place."""
