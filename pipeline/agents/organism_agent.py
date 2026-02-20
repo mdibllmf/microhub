@@ -6,8 +6,8 @@ Common names alone ("mouse", "rat", "zebrafish") are NEVER matched
 to eliminate false positives from antibody descriptions (e.g.
 "anti-rat", "rabbit polyclonal", "goat secondary").
 
-Latin names are then normalised to a single canonical display name
-(e.g. "Mus musculus" → "Mouse") in the normalization step.
+Canonical names are always the full scientific (Latin) binomial name
+(e.g. "Mus musculus", "Danio rerio"), never common names.
 """
 
 import re
@@ -16,69 +16,69 @@ from typing import Dict, List, Set
 from .base_agent import BaseAgent, Extraction
 
 # ======================================================================
-# Latin name → canonical display name
+# Latin name → canonical scientific name
 # ======================================================================
 
 ORGANISM_LATIN: Dict[str, str] = {
-    # Full Latin names
-    "mus musculus": "Mouse",
-    "rattus norvegicus": "Rat",
-    "homo sapiens": "Human",
-    "danio rerio": "Zebrafish",
-    "drosophila melanogaster": "Drosophila",
-    "drosophila": "Drosophila",
-    "caenorhabditis elegans": "C. elegans",
-    "c. elegans": "C. elegans",
-    "c elegans": "C. elegans",
-    "xenopus laevis": "Xenopus",
-    "xenopus tropicalis": "Xenopus",
-    "xenopus": "Xenopus",
-    "arabidopsis thaliana": "Arabidopsis",
-    "arabidopsis": "Arabidopsis",
-    "saccharomyces cerevisiae": "Yeast",
-    "schizosaccharomyces pombe": "Yeast",
-    "escherichia coli": "E. coli",
-    "e. coli": "E. coli",
-    "e coli": "E. coli",
-    "gallus gallus": "Chicken",
-    "sus scrofa": "Pig",
-    "canis familiaris": "Dog",
-    "canis lupus familiaris": "Dog",
-    "macaca mulatta": "Monkey",
-    "macaca fascicularis": "Monkey",
-    "callithrix jacchus": "Monkey",
-    "zea mays": "Maize",
-    "nicotiana benthamiana": "Tobacco",
-    "nicotiana tabacum": "Tobacco",
-    "oryctolagus cuniculus": "Rabbit",
-    "oryza sativa": "Rice",
+    # Full Latin names → canonical scientific name
+    "mus musculus": "Mus musculus",
+    "rattus norvegicus": "Rattus norvegicus",
+    "homo sapiens": "Homo sapiens",
+    "danio rerio": "Danio rerio",
+    "drosophila melanogaster": "Drosophila melanogaster",
+    "drosophila": "Drosophila melanogaster",
+    "caenorhabditis elegans": "Caenorhabditis elegans",
+    "c. elegans": "Caenorhabditis elegans",
+    "c elegans": "Caenorhabditis elegans",
+    "xenopus laevis": "Xenopus laevis",
+    "xenopus tropicalis": "Xenopus tropicalis",
+    "xenopus": "Xenopus laevis",
+    "arabidopsis thaliana": "Arabidopsis thaliana",
+    "arabidopsis": "Arabidopsis thaliana",
+    "saccharomyces cerevisiae": "Saccharomyces cerevisiae",
+    "schizosaccharomyces pombe": "Schizosaccharomyces pombe",
+    "escherichia coli": "Escherichia coli",
+    "e. coli": "Escherichia coli",
+    "e coli": "Escherichia coli",
+    "gallus gallus": "Gallus gallus",
+    "sus scrofa": "Sus scrofa",
+    "canis familiaris": "Canis lupus familiaris",
+    "canis lupus familiaris": "Canis lupus familiaris",
+    "macaca mulatta": "Macaca mulatta",
+    "macaca fascicularis": "Macaca fascicularis",
+    "callithrix jacchus": "Callithrix jacchus",
+    "zea mays": "Zea mays",
+    "nicotiana benthamiana": "Nicotiana benthamiana",
+    "nicotiana tabacum": "Nicotiana tabacum",
+    "oryctolagus cuniculus": "Oryctolagus cuniculus",
+    "oryza sativa": "Oryza sativa",
     # Abbreviated Latin names (e.g., M. musculus)
-    "m. musculus": "Mouse",
-    "h. sapiens": "Human",
-    "r. norvegicus": "Rat",
-    "d. rerio": "Zebrafish",
-    "d. melanogaster": "Drosophila",
-    "x. laevis": "Xenopus",
-    "x. tropicalis": "Xenopus",
-    "g. gallus": "Chicken",
-    "s. scrofa": "Pig",
-    "m. mulatta": "Monkey",
-    "m. fascicularis": "Monkey",
-    "o. cuniculus": "Rabbit",
-    "c. familiaris": "Dog",
-    "s. cerevisiae": "Yeast",
-    "s. pombe": "Yeast",
-    "a. thaliana": "Arabidopsis",
-    "n. tabacum": "Tobacco",
-    "n. benthamiana": "Tobacco",
-    "z. mays": "Maize",
-    "o. sativa": "Rice",
+    "m. musculus": "Mus musculus",
+    "h. sapiens": "Homo sapiens",
+    "r. norvegicus": "Rattus norvegicus",
+    "d. rerio": "Danio rerio",
+    "d. melanogaster": "Drosophila melanogaster",
+    "x. laevis": "Xenopus laevis",
+    "x. tropicalis": "Xenopus tropicalis",
+    "g. gallus": "Gallus gallus",
+    "s. scrofa": "Sus scrofa",
+    "m. mulatta": "Macaca mulatta",
+    "m. fascicularis": "Macaca fascicularis",
+    "o. cuniculus": "Oryctolagus cuniculus",
+    "c. familiaris": "Canis lupus familiaris",
+    "s. cerevisiae": "Saccharomyces cerevisiae",
+    "s. pombe": "Schizosaccharomyces pombe",
+    "a. thaliana": "Arabidopsis thaliana",
+    "n. tabacum": "Nicotiana tabacum",
+    "n. benthamiana": "Nicotiana benthamiana",
+    "z. mays": "Zea mays",
+    "o. sativa": "Oryza sativa",
     # Bare genus names (only those distinctive enough to be unambiguous)
-    "rattus": "Rat",
-    "saccharomyces": "Yeast",
-    "escherichia": "E. coli",
-    "nicotiana": "Tobacco",
-    "oryctolagus": "Rabbit",
+    "rattus": "Rattus norvegicus",
+    "saccharomyces": "Saccharomyces cerevisiae",
+    "escherichia": "Escherichia coli",
+    "nicotiana": "Nicotiana tabacum",
+    "oryctolagus": "Oryctolagus cuniculus",
 }
 
 # Antibody-source patterns -- these species names often appear only in

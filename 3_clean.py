@@ -126,9 +126,9 @@ def _rescan_repositories(paper, repo_scanner, institution_scanner=None):
     institution_scanner (if provided), ensuring ROR IDs are generated even
     when the initial enrichment pass missed them.
     """
-    # Gather all text to scan
+    # Gather all text to scan (including data_availability where RRIDs often appear)
     texts_to_scan = []
-    for field in ("title", "abstract", "methods", "full_text"):
+    for field in ("title", "abstract", "methods", "data_availability", "full_text"):
         val = paper.get(field) or ""
         if val and isinstance(val, str) and len(val) > 10:
             texts_to_scan.append((val, field))

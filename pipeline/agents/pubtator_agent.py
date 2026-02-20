@@ -53,6 +53,41 @@ _FLUOROPHORE_CHEMICALS = {
     "bodipy", "texas red", "oregon green",
 }
 
+# Map PubTator organism names (which may be common names) to scientific names
+_ORGANISM_TO_SCIENTIFIC = {
+    "mouse": "Mus musculus",
+    "mice": "Mus musculus",
+    "murine": "Mus musculus",
+    "human": "Homo sapiens",
+    "humans": "Homo sapiens",
+    "patient": "Homo sapiens",
+    "patients": "Homo sapiens",
+    "rat": "Rattus norvegicus",
+    "rats": "Rattus norvegicus",
+    "zebrafish": "Danio rerio",
+    "fruit fly": "Drosophila melanogaster",
+    "fruit flies": "Drosophila melanogaster",
+    "nematode": "Caenorhabditis elegans",
+    "yeast": "Saccharomyces cerevisiae",
+    "chicken": "Gallus gallus",
+    "pig": "Sus scrofa",
+    "dog": "Canis lupus familiaris",
+    "rabbit": "Oryctolagus cuniculus",
+    "monkey": "Macaca mulatta",
+    "macaque": "Macaca mulatta",
+    "frog": "Xenopus laevis",
+    "maize": "Zea mays",
+    "corn": "Zea mays",
+    "rice": "Oryza sativa",
+    "tobacco": "Nicotiana tabacum",
+    # Already-scientific names that need standardization
+    "drosophila": "Drosophila melanogaster",
+    "xenopus": "Xenopus laevis",
+    "arabidopsis": "Arabidopsis thaliana",
+    "e. coli": "Escherichia coli",
+    "c. elegans": "Caenorhabditis elegans",
+}
+
 
 class PubTatorAgent(BaseAgent):
     """Supplemental extraction via PubTator 3.0 API.
@@ -260,11 +295,22 @@ class PubTatorAgent(BaseAgent):
                 if label == "CHEMICAL" and text.lower() in _FLUOROPHORE_CHEMICALS:
                     label = "FLUOROPHORE"
 
+                # Normalize organism names to scientific names
+                canonical = text
+                if label == "ORGANISM":
+                    canonical = _ORGANISM_TO_SCIENTIFIC.get(text.lower(), text)
+                    # If PubTator returned a scientific name, keep it as-is
+                    # but capitalize genus properly
+                    if canonical == text and " " in text:
+                        # Looks like a binomial — capitalize properly
+                        parts = text.split()
+                        canonical = parts[0].capitalize() + " " + " ".join(p.lower() for p in parts[1:])
+
                 # Get database ID
                 db_id = infons.get("identifier", "")
 
-                # Deduplicate (same text + label)
-                dedup_key = f"{label}:{text.lower()}"
+                # Deduplicate (same canonical + label)
+                dedup_key = f"{label}:{canonical.lower()}"
                 if dedup_key in seen:
                     continue
                 seen.add(dedup_key)
@@ -283,7 +329,7 @@ class PubTatorAgent(BaseAgent):
                     source_agent=self.name,
                     section=section,
                     metadata={
-                        "canonical": text,
+                        "canonical": canonical,
                         "database_id": db_id,
                         "source": "pubtator3",
                     },
