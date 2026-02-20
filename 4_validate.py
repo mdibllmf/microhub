@@ -85,6 +85,22 @@ def main():
     missing_fields = {"title": 0, "doi": 0, "pmid": 0}
     invalid_tags = {}
 
+    # Enrichment coverage counters
+    enrichment_counts = {
+        "has_full_text": 0,
+        "has_openalex": 0,
+        "has_oa": 0,
+        "has_fwci": 0,
+        "has_rors": 0,
+        "has_datasets": 0,
+        "has_rrids": 0,
+        "has_github": 0,
+        "has_institutions": 0,
+        "has_openalex_topics": 0,
+        "has_fields_of_study": 0,
+        "citation_count_present": 0,
+    }
+
     for fp in files:
         with open(fp, "r", encoding="utf-8") as f:
             papers = json.load(f)
@@ -108,6 +124,32 @@ def main():
                             file_issues += 1
                             invalid_tags.setdefault(category, {})
                             invalid_tags[category][v] = invalid_tags[category].get(v, 0) + 1
+
+            # Track enrichment coverage
+            if paper.get("has_full_text") or paper.get("full_text"):
+                enrichment_counts["has_full_text"] += 1
+            if paper.get("openalex_id") or paper.get("has_openalex"):
+                enrichment_counts["has_openalex"] += 1
+            if paper.get("oa_status") or paper.get("has_oa"):
+                enrichment_counts["has_oa"] += 1
+            if paper.get("fwci") is not None and paper.get("fwci") != "":
+                enrichment_counts["has_fwci"] += 1
+            if paper.get("rors"):
+                enrichment_counts["has_rors"] += 1
+            if paper.get("repositories"):
+                enrichment_counts["has_datasets"] += 1
+            if paper.get("rrids"):
+                enrichment_counts["has_rrids"] += 1
+            if paper.get("github_url") or paper.get("has_github"):
+                enrichment_counts["has_github"] += 1
+            if paper.get("institutions"):
+                enrichment_counts["has_institutions"] += 1
+            if paper.get("openalex_topics") or paper.get("has_openalex_topics"):
+                enrichment_counts["has_openalex_topics"] += 1
+            if paper.get("fields_of_study") or paper.get("has_fields_of_study"):
+                enrichment_counts["has_fields_of_study"] += 1
+            if paper.get("citation_count") and paper.get("citation_count") > 0:
+                enrichment_counts["citation_count_present"] += 1
 
         total_papers += len(papers)
         total_issues += file_issues
@@ -138,6 +180,29 @@ def main():
             logger.info("  %s:", category)
             for v, count in top:
                 logger.info("    %-30s  (%d)", v, count)
+        logger.info("")
+
+    # --- Enrichment coverage ---
+    if total_papers > 0:
+        logger.info("Enrichment coverage:")
+        coverage_labels = {
+            "has_full_text": "Full text",
+            "has_openalex": "OpenAlex",
+            "has_oa": "OA status",
+            "has_fwci": "FWCI score",
+            "has_rors": "ROR IDs",
+            "has_datasets": "Datasets/repos",
+            "has_rrids": "RRIDs",
+            "has_github": "GitHub URL",
+            "has_institutions": "Institutions",
+            "has_openalex_topics": "OA topics",
+            "has_fields_of_study": "Fields of study",
+            "citation_count_present": "Citations",
+        }
+        for key, label in coverage_labels.items():
+            count = enrichment_counts[key]
+            pct = (count / total_papers) * 100
+            logger.info("  %-20s  %5d / %d  (%5.1f%%)", label, count, total_papers, pct)
         logger.info("")
 
     if total_issues == 0:
