@@ -143,7 +143,7 @@ CONFIDENCE_MATRIX: Dict[str, Dict[str, float]] = {
         "data_availability": 0.20,
         "full_text": 0.70,
     },
-    "SAMPLE_PREP": {
+    "SAMPLE_PREPARATION": {
         "title": 0.80,
         "abstract": 0.70,
         "methods": 0.95,
@@ -166,6 +166,54 @@ CONFIDENCE_MATRIX: Dict[str, Dict[str, float]] = {
         "figures": 0.75,
         "data_availability": 0.30,
         "full_text": 0.70,
+    },
+    "IMAGE_ANALYSIS_SOFTWARE": {
+        "title": 0.85,
+        "abstract": 0.70,
+        "methods": 0.95,
+        "materials": 0.95,
+        "results": 0.80,
+        "discussion": 0.35,
+        "introduction": 0.35,
+        "figures": 0.75,
+        "data_availability": 0.30,
+        "full_text": 0.70,
+    },
+    "IMAGE_ACQUISITION_SOFTWARE": {
+        "title": 0.85,
+        "abstract": 0.70,
+        "methods": 0.95,
+        "materials": 0.95,
+        "results": 0.80,
+        "discussion": 0.35,
+        "introduction": 0.35,
+        "figures": 0.75,
+        "data_availability": 0.30,
+        "full_text": 0.70,
+    },
+    "GENERAL_SOFTWARE": {
+        "title": 0.85,
+        "abstract": 0.70,
+        "methods": 0.95,
+        "materials": 0.95,
+        "results": 0.80,
+        "discussion": 0.35,
+        "introduction": 0.35,
+        "figures": 0.75,
+        "data_availability": 0.30,
+        "full_text": 0.70,
+    },
+    "ANTIBODY_SOURCE": {
+        "title": 0.60,
+        "abstract": 0.55,
+        "methods": 0.90,
+        "materials": 0.90,
+        "results": 0.65,
+        "discussion": 0.25,
+        "introduction": 0.25,
+        "figures": 0.60,
+        "data_availability": 0.20,
+        "full_text": 0.60,
     },
     "REAGENT_SUPPLIER": {
         "title": 0.60,
@@ -217,7 +265,7 @@ def get_confidence(entity_label: str, section: str) -> float:
     section = (section or "full_text").lower()
     # Normalize "materials" → "methods" synonym
     if section in ("materials", "materials_and_methods"):
-        section = "materials"
+        section = "methods"
 
     scores = CONFIDENCE_MATRIX.get(entity_label, _DEFAULT_SECTION_SCORES)
     return scores.get(section, scores.get("full_text", 0.70))

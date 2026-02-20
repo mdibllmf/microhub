@@ -18,15 +18,12 @@ from .base_agent import BaseAgent, Extraction
 SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     # Fixation
     "Fixation": (re.compile(r"\b(?:fix(?:ed|ation|ative)|(?:4%?\s*)?paraformaldehyde|(?:4%?\s*)?PFA)\b", re.I), 0.8),
-    "PFA Fixation": (re.compile(r"\b(?:(?:4%?\s*)?PFA\s+fix|paraformaldehyde\s+fix|(?:4%?\s*)?PFA\b)", re.I), 0.85),
+    "Paraformaldehyde Fixation": (re.compile(r"\b(?:(?:4%?\s*)?PFA\s+fix|paraformaldehyde\s+fix|(?:4%?\s*)?PFA\b)", re.I), 0.85),
     "Methanol Fixation": (re.compile(r"\b(?:methanol\s+fix|ice[- ]?cold\s+methanol|MeOH\s+fix)\b", re.I), 0.85),
     "Glutaraldehyde": (re.compile(r"\bglutaraldehyde\b", re.I), 0.9),
 
-    # Tissue clearing
-    # CLARITY requires tissue-clearing context to avoid matching the common
-    # English word (e.g. "with greater clarity").  Must appear near clearing-
-    # related terms or be explicitly described as a protocol/method.
-    "CLARITY": (re.compile(
+    # Tissue clearing — full expanded names
+    "Clear Lipid-exchanged Acrylamide-hybridized Rigid Imaging-compatible Tissue-hydrogel": (re.compile(
         r"\bCLARITY\b(?=.{0,60}(?:clear|tissue|brain|organ|hydrogel|protocol|method|label|immunostain|mouse|sample|intact|transparen))"
         r"|(?:clear|tissue|brain|organ|hydrogel|protocol|method|transparen)\w*.{0,60}\bCLARITY\b"
         r"|\bCLARITY[- ]?(?:protocol|method|clearing|based|optimized|compatible)\b"
@@ -34,38 +31,38 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
         r"|\bCLARITY\s+SPIM\b",
         re.I | re.S,
     ), 0.95),
-    "CUBIC": (re.compile(r"\bCUBIC\b"), 0.9),
-    "iDISCO": (re.compile(r"\biDISCO\+?\b"), 0.95),
-    "3DISCO": (re.compile(r"\b3DISCO\b"), 0.95),
-    "uDISCO": (re.compile(r"\buDISCO\b"), 0.95),
-    "SHIELD": (re.compile(r"\bSHIELD\b(?=.{0,50}(?:clear|tissue|brain|protocol))", re.I | re.S), 0.85),
+    "Clear Unobstructed Brain Imaging Cocktails and Computational analysis": (re.compile(r"\bCUBIC\b"), 0.9),
+    "Immunolabeling-enabled Three-Dimensional Imaging of Solvent-Cleared Organs": (re.compile(r"\biDISCO\+?\b"), 0.95),
+    "Three-Dimensional Imaging of Solvent-Cleared Organs": (re.compile(r"\b3DISCO\b"), 0.95),
+    "Ultimate Three-Dimensional Imaging of Solvent-Cleared Organs": (re.compile(r"\buDISCO\b"), 0.95),
+    "Stabilization to Harsh conditions via Intramolecular Epoxide Linkages to prevent Degradation": (re.compile(r"\bSHIELD\b(?=.{0,50}(?:clear|tissue|brain|protocol))", re.I | re.S), 0.85),
     "Tissue Clearing": (re.compile(r"\b(?:tissue|optical)\s+clearing\b", re.I), 0.9),
-    "PACT": (re.compile(r"\bPACT\b(?=.{0,30}(?:clear|tissue|brain|protocol))", re.I | re.S), 0.85),
-    "PEGASOS": (re.compile(r"\bPEGASOS\b", re.I), 0.95),
-    "eFLASH": (re.compile(r"\beFLASH\b"), 0.95),
+    "Passive CLARITY Technique": (re.compile(r"\bPACT\b(?=.{0,30}(?:clear|tissue|brain|protocol))", re.I | re.S), 0.85),
+    "Polyethylene Glycol-Associated Solvent System": (re.compile(r"\bPEGASOS\b", re.I), 0.95),
+    "Enhanced Fluorescence-Assisted Shotgun Histology": (re.compile(r"\beFLASH\b"), 0.95),
 
     # Embedding & sectioning
-    "OCT Embedding": (re.compile(r"\bOCT\s+(?:embed|compound|medium|block)\b", re.I), 0.85),
+    "Optimal Cutting Temperature Embedding": (re.compile(r"\bOCT\s+(?:embed|compound|medium|block)\b", re.I), 0.85),
     "Paraffin Embedding": (re.compile(r"\bparaffin\s+(?:embed|section|block)\b", re.I), 0.85),
     "Cryosectioning": (re.compile(r"\b(?:cryosection|cryostat|cryo[- ]?section)\b", re.I), 0.9),
     "Vibratome": (re.compile(r"\bvibratome\b", re.I), 0.9),
     "Microtome": (re.compile(r"\bmicrotome\b", re.I), 0.9),
     "Ultramicrotome": (re.compile(r"\b(?:ultramicrotome|ultra[- ]?thin\s+section)\b", re.I), 0.9),
 
-    # Staining / labeling
+    # Staining / labeling — full expanded names
     "Immunostaining": (re.compile(r"\b(?:immunostain|immuno[- ]?stain)\w*\b", re.I), 0.9),
     "Immunofluorescence": (re.compile(r"\b(?:immunofluorescen\w*|IF\s+staining)\b", re.I), 0.9),
     "Immunohistochemistry": (re.compile(r"\b(?:immunohistochemist\w*|IHC)\b", re.I), 0.85),
-    "H&E": (re.compile(r"\b(?:H\s*&\s*E|hematoxylin\s+(?:and\s+)?eosin)\b", re.I), 0.9),
-    "FISH": (re.compile(r"\b(?:fluorescen\w+\s+in\s+situ\s+hybridi[sz]\w+|FISH\s+(?:experiment|probe|signal|stain|label))\b", re.I), 0.85),
-    "smFISH": (re.compile(r"\bsmFISH\b"), 0.95),
+    "Hematoxylin and Eosin": (re.compile(r"\b(?:H\s*&\s*E|hematoxylin\s+(?:and\s+)?eosin)\b", re.I), 0.9),
+    "Fluorescence In Situ Hybridization": (re.compile(r"\b(?:fluorescen\w+\s+in\s+situ\s+hybridi[sz]\w+|FISH\s+(?:experiment|probe|signal|stain|label))\b", re.I), 0.85),
+    "Single-Molecule Fluorescence In Situ Hybridization": (re.compile(r"\bsmFISH\b"), 0.95),
     "RNAscope": (re.compile(r"\bRNAscope\b", re.I), 0.95),
-    "MERFISH": (re.compile(r"\bMERFISH\b", re.I), 0.95),
-    "seqFISH": (re.compile(r"\bseqFISH\b", re.I), 0.95),
+    "Multiplexed Error-Robust Fluorescence In Situ Hybridization": (re.compile(r"\bMERFISH\b", re.I), 0.95),
+    "Sequential Fluorescence In Situ Hybridization": (re.compile(r"\bseqFISH\b", re.I), 0.95),
     "In Situ Hybridization": (re.compile(r"\bin\s+situ\s+hybridi[sz]\w+\b", re.I), 0.85),
-    "TUNEL": (re.compile(r"\bTUNEL\b"), 0.9),
+    "Terminal Deoxynucleotidyl Transferase dUTP Nick End Labeling": (re.compile(r"\bTUNEL\b"), 0.9),
 
-    # Cell handling
+    # Cell handling — full expanded names
     "Cell Culture": (re.compile(r"\bcell\s+cultur\w*\b", re.I), 0.8),
     "Primary Culture": (re.compile(r"\bprimary\s+(?:cell\s+)?cultur\w*\b", re.I), 0.85),
     "Transfection": (re.compile(r"\btransfect\w+\b", re.I), 0.85),
@@ -74,8 +71,8 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "Electroporation": (re.compile(r"\belectroporat\w+\b", re.I), 0.9),
     "Lentiviral": (re.compile(r"\blentivir\w+\b", re.I), 0.85),
     "Adenoviral": (re.compile(r"\badenovir\w+\b", re.I), 0.85),
-    "AAV": (re.compile(r"\b(?:AAV\d*|adeno[- ]?associated\s+virus)\b", re.I), 0.85),
-    "CRISPR": (re.compile(r"\bCRISPR\b"), 0.9),
+    "Adeno-Associated Virus": (re.compile(r"\b(?:AAV\d*|adeno[- ]?associated\s+virus)\b", re.I), 0.85),
+    "Clustered Regularly Interspaced Short Palindromic Repeats": (re.compile(r"\bCRISPR\b"), 0.9),
     "Knockdown": (re.compile(r"\b(?:knockdown|knock[- ]?down|siRNA|shRNA)\b", re.I), 0.85),
     "Knockout": (re.compile(r"\b(?:knockout|knock[- ]?out)\b", re.I), 0.85),
     "Live Imaging": (re.compile(r"\blive[- ]?(?:cell\s+)?imaging\b", re.I), 0.85),
@@ -133,7 +130,7 @@ class SamplePrepAgent(BaseAgent):
             for m in pattern.finditer(text):
                 # Extra check for CLARITY: reject if the surrounding text
                 # is using the common English word, not the protocol
-                if canonical == "CLARITY":
+                if canonical == "Clear Lipid-exchanged Acrylamide-hybridized Rigid Imaging-compatible Tissue-hydrogel":
                     start = max(0, m.start() - 30)
                     context = text[start:m.end() + 20]
                     if _CLARITY_NEGATIVE.search(context):
