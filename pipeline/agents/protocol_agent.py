@@ -330,9 +330,16 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
 # RRID patterns
 # ======================================================================
 
+# Primary pattern: standard RRID:PREFIX_ID format (with flexible whitespace)
 _RRID_PATTERN = re.compile(
-    r"\bRRID\s*:\s*((?:AB|SCR|CVCL|IMSR|BDSC|ZFIN|WB-STRAIN|MGI|MMRRC|ZIRC|DGRC|CGC|Addgene)_\d+)\b",
+    r"\bRRID\s*[=:]\s*((?:AB|SCR|CVCL|IMSR|BDSC|ZFIN|WB-STRAIN|WB_STRAIN|MGI|MMRRC|ZIRC|DGRC|CGC|Addgene|SAMN|NXR|FlyBase|DGGR)_[\w:-]+)\b",
     re.IGNORECASE,
+)
+
+# Secondary pattern: standalone identifiers (without RRID: prefix) that
+# unambiguously indicate an RRID when found in methods/materials sections
+_RRID_STANDALONE_PATTERN = re.compile(
+    r"\b((?:AB|SCR|CVCL|Addgene)_\d{4,})\b",
 )
 
 _RRID_TYPE_MAP = {
@@ -340,6 +347,15 @@ _RRID_TYPE_MAP = {
     "SCR": "software",
     "CVCL": "cell_line",
     "Addgene": "plasmid",
+    "IMSR": "organism",
+    "BDSC": "organism",
+    "ZFIN": "organism",
+    "MGI": "organism",
+    "MMRRC": "organism",
+    "FlyBase": "organism",
+    "NXR": "organism",
+    "DGGR": "organism",
+    "SAMN": "biosample",
 }
 
 # ======================================================================
@@ -632,10 +648,16 @@ class ProtocolAgent(BaseAgent):
     # ------------------------------------------------------------------
     def _match_rrids(self, text: str, section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
+        seen_ids: set = set()
+
+        # Primary: standard RRID:PREFIX_ID format
         for m in _RRID_PATTERN.finditer(text):
             rrid_id = m.group(1)
+            if rrid_id in seen_ids:
+                continue
+            seen_ids.add(rrid_id)
             prefix = rrid_id.split("_")[0]
-            rrid_type = _RRID_TYPE_MAP.get(prefix, "organism")
+            rrid_type = _RRID_TYPE_MAP.get(prefix, "other")
             extractions.append(Extraction(
                 text=f"RRID:{rrid_id}",
                 label="RRID",
@@ -650,6 +672,32 @@ class ProtocolAgent(BaseAgent):
                     "url": f"https://scicrunch.org/resolver/RRID:{rrid_id}",
                 },
             ))
+
+        # Secondary: standalone identifiers (AB_123456, SCR_123456, etc.)
+        # Only in methods/materials to avoid false positives
+        if section in ("methods", "materials", "data_availability", "full_text"):
+            for m in _RRID_STANDALONE_PATTERN.finditer(text):
+                rrid_id = m.group(1)
+                if rrid_id in seen_ids:
+                    continue
+                seen_ids.add(rrid_id)
+                prefix = rrid_id.split("_")[0]
+                rrid_type = _RRID_TYPE_MAP.get(prefix, "other")
+                extractions.append(Extraction(
+                    text=f"RRID:{rrid_id}",
+                    label="RRID",
+                    start=m.start(), end=m.end(),
+                    confidence=0.80,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={
+                        "canonical": f"RRID:{rrid_id}",
+                        "rrid_id": rrid_id,
+                        "rrid_type": rrid_type,
+                        "url": f"https://scicrunch.org/resolver/RRID:{rrid_id}",
+                    },
+                ))
+
         return extractions
 
     # ------------------------------------------------------------------
