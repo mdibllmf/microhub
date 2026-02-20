@@ -333,6 +333,8 @@ def main():
                         help="Use local Ollama LLM to verify Methods section tags")
     parser.add_argument("--ollama-model", default=None,
                         help="Ollama model name (default: llama3.1 or OLLAMA_MODEL env)")
+    parser.add_argument("--workers", type=int, default=4,
+                        help="Number of parallel workers for API enrichment (default: 4)")
 
     args = parser.parse_args()
 
@@ -395,7 +397,7 @@ def main():
     enricher_api = None
     if api_enrich:
         from pipeline.enrichment import Enricher
-        enricher_api = Enricher()
+        enricher_api = Enricher(max_workers=args.workers)
 
     logger.info("=" * 60)
     logger.info("STEP 3 — CLEAN (re-tag + finalize JSON)")
@@ -404,6 +406,7 @@ def main():
     logger.info("Output dir:  %s", out_dir)
     logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
     logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
+    logger.info("Workers:     %d", args.workers)
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")
     if api_enrich:
         logger.info("  OpenAlex:  %s", "no" if args.no_openalex else "yes")

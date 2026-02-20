@@ -22,7 +22,9 @@ Usage in 3_clean.py:
 import json
 import logging
 import os
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
@@ -78,7 +80,7 @@ class Enricher:
     # S2 batch endpoint accepts up to 500 IDs per request
     S2_BATCH_SIZE = 500
 
-    def __init__(self):
+    def __init__(self, max_workers: int = 4):
         self.github_token = _get_key("GITHUB_TOKEN")
         self.s2_api_key = _get_key("SEMANTIC_SCHOLAR_API_KEY")
         self.openalex_email = _get_key("OPENALEX_EMAIL") or "microhub@example.com"
@@ -100,6 +102,11 @@ class Enricher:
         self._datacite_agent = None
         self._ror_client = None
 
+        # Parallel enrichment
+        self._max_workers = max(1, max_workers)
+        self._github_lock = threading.Lock()
+        self._init_lock = threading.Lock()
+
         if not self.github_token:
             logger.info("No GITHUB_TOKEN found — GitHub API calls will be "
                         "limited to 60/hour.  Set GITHUB_TOKEN in .env for 5000/hour.")
@@ -120,18 +127,22 @@ class Enricher:
 
     @property
     def datacite_agent(self):
-        """Lazy-initialize DataCite linker agent."""
+        """Lazy-initialize DataCite linker agent (thread-safe)."""
         if self._datacite_agent is None:
-            from .agents.datacite_linker_agent import DataCiteLinkerAgent
-            self._datacite_agent = DataCiteLinkerAgent()
+            with self._init_lock:
+                if self._datacite_agent is None:
+                    from .agents.datacite_linker_agent import DataCiteLinkerAgent
+                    self._datacite_agent = DataCiteLinkerAgent()
         return self._datacite_agent
 
     @property
     def ror_client(self):
-        """Lazy-initialize ROR v2 client."""
+        """Lazy-initialize ROR v2 client (thread-safe)."""
         if self._ror_client is None:
-            from .validation.ror_v2_client import RORv2Client
-            self._ror_client = RORv2Client(client_id=self.ror_client_id)
+            with self._init_lock:
+                if self._ror_client is None:
+                    from .validation.ror_v2_client import RORv2Client
+                    self._ror_client = RORv2Client(client_id=self.ror_client_id)
         return self._ror_client
 
     # ------------------------------------------------------------------
@@ -164,16 +175,42 @@ class Enricher:
         if fetch_citations and not self._s2_exhausted:
             self._batch_enrich_citations(papers)
 
-        # 3. Per-paper GitHub + CrossRef + DataCite + ROR (only where needed)
-        for paper in papers:
-            if fetch_github and not self._gh_exhausted:
-                self._enrich_github_tools(paper)
-            if fetch_crossref_repos:
-                self._enrich_crossref_repos(paper)
-            if fetch_datacite:
-                self._enrich_datacite(paper)
-            if fetch_ror:
-                self._enrich_ror_affiliations(paper)
+        # 3. Per-paper GitHub + CrossRef + DataCite + ROR — parallel workers
+        any_per_paper = (
+            (fetch_github and not self._gh_exhausted)
+            or fetch_crossref_repos or fetch_datacite or fetch_ror
+        )
+        if any_per_paper and papers:
+            def _enrich_one(paper):
+                if fetch_github and not self._gh_exhausted:
+                    self._enrich_github_tools(paper)
+                if fetch_crossref_repos:
+                    self._enrich_crossref_repos(paper)
+                if fetch_datacite:
+                    self._enrich_datacite(paper)
+                if fetch_ror:
+                    self._enrich_ror_affiliations(paper)
+
+            if self._max_workers <= 1:
+                for paper in papers:
+                    _enrich_one(paper)
+            else:
+                logger.info("  Per-paper API enrichment: %d papers × %d workers",
+                            len(papers), self._max_workers)
+                with ThreadPoolExecutor(max_workers=self._max_workers) as pool:
+                    futs = {pool.submit(_enrich_one, p): p for p in papers}
+                    done_count = 0
+                    for fut in as_completed(futs):
+                        done_count += 1
+                        try:
+                            fut.result()
+                        except Exception as exc:
+                            pmid = futs[fut].get("pmid", "?")
+                            logger.warning("  Enrichment error for PMID %s: %s",
+                                           pmid, exc)
+                        if done_count % 50 == 0 or done_count == len(futs):
+                            logger.info("  Per-paper enrichment: %d / %d done",
+                                        done_count, len(futs))
 
     # ------------------------------------------------------------------
     # Semantic Scholar — batch endpoint
@@ -313,6 +350,14 @@ class Enricher:
     # GitHub API enrichment
     # ------------------------------------------------------------------
 
+    def _github_rate_wait(self):
+        """Thread-safe rate limit wait for GitHub API."""
+        with self._github_lock:
+            elapsed = time.time() - self._last_github_call
+            if elapsed < self._github_delay:
+                time.sleep(self._github_delay - elapsed)
+            self._last_github_call = time.time()
+
     def _enrich_github_tools(self, paper: Dict) -> None:
         """Fetch missing metadata for each github tool."""
         tools = paper.get("github_tools")
@@ -368,17 +413,13 @@ class Enricher:
         if self.github_token:
             headers["Authorization"] = f"token {self.github_token}"
 
-        # Rate limiting
-        elapsed = time.time() - self._last_github_call
-        if elapsed < self._github_delay:
-            time.sleep(self._github_delay - elapsed)
+        self._github_rate_wait()
 
         try:
             resp = requests.get(
                 f"https://api.github.com/repos/{full_name}",
                 headers=headers, timeout=15,
             )
-            self._last_github_call = time.time()
 
             if resp.status_code == 404:
                 return {"exists": False, "full_name": full_name}
@@ -409,6 +450,7 @@ class Enricher:
 
             # Latest release
             try:
+                self._github_rate_wait()
                 rr = requests.get(
                     f"https://api.github.com/repos/{full_name}/releases/latest",
                     headers=headers, timeout=10,
@@ -422,6 +464,7 @@ class Enricher:
 
             # Last commit date
             try:
+                self._github_rate_wait()
                 cr = requests.get(
                     f"https://api.github.com/repos/{full_name}/commits",
                     headers=headers, params={"per_page": 1}, timeout=10,

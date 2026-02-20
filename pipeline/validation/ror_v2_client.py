@@ -20,6 +20,7 @@ Usage:
 
 import logging
 import re
+import threading
 import time
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
@@ -62,6 +63,7 @@ class RORv2Client:
         self.client_id = client_id
         self._last_call = 0.0
         self._cache: Dict[str, Optional[Dict]] = {}
+        self._lock = threading.Lock()
 
     # ------------------------------------------------------------------
     # Affiliation matching
@@ -136,7 +138,6 @@ class RORv2Client:
                 f"{_ROR_V2_BASE}/{bare_id}",
                 timeout=10,
             )
-            self._last_call = time.time()
 
             if resp.status_code != 200:
                 return None
@@ -238,7 +239,6 @@ class RORv2Client:
                 params=params,
                 timeout=15,
             )
-            self._last_call = time.time()
 
             if resp.status_code == 429:
                 logger.warning("ROR API rate limited")
@@ -335,6 +335,8 @@ class RORv2Client:
         }
 
     def _rate_limit(self):
-        elapsed = time.time() - self._last_call
-        if elapsed < _REQUEST_DELAY:
-            time.sleep(_REQUEST_DELAY - elapsed)
+        with self._lock:
+            elapsed = time.time() - self._last_call
+            if elapsed < _REQUEST_DELAY:
+                time.sleep(_REQUEST_DELAY - elapsed)
+            self._last_call = time.time()
