@@ -68,7 +68,7 @@ class PipelineOrchestrator:
         self.sample_prep_agent = SamplePrepAgent()
         self.cell_line_agent = CellLineAgent()
         self.protocol_agent = ProtocolAgent()
-        self.institution_agent = InstitutionAgent()
+        self.institution_agent = InstitutionAgent(ror_local_path=ror_path)
 
         # Supplemental: PubTator NLP-based extraction (with local lookup)
         self.pubtator_agent = PubTatorAgent(

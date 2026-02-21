@@ -153,8 +153,9 @@ class RORv2Client:
     def match_affiliation(self, affiliation: str) -> Optional[Dict[str, Any]]:
         """Match a raw affiliation string to a ROR organization.
 
-        Uses the v2 affiliation matching endpoint with single_search
-        parameter for improved precision.
+        Checks local ROR dump first for exact name matches within the
+        affiliation string, then falls back to the v2 affiliation matching
+        endpoint for fuzzy matching.
 
         Parameters
         ----------
@@ -168,16 +169,64 @@ class RORv2Client:
             score, chosen (bool).
             Returns None if no confident match found.
         """
-        if not HAS_REQUESTS or not affiliation or not affiliation.strip():
+        if not affiliation or not affiliation.strip():
             return None
 
         cache_key = affiliation.strip().lower()
         if cache_key in self._cache:
             return self._cache[cache_key]
 
+        # LOCAL FIRST: try exact name match within the affiliation string
+        if self._local_loaded:
+            local_result = self._match_affiliation_local(affiliation.strip())
+            if local_result:
+                self._cache[cache_key] = local_result
+                return local_result
+
+        # FALLBACK: ROR v2 API fuzzy affiliation matching
+        if not HAS_REQUESTS:
+            return None
+
         result = self._query_affiliation(affiliation.strip())
         self._cache[cache_key] = result
         return result
+
+    def _match_affiliation_local(self, affiliation: str) -> Optional[Dict[str, Any]]:
+        """Try to match an affiliation string against the local ROR index.
+
+        Checks if any known institution name appears in the affiliation.
+        Returns the longest matching name to avoid partial matches.
+        """
+        aff_lower = affiliation.lower()
+
+        # Direct exact match (entire affiliation is an institution name)
+        entry = self._local_index.get(aff_lower)
+        if entry:
+            result = dict(entry)
+            result.setdefault("ror_url", f"https://ror.org/{entry.get('ror_id', '')}")
+            result["score"] = 1.0
+            result["chosen"] = True
+            return result
+
+        # Check if any known name is a substring of the affiliation
+        # Prefer the longest matching name to reduce false positives
+        best_match = None
+        best_len = 0
+        for name_lower, entry in self._local_index.items():
+            if len(name_lower) < 4:
+                continue  # Skip very short names to avoid false positives
+            if name_lower in aff_lower and len(name_lower) > best_len:
+                best_match = entry
+                best_len = len(name_lower)
+
+        if best_match and best_len >= 8:
+            result = dict(best_match)
+            result.setdefault("ror_url", f"https://ror.org/{best_match.get('ror_id', '')}")
+            result["score"] = 0.9
+            result["chosen"] = True
+            return result
+
+        return None
 
     def match_affiliations_batch(self,
                                   affiliations: List[str]) -> List[Optional[Dict]]:
