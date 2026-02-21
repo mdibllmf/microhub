@@ -430,14 +430,14 @@ class JsonExporter:
             "image_repositories": [
                 r for r in repositories
                 if isinstance(r, dict) and any(
-                    domain in str(r.get("url", "")).lower()
-                    for domain in (
-                        "empiar", "idr.openmicroscopy", "biostudies",
-                        "bioimage", "image.sc", "omero",
-                        "cell-image-library", "ssbd",
+                    kw in (r.get("name") or r.get("url") or "").lower()
+                    for kw in (
+                        "empiar", "idr", "bioimage", "biostudies",
+                        "image data resource", "ssbd", "omero",
+                        "cell image library", "zenodo",
                     )
                 )
-            ] if repositories else [],
+            ],
             "supplementary_materials": supplementary,
             "rrids": rrids,
             "rors": self._deduplicate_rors(rors),
