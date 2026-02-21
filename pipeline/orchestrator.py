@@ -31,6 +31,7 @@ from .validation.tag_validator import TagValidator
 from .validation.api_validator import ApiValidator
 from .validation.identifier_normalizer import IdentifierNormalizer
 from .validation.ror_v2_client import RORv2Client
+from .validation.ontology_normalizer import OntologyNormalizer
 from .role_classifier import RoleClassifier, EntityRole
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,9 @@ class PipelineOrchestrator:
         self.tag_validator = TagValidator(tag_dictionary_path)
         self.api_validator = ApiValidator() if use_api_validation else None
         self.id_normalizer = IdentifierNormalizer()
+
+        # FBbi ontology normalization for microscopy techniques
+        self.ontology_normalizer = OntologyNormalizer()
 
     # ------------------------------------------------------------------
     def process_paper(self, paper: Dict[str, Any]) -> Dict[str, Any]:
@@ -133,6 +137,14 @@ class PipelineOrchestrator:
         # Role classification is now applied inside _run_agents() where
         # raw extractions with position data are still available.
         # The _role_classification report is already in results if enabled.
+
+        # Post-extraction: FBbi ontology normalization for techniques
+        if self.ontology_normalizer and results.get("microscopy_techniques"):
+            results["_technique_ontology"] = (
+                self.ontology_normalizer.enrich_techniques(
+                    results["microscopy_techniques"]
+                )
+            )
 
         # Post-extraction: normalize all identifiers
         self.id_normalizer.normalize_paper(results)
