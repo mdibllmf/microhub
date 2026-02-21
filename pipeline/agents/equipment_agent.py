@@ -62,7 +62,6 @@ MICROSCOPE_BRANDS: Dict[str, str] = {
     "lavision biotec": "LaVision BioTec",
     "lavision": "LaVision BioTec",
     "luxendo": "Luxendo",
-    "molecular devices": "Molecular Devices",
     "visitech": "Visitech",
     "becker & hickl": "Becker & Hickl",
     "becker and hickl": "Becker & Hickl",
@@ -244,6 +243,12 @@ REAGENT_SUPPLIERS: Dict[str, str] = {
     "biolegend": "BioLegend",
     "visiopharm": "Visiopharm",
     "definiens": "Definiens",
+    "cytiva": "Cytiva",
+    "ge healthcare life sciences": "Cytiva",
+    "genetex": "GeneTex",
+    "novus biologicals": "Novus Biologicals", "novus": "Novus Biologicals",
+    "vwr": "VWR", "vwr international": "VWR",
+    "ebioscience": "eBioscience",
 }
 
 # Context patterns for reagent suppliers (e.g. "Sigma-Aldrich, St. Louis")

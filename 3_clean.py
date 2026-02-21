@@ -192,7 +192,7 @@ def _rescan_repositories(paper, repo_scanner, institution_scanner=None):
 
     paper["repositories"] = existing_repos
 
-    # --- Merge protocols ---
+    # --- Merge protocols (deduplicate by URL + validate) ---
     existing_protos = paper.get("protocols") or []
     if isinstance(existing_protos, str):
         try:
@@ -200,23 +200,63 @@ def _rescan_repositories(paper, repo_scanner, institution_scanner=None):
         except (json.JSONDecodeError, TypeError):
             existing_protos = []
 
-    existing_proto_names = set()
+    def _norm_url(url):
+        if not url:
+            return ""
+        return url.strip().rstrip("/").lower().split("?")[0]
+
+    def _url_looks_corrupted(url):
+        """Detect digit sequences injected into URL path segments."""
+        if not url:
+            return False
+        for part in url.split("/"):
+            if re.search(r"[a-z]-?\d{2,5}-?[a-z]", part):
+                cleaned = re.sub(r"\d{2,5}", "", part)
+                if cleaned != part and not re.search(r"\d", cleaned):
+                    return True
+        return False
+
+    seen_urls = set()
+    seen_names = set()
+    deduped = []
     for proto in existing_protos:
-        if isinstance(proto, dict):
-            existing_proto_names.add((proto.get("name") or "").lower())
+        if not isinstance(proto, dict):
+            continue
+        url = _norm_url(proto.get("url"))
+        name = (proto.get("name") or "").lower()
+        if proto.get("url") and _url_looks_corrupted(proto["url"]):
+            continue
+        if url and url in seen_urls:
+            continue
+        if not url and name and name in seen_names:
+            continue
+        if url:
+            seen_urls.add(url)
+        if name:
+            seen_names.add(name)
+        deduped.append(proto)
 
     for ext in all_extractions:
         if ext.label in ("PROTOCOL", "PROTOCOL_URL"):
             name = ext.canonical()
-            if name.lower() not in existing_proto_names:
-                entry = {"name": name}
-                if ext.metadata.get("url"):
-                    entry["url"] = ext.metadata["url"]
-                entry["source"] = ext.section or "rescan"
-                existing_protos.append(entry)
-                existing_proto_names.add(name.lower())
+            url = ext.metadata.get("url", "")
+            norm = _norm_url(url)
+            if url and _url_looks_corrupted(url):
+                continue
+            if norm and norm in seen_urls:
+                continue
+            if not norm and name.lower() in seen_names:
+                continue
+            entry = {"name": name}
+            if url:
+                entry["url"] = url
+            entry["source"] = ext.section or "rescan"
+            deduped.append(entry)
+            if norm:
+                seen_urls.add(norm)
+            seen_names.add(name.lower())
 
-    paper["protocols"] = existing_protos
+    paper["protocols"] = deduped
 
     # --- Merge RRIDs ---
     existing_rrids = paper.get("rrids") or []
@@ -643,6 +683,29 @@ def main():
                 fetch_datacite=not args.no_datacite,
                 fetch_ror=not args.no_ror,
             )
+
+        # --- Post-enrichment flag refresh ---
+        for paper in cleaned:
+            paper["has_openalex"] = bool(paper.get("openalex_id"))
+            paper["has_oa"] = bool(paper.get("oa_status"))
+            paper["has_fwci"] = paper.get("fwci") is not None and paper.get("fwci") != ""
+            paper["has_openalex_topics"] = bool(paper.get("openalex_topics"))
+            paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions"))
+            paper["has_fields_of_study"] = bool(paper.get("fields_of_study"))
+            paper["has_datasets"] = bool([
+                r for r in paper.get("repositories", [])
+                if isinstance(r, dict) and r.get("source") in (
+                    "datacite", "openaire", "crossref-relation", "text_pattern"
+                )
+            ])
+            _oa = str(paper.get("oa_status", "")).lower().strip()
+            paper["is_open_access"] = (
+                paper.get("is_open_access", False)
+                or _oa in ("gold", "green", "hybrid", "bronze")
+            )
+            paper["has_rors"] = bool(paper.get("rors"))
+            paper["has_institutions"] = bool(paper.get("institutions"))
+            paper["has_facility"] = paper["has_institutions"]
 
         # Write output
         out_file = os.path.join(out_dir, os.path.basename(input_file))

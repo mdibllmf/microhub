@@ -68,6 +68,13 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "scikit-image": "scikit-image",
     "skimage": "scikit-image",
     "arivis": "Arivis",
+    "omero": "OMERO",
+    "omero.web": "OMERO", "omero server": "OMERO",
+    "definiens": "Definiens", "definiens tissue studio": "Definiens",
+    "visiopharm": "Visiopharm",
+    "morphographx": "MorphoGraphX",
+    "nucleisegnet": "NucleiSegNet",
+    "bioimage suite": "BioImage Suite",
 }
 
 # ======================================================================
@@ -208,6 +215,14 @@ GENERAL_SOFTWARE: Dict[str, str] = {
     "sas": "SAS",
     "microsoft excel": "Excel",
     "excel": "Excel",
+    "jmp": "JMP", "jmp statistical": "JMP",
+    "labview": "LabVIEW", "lab view": "LabVIEW",
+    "maple": "Maple",
+    "mathematica": "Mathematica", "wolfram mathematica": "Mathematica",
+    "wolfram": "Wolfram",
+    "mega": "MEGA", "mega software": "MEGA", "mega x": "MEGA",
+    "perl": "Perl",
+    "stata": "Stata",
 }
 
 # R needs context to avoid matching single-letter occurrences
