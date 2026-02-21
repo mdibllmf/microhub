@@ -461,6 +461,12 @@ class JsonExporter:
         paper["has_github_tools"] = bool(paper.get("github_tools"))
         paper["has_facility"] = paper["has_institutions"]
 
+        # Extract data_availability and code_availability from full_text
+        # BEFORE stripping it — step 3 needs these for repository extraction
+        if paper.get("full_text") and not paper.get("data_availability"):
+            from pipeline.parsing.section_extractor import _extract_data_availability
+            paper["data_availability"] = _extract_data_availability(paper["full_text"])
+
         # Remove full_text from output (tags already extracted)
         if "full_text" in paper:
             del paper["full_text"]
