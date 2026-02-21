@@ -554,7 +554,7 @@ def main():
             # Sync aliases
             paper["techniques"] = paper.get("microscopy_techniques", [])
             paper["tags"] = paper.get("microscopy_techniques", [])
-            # software = acquisition software only (microscope control: ZEN, LAS X, etc.)
+            # software = acquisition software only (microscope control: ZEN, Leica Application Suite X, etc.)
             # Analysis and general software have their own dedicated fields
             paper["software"] = paper.get("image_acquisition_software") or []
 

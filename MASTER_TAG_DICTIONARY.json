@@ -112,7 +112,7 @@
       "BioImage Suite", "CellProfiler", "CellSens", "Cellpose", "ChimeraX", "Columbus",
       "DeconvolutionLab", "DeepCell", "Definiens", "Digital Micrograph", "Dragonfly",
       "EMAN2", "FluoView", "HALO", "Harmony", "Huygens", "IMOD", "Icy", "ImageJ", "Fiji",
-      "Imaris", "LAS X", "MATLAB", "Mask R-CNN", "MetaMorph", "MicroManager",
+      "Imaris", "MATLAB", "Mask R-CNN", "MetaMorph", "MicroManager",
       "MorphoGraphX", "NIS-Elements", "Neurolucida", "NucleiSegNet", "OMERO", "PyMOL",
       "Python", "QuPath", "R", "RELION", "SAM", "Scipion", "SerialEM", "SlideBook",
       "StarDist", "ThunderSTORM", "TrackMate", "U-Net", "UCSF Chimera", "Vaa3D",
@@ -131,7 +131,7 @@
     "import_call": "wp_set_object_terms($post_id, $data['image_acquisition_software'], 'mh_acquisition_software')",
     "all_valid_values": [
       "ArrayScan", "CellReporterXpress", "CellSens", "Columbus", "FluoView", "HCImage",
-      "Harmony", "IN Cell", "ImageXpress", "Imspector", "LAS X", "MetaMorph", "MicroManager",
+      "Harmony", "IN Cell", "ImageXpress", "Imspector", "Leica Application Suite X", "MetaMorph", "MicroManager",
       "NIS-Elements", "Opera Phenix", "Prairie View", "ScanImage", "SlideBook", "SymPhoTime",
       "ThorImage", "Volocity Acquisition", "ZEN"
     ]

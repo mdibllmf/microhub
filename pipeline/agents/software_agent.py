@@ -2,7 +2,7 @@
 Software extraction agent -- image analysis and acquisition software.
 
 Separates image analysis software (ImageJ, Fiji, CellProfiler, etc.)
-from image acquisition software (ZEN, LAS X, NIS-Elements, etc.)
+from image acquisition software (ZEN, Leica Application Suite X, NIS-Elements, etc.)
 and general-purpose software (MATLAB, Python, R, etc.).
 """
 
@@ -79,7 +79,7 @@ IMAGE_ACQUISITION_SOFTWARE: Dict[str, str] = {
     "zen blue": "ZEN",
     "zen black": "ZEN",
     "zeiss zen": "ZEN",
-    "leica application suite x": "LAS X",
+    "leica application suite x": "Leica Application Suite X",
     "nis-elements": "NIS-Elements",
     "nis elements": "NIS-Elements",
     "metamorph": "MetaMorph",
