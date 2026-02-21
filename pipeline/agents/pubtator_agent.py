@@ -108,9 +108,13 @@ class PubTatorAgent(BaseAgent):
         self._cache: Dict[str, List[Extraction]] = {}
         self._local_annotations: Dict[str, List[Dict]] = {}
         self._local_loaded = False
+        self._local_path = local_path  # deferred to first use
 
-        if local_path:
-            self._load_local(local_path)
+    def _ensure_local_loaded(self):
+        """Lazy-load PubTator entity files on first use."""
+        if not self._local_loaded and self._local_path:
+            self._load_local(self._local_path)
+            self._local_path = None  # prevent re-loading
 
     def _load_local(self, path: str):
         """Load PubTator entity summary files into a PMID-indexed lookup.
@@ -163,6 +167,8 @@ class PubTatorAgent(BaseAgent):
                             "mentions": mentions.split("|"),
                         })
                         count += 1
+                        if count % 500000 == 0:
+                            logger.info("  ... loaded %d PubTator annotations so far", count)
             except Exception as exc:
                 logger.warning("Failed to parse %s: %s", gz_path, exc)
 
@@ -242,7 +248,8 @@ class PubTatorAgent(BaseAgent):
         if pmid in self._cache:
             return self._cache[pmid]
 
-        # LOCAL FIRST
+        # LOCAL FIRST (lazy-load on first use)
+        self._ensure_local_loaded()
         if self._local_loaded and pmid in self._local_annotations:
             extractions = self._parse_local_annotations(pmid)
             self._cache[pmid] = extractions
