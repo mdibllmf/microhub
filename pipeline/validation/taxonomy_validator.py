@@ -3,9 +3,14 @@ Taxonomy validation using NCBI Taxonomy and PubTator APIs.
 
 Validates organism names against NCBI Taxonomy IDs and enriches
 extractions with taxonomic identifiers.
+
+Supports local-first validation via NCBI names.dmp (downloaded by
+download_lookup_tables.sh).  Falls back to the live NCBI API if
+local lookup misses or is not loaded.
 """
 
 import logging
+import os
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -43,12 +48,61 @@ _PUBTATOR_API = "https://www.ncbi.nlm.nih.gov/research/pubtator3-api"
 class TaxonomyValidator:
     """Validate organism names against NCBI Taxonomy."""
 
-    def __init__(self):
+    def __init__(self, local_path: str = None):
         self._cache: Dict[str, Optional[int]] = {}
+        self._local_names: Dict[str, int] = {}  # lowercase name → taxid
+        self._local_loaded = False
+
+        if local_path:
+            self._load_local(local_path)
+
+    def _load_local(self, path: str):
+        """Parse NCBI names.dmp for comprehensive name → TaxID mapping."""
+        names_path = path
+        if os.path.isdir(path):
+            names_path = os.path.join(path, "names.dmp")
+
+        if not os.path.exists(names_path):
+            logger.warning("NCBI names.dmp not found at %s", names_path)
+            return
+
+        count = 0
+        try:
+            with open(names_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    parts = line.strip().split("\t|\t")
+                    if len(parts) >= 4:
+                        try:
+                            taxid = int(parts[0].strip())
+                        except ValueError:
+                            continue
+                        name = parts[1].strip()
+                        name_class = parts[3].rstrip("\t|").strip()
+
+                        # Index scientific names, common names, and synonyms
+                        if name_class in (
+                            "scientific name", "common name",
+                            "synonym", "equivalent name",
+                            "genbank common name",
+                        ):
+                            name_lower = name.lower()
+                            # Prefer scientific names over common names
+                            if (name_lower not in self._local_names
+                                    or name_class == "scientific name"):
+                                self._local_names[name_lower] = taxid
+                            count += 1
+
+            self._local_loaded = True
+            logger.info(
+                "NCBI taxonomy loaded: %d name entries, %d unique names",
+                count, len(self._local_names),
+            )
+        except Exception as exc:
+            logger.warning("Failed to load NCBI taxonomy: %s", exc)
 
     def get_taxid(self, organism: str) -> Optional[int]:
         """Return NCBI Taxonomy ID for a canonical organism name."""
-        # Check local mapping first
+        # Check hardcoded map first (fastest)
         taxid = NCBI_TAXIDS.get(organism)
         if taxid is not None:
             return taxid
@@ -57,7 +111,14 @@ class TaxonomyValidator:
         if organism in self._cache:
             return self._cache[organism]
 
-        # Query NCBI Taxonomy search
+        # LOCAL LOOKUP (comprehensive)
+        if self._local_loaded:
+            taxid = self._local_names.get(organism.lower())
+            if taxid is not None:
+                self._cache[organism] = taxid
+                return taxid
+
+        # FALLBACK: original NCBI API
         taxid = self._query_ncbi(organism)
         self._cache[organism] = taxid
         return taxid

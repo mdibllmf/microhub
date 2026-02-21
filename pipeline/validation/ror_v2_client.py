@@ -18,7 +18,10 @@ Usage:
     # → {"ror_id": "042nb2s44", "name": "Massachusetts Institute of Technology", ...}
 """
 
+import glob
+import json
 import logging
+import os
 import re
 import threading
 import time
@@ -49,9 +52,14 @@ _REQUEST_DELAY = 0.15  # ≈2000/300s
 
 
 class RORv2Client:
-    """Query the ROR v2 API for organization matching and lookup."""
+    """Query the ROR v2 API for organization matching and lookup.
 
-    def __init__(self, client_id: str = None):
+    Supports local-first matching via the ROR data dump JSON file
+    (downloaded by download_lookup_tables.sh).  Falls back to the
+    live API for fuzzy affiliation matching.
+    """
+
+    def __init__(self, client_id: str = None, local_path: str = None):
         """
         Parameters
         ----------
@@ -59,11 +67,84 @@ class RORv2Client:
             ROR API client ID (register at ror.org/api-client-id).
             Without one: 50 requests per 5 minutes.
             With one: 2,000 requests per 5 minutes.
+        local_path : str, optional
+            Path to the ROR data dump directory or JSON file.
         """
         self.client_id = client_id
         self._last_call = 0.0
         self._cache: Dict[str, Optional[Dict]] = {}
         self._lock = threading.Lock()
+        self._local_index: Dict[str, Dict] = {}  # lowercase name → {ror_id, name, country}
+        self._local_loaded = False
+
+        if local_path:
+            self._load_local(local_path)
+
+    def _load_local(self, path: str):
+        """Load ROR data dump JSON for local name → ROR ID matching."""
+        json_path = path
+        if os.path.isdir(path):
+            # Find the JSON file (name varies by version)
+            candidates = glob.glob(os.path.join(path, "v*.json"))
+            if not candidates:
+                candidates = glob.glob(os.path.join(path, "*.json"))
+            if not candidates:
+                logger.warning("No ROR JSON found in %s", path)
+                return
+            json_path = candidates[0]
+
+        if not os.path.exists(json_path):
+            logger.warning("ROR dump not found at %s", json_path)
+            return
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                orgs = json.load(f)
+
+            count = 0
+            for org in orgs:
+                ror_url = org.get("id", "")
+                ror_id = ror_url.replace("https://ror.org/", "")
+                name = org.get("name", "")
+
+                if not ror_id or not name:
+                    continue
+
+                entry = {"ror_id": ror_id, "name": name, "country": ""}
+
+                # Get country
+                locations = org.get("locations", [])
+                if locations and isinstance(locations[0], dict):
+                    geonames = locations[0].get("geonames_details", {})
+                    entry["country"] = geonames.get("country_name", "")
+
+                # Index by primary name
+                self._local_index[name.lower()] = entry
+
+                # Index by all alternate names and acronyms
+                for name_obj in org.get("names", []):
+                    alt_name = name_obj.get("value", "")
+                    if alt_name:
+                        alt_lower = alt_name.lower()
+                        # Don't overwrite primary names with acronyms
+                        if alt_lower not in self._local_index:
+                            self._local_index[alt_lower] = entry
+
+                count += 1
+
+            self._local_loaded = True
+            logger.info(
+                "ROR local index loaded: %d organizations, %d lookup keys",
+                count, len(self._local_index),
+            )
+        except Exception as exc:
+            logger.warning("Failed to load ROR dump: %s", exc)
+
+    def lookup_local(self, institution_name: str) -> Optional[Dict]:
+        """Fast local lookup by exact institution name."""
+        if not self._local_loaded:
+            return None
+        return self._local_index.get(institution_name.lower())
 
     # ------------------------------------------------------------------
     # Affiliation matching

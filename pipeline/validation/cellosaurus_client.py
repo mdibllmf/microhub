@@ -23,6 +23,8 @@ Usage:
 """
 
 import logging
+import os
+import re
 import time
 from typing import Any, Dict, List, Optional, Set
 
@@ -41,13 +43,88 @@ class CellosaurusClient:
     """Validate and enrich cell line names via the Cellosaurus REST API.
 
     Thread-safe with per-instance rate limiting and caching.
+    Supports local-first validation from the cellosaurus.txt flat file.
     """
 
-    def __init__(self, delay: float = 0.3):
+    def __init__(self, delay: float = 0.3, local_path: str = None):
         self._cache: Dict[str, Optional[Dict[str, Any]]] = {}
         self._last_call = 0.0
         self._delay = delay
         self._exhausted = False
+        self._local_index: Dict[str, Dict[str, Any]] = {}
+        self._local_loaded = False
+
+        if local_path:
+            self._load_local(local_path)
+
+    def _load_local(self, path: str):
+        """Parse cellosaurus.txt flat file into a fast lookup index."""
+        txt_path = path
+        if os.path.isdir(path):
+            txt_path = os.path.join(path, "cellosaurus.txt")
+
+        if not os.path.exists(txt_path):
+            logger.warning("Cellosaurus flat file not found at %s", txt_path)
+            return
+
+        count = 0
+        current: Dict[str, Any] = {}
+        try:
+            with open(txt_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.rstrip("\n")
+                    if line == "//":
+                        if current.get("name") and current.get("accession"):
+                            entry = {
+                                "accession": current["accession"],
+                                "name": current["name"],
+                                "synonyms": current.get("synonyms", []),
+                                "species": current.get("species", ""),
+                                "species_tax_id": current.get("tax_id", ""),
+                                "disease": current.get("disease", ""),
+                                "category": current.get("category", ""),
+                            }
+                            # Index by primary name
+                            self._local_index[current["name"].lower()] = entry
+                            # Index by all synonyms
+                            for syn in current.get("synonyms", []):
+                                syn_lower = syn.strip().lower()
+                                if syn_lower and syn_lower not in self._local_index:
+                                    self._local_index[syn_lower] = entry
+                            count += 1
+                        current = {}
+                    elif line.startswith("ID   "):
+                        current["name"] = line[5:].strip()
+                    elif line.startswith("AC   "):
+                        current["accession"] = line[5:].strip()
+                    elif line.startswith("SY   "):
+                        syns = line[5:].split(";")
+                        current.setdefault("synonyms", []).extend(
+                            s.strip() for s in syns if s.strip()
+                        )
+                    elif line.startswith("OX   "):
+                        # "NCBI_TaxID=9606; ! Homo sapiens"
+                        parts = line[5:].split("!")
+                        if len(parts) > 1:
+                            current["species"] = parts[1].strip()
+                        tax_match = re.search(r'NCBI_TaxID=(\d+)', line)
+                        if tax_match:
+                            current["tax_id"] = tax_match.group(1)
+                    elif line.startswith("DI   "):
+                        # "NCIt; C27677; Cervical adenocarcinoma"
+                        parts = line[5:].split(";")
+                        if len(parts) >= 3:
+                            current["disease"] = parts[2].strip()
+                    elif line.startswith("CA   "):
+                        current["category"] = line[5:].strip()
+
+            self._local_loaded = True
+            logger.info(
+                "Cellosaurus local index loaded: %d cell lines, %d lookup keys",
+                count, len(self._local_index),
+            )
+        except Exception as exc:
+            logger.warning("Failed to load Cellosaurus flat file: %s", exc)
 
     # ------------------------------------------------------------------
     # Public API
@@ -76,13 +153,23 @@ class CellosaurusClient:
               - str_data: STR profile data (if available)
             Returns None if the cell line is not found.
         """
-        if not HAS_REQUESTS or self._exhausted or not cell_line_name:
+        if not cell_line_name:
             return None
 
         cache_key = cell_line_name.strip().lower()
         if cache_key in self._cache:
             return self._cache[cache_key]
 
+        # LOCAL FIRST
+        if self._local_loaded:
+            entry = self._local_index.get(cache_key)
+            if entry:
+                self._cache[cache_key] = entry
+                return entry
+
+        # FALLBACK: original API search
+        if not HAS_REQUESTS or self._exhausted:
+            return None
         result = self._search_cell_line(cell_line_name.strip())
         self._cache[cache_key] = result
         return result
