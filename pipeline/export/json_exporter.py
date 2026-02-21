@@ -289,6 +289,19 @@ class JsonExporter:
         supplementary = self.safe_json_parse(row_dict.get("supplementary_materials"))
         rrids = self.safe_json_parse(row_dict.get("rrids"))
         rors = self.safe_json_parse(row_dict.get("rors"))
+        # Deduplicate ROR entries by ID at parse time
+        if rors:
+            seen_ror_ids = set()
+            deduped_rors = []
+            for ror_entry in rors:
+                if isinstance(ror_entry, dict):
+                    ror_id = ror_entry.get("id", "")
+                    if ror_id and ror_id not in seen_ror_ids:
+                        seen_ror_ids.add(ror_id)
+                        deduped_rors.append(ror_entry)
+                    elif not ror_id:
+                        deduped_rors.append(ror_entry)
+            rors = deduped_rors
         references = self.safe_json_parse(row_dict.get("references"))
         figures = self.safe_json_parse(row_dict.get("figures"))
         antibodies = self.safe_json_parse(row_dict.get("antibodies"))
@@ -342,6 +355,15 @@ class JsonExporter:
             "citations": citation_count,
             "influential_citation_count": self.safe_get(row_dict, "influential_citation_count", 0),
             "citation_source": self.safe_get(row_dict, "citation_source"),
+
+            # === OPENALEX & OPEN ACCESS ===
+            "openalex_id": self.safe_get(row_dict, "openalex_id"),
+            "oa_status": self.safe_get(row_dict, "oa_status"),
+            "oa_url": self.safe_get(row_dict, "oa_url"),
+            "openalex_topics": self.safe_json_parse(row_dict.get("openalex_topics")),
+            "openalex_institutions": self.safe_json_parse(row_dict.get("openalex_institutions")),
+            "fields_of_study": self.safe_json_parse(row_dict.get("fields_of_study")),
+            "fwci": self.safe_get(row_dict, "fwci"),
 
             # === URLS ===
             "doi_url": self.safe_get(row_dict, "doi_url"),

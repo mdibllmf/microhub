@@ -207,6 +207,38 @@ FLUOROPHORE_CANONICAL: Dict[str, str] = {
     # Bimolecular fluorescence
     "split-gfp": "Split-GFP", "split gfp": "Split-GFP",
     "bifc": "BiFC", "bimolecular fluorescence": "BiFC",
+    # --- Voltage indicators & neurotransmitter sensors ---
+    "ace2n": "Ace2N",
+    "varnam": "VARNAM",
+    "flickr1": "FlicR1", "flicr1": "FlicR1",
+    "macq": "MacQ",
+    "paquasar": "paQuasAr",
+    "gach": "GACh", "grab-ach": "GACh",
+    "iachsnfr": "iAChSnFR",
+    "iserosnfr": "iSeroSnFR",
+    "flex sensor": "FLEX sensors", "flex sensors": "FLEX sensors",
+    # --- Rare/legacy fluorescent proteins ---
+    "azurite": "Azurite",
+    "phiyfp": "PhiYFP",
+    "sbfp": "SBFP",
+    "ifp": "IFP", "infrared fluorescent protein": "IFP",
+    "mbanana": "mBanana",
+    "mgrape": "mGrape",
+    "mkalama1": "mKalama1", "mkalama": "mKalama1",
+    "mmaroon": "mMaroon",
+    "mirisfp": "mIrisFP",
+    "mclavgr2": "mClavGR2", "mclavgr": "mClavGR2",
+    "mgeos": "mGeos",
+    # --- DsRed variants ---
+    "dsred-express": "DsRed-Express", "dsred express": "DsRed-Express",
+    "dsred-monomer": "DsRed-Monomer", "dsred monomer": "DsRed-Monomer",
+    # --- Calcium dyes ---
+    "calcium orange": "Calcium Orange",
+    "calcium crimson": "Calcium Crimson",
+    # --- FRET pairs ---
+    "cfp-yfp fret": "CFP-YFP FRET", "cfp/yfp fret": "CFP-YFP FRET",
+    "mturquoise-venus": "mTurquoise-Venus", "mturquoise/venus": "mTurquoise-Venus",
+    "cerulean-venus": "Cerulean-Venus", "cerulean/venus": "Cerulean-Venus",
 }
 
 # ======================================================================
@@ -223,8 +255,8 @@ _REGEX_PATTERNS: List[tuple] = [
     (re.compile(r"\bATTO\s*(\d{3}N?)\b", re.I),
      lambda m: f"ATTO {m.group(1)}"),
     # Cy dyes
-    (re.compile(r"\bCy([357])(?:\.5)?\b"),
-     lambda m: f"Cy{m.group(1)}"),
+    (re.compile(r"\bCy([2357])(?:\.5)?\b"),
+     lambda m: f"Cy{m.group(1)}" if not m.group(0).endswith(".5") else f"Cy{m.group(1)}.5"),
     # Hoechst
     (re.compile(r"\bHoechst\s*(\d{5})\b", re.I),
      lambda m: f"Hoechst {m.group(1)}"),
