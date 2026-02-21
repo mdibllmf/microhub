@@ -208,13 +208,12 @@ def _extract_figure_captions(text: str) -> str:
 
 
 def _extract_data_availability(text: str) -> str:
-    """Extract Data Availability section from full text."""
-    m = _DATA_AVAIL_RE.search(text)
-    if not m:
-        return ""
+    """Extract Data Availability and Code Availability sections from full text.
 
-    start = m.end()
-    # Take text until next section heading or end
+    Finds ALL matching sections (data availability, code availability, etc.)
+    and concatenates them.  This ensures code availability is captured even
+    when it appears as a separate section from data availability.
+    """
     _next_heading = re.compile(
         r"\n\s*(?:\d+\.?\s*)?(?:acknowledge?ments?|references?|funding|"
         r"supplementary|author\s+contributions?|competing\s+interests?|"
@@ -224,9 +223,17 @@ def _extract_data_availability(text: str) -> str:
         r"star\s+methods|(?:experimental|materials?\s+and)\s+methods?)\s*\n",
         re.IGNORECASE,
     )
-    end_m = _next_heading.search(text, start)
-    end = end_m.start() if end_m else min(start + 2000, len(text))
-    return text[start:end].strip()
+
+    parts = []
+    for m in _DATA_AVAIL_RE.finditer(text):
+        start = m.end()
+        end_m = _next_heading.search(text, start)
+        end = end_m.start() if end_m else min(start + 3000, len(text))
+        chunk = text[start:end].strip()
+        if chunk:
+            parts.append(chunk)
+
+    return "\n\n".join(parts)
 
 
 # Patterns to detect the start of References/Bibliography section

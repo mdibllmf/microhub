@@ -441,19 +441,34 @@ class PipelineOrchestrator:
 
     @staticmethod
     def _structured_repositories(exts: List[Extraction]) -> List[Dict]:
-        """Build structured repository list."""
+        """Build structured repository list, deduplicating by URL and accession ID."""
         repos = []
-        seen: Set[str] = set()
+        seen_urls: Set[str] = set()
+        seen_accessions: Set[str] = set()
         for ext in exts:
             if ext.label != "REPOSITORY":
                 continue
-            key = ext.metadata.get("url") or ext.canonical()
-            if key in seen:
+            url = ext.metadata.get("url", "")
+            url_key = url.lower().rstrip("/") if url else ""
+            accession = ext.metadata.get("accession_id", "")
+            acc_key = (ext.canonical() + ":" + accession).lower() if accession else ""
+
+            # Skip if we already have this URL or accession
+            if url_key and url_key in seen_urls:
                 continue
-            seen.add(key)
+            if acc_key and acc_key in seen_accessions:
+                continue
+
+            if url_key:
+                seen_urls.add(url_key)
+            if acc_key:
+                seen_accessions.add(acc_key)
+
             entry = {"name": ext.canonical()}
-            if ext.metadata.get("url"):
-                entry["url"] = ext.metadata["url"]
+            if url:
+                entry["url"] = url
+            if accession:
+                entry["accession"] = accession
             repos.append(entry)
         return repos
 
@@ -488,9 +503,9 @@ class PipelineOrchestrator:
             if ext.label != "ROR":
                 continue
             ror_id = ext.canonical()
-            if ror_id in seen:
+            if ror_id.lower() in seen:
                 continue
-            seen.add(ror_id)
+            seen.add(ror_id.lower())
             rors.append({
                 "id": ror_id,
                 "url": ext.metadata.get("url", ""),
@@ -500,8 +515,8 @@ class PipelineOrchestrator:
         # From institution agent (ROR IDs looked up from institution names)
         for ext in institution_exts:
             ror_id = ext.metadata.get("ror_id")
-            if ror_id and ror_id not in seen:
-                seen.add(ror_id)
+            if ror_id and ror_id.lower() not in seen:
+                seen.add(ror_id.lower())
                 rors.append({
                     "id": ror_id,
                     "url": ext.metadata.get("ror_url", ""),

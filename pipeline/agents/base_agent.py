@@ -60,10 +60,21 @@ class BaseAgent(ABC):
 
     @staticmethod
     def _deduplicate(extractions: List[Extraction]) -> List[Extraction]:
-        """Remove duplicate canonical forms, keeping highest-confidence."""
+        """Remove duplicate canonical forms, keeping highest-confidence.
+
+        For REPOSITORY and GITHUB_URL labels, the dedup key also includes the
+        URL or accession ID so that distinct entries (e.g. EMPIAR-10078 and
+        EMPIAR-10097) are kept even though they share the same canonical name.
+        """
         seen: Dict[str, Extraction] = {}
         for ext in extractions:
-            key = (ext.label, ext.canonical())
+            if ext.label in ("REPOSITORY", "GITHUB_URL"):
+                # Repositories: dedup by label + canonical + URL/accession
+                url = ext.metadata.get("url", "").lower().rstrip("/")
+                acc = ext.metadata.get("accession_id", "").lower()
+                key = (ext.label, ext.canonical(), url or acc or ext.text.lower())
+            else:
+                key = (ext.label, ext.canonical())
             if key not in seen or ext.confidence > seen[key].confidence:
                 seen[key] = ext
         return list(seen.values())

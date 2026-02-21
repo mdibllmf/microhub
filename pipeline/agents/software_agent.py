@@ -27,7 +27,6 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "cellpose": "Cellpose",
     "stardist": "StarDist",
     "deepcell": "DeepCell",
-    "omero": "OMERO",
     "dragonfly ors": "Dragonfly",
     "amira": "Amira",
     "huygens": "Huygens",
@@ -80,9 +79,10 @@ IMAGE_ACQUISITION_SOFTWARE: Dict[str, str] = {
     "zen blue": "ZEN",
     "zen black": "ZEN",
     "zeiss zen": "ZEN",
-    "las x": "LAS X",
+    "las x": None,  # LAS X needs context (matches "las x-ray", etc.)
     "las af": "LAS X",
     "leica las": "LAS X",
+    "leica las x": "LAS X",
     "nis-elements": "NIS-Elements",
     "nis elements": "NIS-Elements",
     "metamorph": "MetaMorph",
@@ -127,6 +127,20 @@ _ZEN_CONTEXT = re.compile(
     re.IGNORECASE,
 )
 _ZEN_BRAND_CONTEXT = re.compile(r"\b(?:Zeiss|Carl Zeiss)\b.{0,50}\bZEN\b", re.I | re.S)
+
+# Context pattern for "LAS X" to avoid matching "LAS X-ray", "LAS X-linked", etc.
+# Requires microscopy/software context nearby
+_LAS_X_CONTEXT = re.compile(
+    r"\bLAS\s+X\b(?=\s*(?:software|version|v?\d|lite|acquisition|imaging|microscop"
+    r"|confocal|module|platform|Leica))"
+    r"|\bLAS\s+X\b(?!\s*[-])"  # accept if NOT followed by a hyphen (rules out "LAS X-ray")
+    r"|\bLAS\s+X\b(?=\s*[,;.)\"'])"  # accept at end of clause
+    r"|\bLAS\s+X\b(?=\s*$)",  # accept at end of string
+    re.IGNORECASE | re.DOTALL,
+)
+_LAS_X_BRAND_CONTEXT = re.compile(
+    r"\b(?:Leica)\b.{0,50}\bLAS\s+X\b", re.I | re.S
+)
 
 # Context pattern for "IN Cell" to avoid matching generic "in cell" phrases
 _IN_CELL_CONTEXT = re.compile(
@@ -310,6 +324,28 @@ class SoftwareAgent(BaseAgent):
                     confidence=0.8, source_agent=self.name,
                     section=section or "",
                     metadata={"canonical": "ZEN"},
+                ))
+
+        # Handle "LAS X" with context (avoid "LAS X-ray", "LAS X-linked", etc.)
+        for m in _LAS_X_CONTEXT.finditer(text):
+            extractions.append(Extraction(
+                text=m.group(0).strip(),
+                label="IMAGE_ACQUISITION_SOFTWARE",
+                start=m.start(), end=m.end(),
+                confidence=0.85, source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": "LAS X"},
+            ))
+        for m in _LAS_X_BRAND_CONTEXT.finditer(text):
+            idx = text.upper().find("LAS X", m.start())
+            if idx >= 0:
+                extractions.append(Extraction(
+                    text="LAS X",
+                    label="IMAGE_ACQUISITION_SOFTWARE",
+                    start=idx, end=idx + 5,
+                    confidence=0.85, source_agent=self.name,
+                    section=section or "",
+                    metadata={"canonical": "LAS X"},
                 ))
 
         # Handle "IN Cell" with context (avoid matching generic "in cell" phrases)

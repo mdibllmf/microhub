@@ -148,33 +148,46 @@ def _rescan_repositories(paper, repo_scanner, institution_scanner=None):
 
     existing_urls = set()
     existing_names = set()
+    existing_accessions = set()
     for r in existing_repos:
         if isinstance(r, dict):
             url = (r.get("url") or "").lower().rstrip("/")
             if url:
                 existing_urls.add(url)
             existing_names.add((r.get("name") or "").lower())
+            acc = r.get("accession", "")
+            if acc:
+                existing_accessions.add(acc.lower())
 
     for ext in all_extractions:
         if ext.label == "REPOSITORY":
             url = ext.metadata.get("url", "")
             name = ext.canonical()
+            accession = ext.metadata.get("accession_id", "")
             url_lower = url.lower().rstrip("/") if url else ""
+            acc_key = (name + ":" + accession).lower() if accession else ""
 
             # Skip if we already have this URL
             if url_lower and url_lower in existing_urls:
                 continue
+            # Skip if we already have this accession ID for the same repo type
+            if acc_key and acc_key in existing_accessions:
+                continue
             # For non-URL repos (e.g., accession IDs), skip if name+text match
-            if not url and name.lower() in existing_names:
+            if not url and not accession and name.lower() in existing_names:
                 continue
 
             entry = {"name": name}
             if url:
                 entry["url"] = url
+            if accession:
+                entry["accession"] = accession
             entry["source"] = "rescan"
             existing_repos.append(entry)
             if url_lower:
                 existing_urls.add(url_lower)
+            if acc_key:
+                existing_accessions.add(acc_key)
             existing_names.add(name.lower())
 
     paper["repositories"] = existing_repos

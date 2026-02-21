@@ -393,6 +393,24 @@ def normalize_tags(paper: Dict) -> Dict:
     _apply(paper, "microscopy_techniques", TECHNIQUE_RENAMES)
     _apply(paper, "microscope_brands", BRAND_RENAMES)
     _apply(paper, "image_analysis_software", SOFTWARE_RENAMES)
+    _apply(paper, "image_acquisition_software", SOFTWARE_RENAMES)
+
+    # Ensure acquisition-only software doesn't appear in the analysis list
+    # and vice versa (handles legacy data or cross-step contamination)
+    _acquisition_only = {
+        "LAS X", "ZEN", "NIS-Elements", "MetaMorph", "SlideBook",
+        "Volocity", "Volocity Acquisition", "Harmony", "CellSens",
+        "FluoView", "Prairie View", "ScanImage", "MicroManager",
+        "ThorImage", "SymPhoTime", "Imspector", "HCImage",
+        "ImageXpress", "CellReporterXpress", "IN Cell",
+        "Opera Phenix", "Columbus", "ArrayScan",
+    }
+    analysis = paper.get("image_analysis_software") or []
+    if analysis:
+        paper["image_analysis_software"] = [
+            s for s in analysis if s not in _acquisition_only
+        ]
+
     _apply(paper, "organisms", ORGANISM_RENAMES)
     _apply(paper, "cell_lines", CELL_LINE_RENAMES)
     _apply(paper, "sample_preparation", SAMPLE_PREP_RENAMES)
