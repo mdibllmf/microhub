@@ -73,6 +73,14 @@ class ApiValidator:
         self._ror_cache: Dict[str, Optional[Dict]] = {}
         self._taxon_cache: Dict[str, Optional[Dict]] = {}
 
+        # Cellosaurus client for cell line validation
+        self._cellosaurus = None
+        try:
+            from .cellosaurus_client import CellosaurusClient
+            self._cellosaurus = CellosaurusClient()
+        except ImportError:
+            pass
+
         # Rate limiting
         self._last_call: Dict[str, float] = {}
         self._delays = {
@@ -117,6 +125,12 @@ class ApiValidator:
         if "organisms" in results:
             results["organisms"] = self._validate_organisms(
                 results["organisms"]
+            )
+
+        # 5. Validate cell lines against Cellosaurus
+        if "cell_lines" in results and self._cellosaurus:
+            results["_cell_line_metadata"] = self._validate_cell_lines(
+                results["cell_lines"]
             )
 
         return results
@@ -486,6 +500,48 @@ class ApiValidator:
 
         except Exception:
             return None
+
+    # ------------------------------------------------------------------
+    # Cellosaurus cell line validation
+    # ------------------------------------------------------------------
+
+    def _validate_cell_lines(
+        self, cell_lines: List[str]
+    ) -> List[Dict[str, Any]]:
+        """Validate cell line names against Cellosaurus and return metadata.
+
+        Returns a list of metadata dicts (one per cell line) containing
+        accession IDs, species of origin, disease info, and validation status.
+        The original ``cell_lines`` list in results is NOT modified — this
+        only populates the ``_cell_line_metadata`` key for enrichment.
+        """
+        if not self._cellosaurus:
+            return []
+
+        metadata: List[Dict[str, Any]] = []
+        for name in cell_lines:
+            result = self._cellosaurus.validate(name)
+            if result:
+                entry = {
+                    "name": name,
+                    "validated": True,
+                    "cellosaurus_accession": result.get("accession", ""),
+                    "canonical_name": result.get("name", name),
+                    "species": result.get("species", ""),
+                    "disease": result.get("disease", ""),
+                    "category": result.get("category", ""),
+                }
+                if result.get("sex"):
+                    entry["sex"] = result["sex"]
+                if result.get("cross_references"):
+                    entry["cross_references"] = result["cross_references"]
+                metadata.append(entry)
+            else:
+                metadata.append({
+                    "name": name,
+                    "validated": False,
+                })
+        return metadata
 
     # ------------------------------------------------------------------
     # PubTator supplemental extraction (for papers with PMIDs)
