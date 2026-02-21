@@ -612,18 +612,20 @@ def main():
             paper["has_detectors"] = bool(paper.get("detectors"))
             paper["has_filters"] = bool(paper.get("filters"))
 
-            # New enrichment boolean flags (v6.1)
+            # New enrichment boolean flags (v6.1) — derived from actual data
             paper["has_openalex"] = bool(paper.get("openalex_id"))
-            paper["has_oa"] = bool(paper.get("oa_status"))
+            paper["has_oa"] = bool(paper.get("oa_status")) and str(paper.get("oa_status", "")).lower() != "closed"
             paper["has_fwci"] = paper.get("fwci") is not None and paper.get("fwci") != ""
             paper["has_datasets"] = bool([
                 r for r in paper.get("repositories", [])
                 if isinstance(r, dict) and r.get("source") in ("datacite", "openaire", "crossref-relation", "text_pattern")
             ])
-            paper["is_open_access"] = paper.get("is_open_access", False)
-            paper["has_openalex_topics"] = bool(paper.get("openalex_topics"))
-            paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions"))
-            paper["has_fields_of_study"] = bool(paper.get("fields_of_study"))
+            # Derive is_open_access from oa_status, not just pass through
+            oa_status = str(paper.get("oa_status", "") or "").lower().strip()
+            paper["is_open_access"] = oa_status in ("gold", "green", "hybrid", "bronze") or bool(paper.get("is_open_access"))
+            paper["has_openalex_topics"] = bool(paper.get("openalex_topics")) and paper.get("openalex_topics") != "[]"
+            paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions")) and paper.get("openalex_institutions") != "[]"
+            paper["has_fields_of_study"] = bool(paper.get("fields_of_study")) and paper.get("fields_of_study") != "[]"
 
             # Remove full_text from output (tags already extracted)
             paper.pop("full_text", None)

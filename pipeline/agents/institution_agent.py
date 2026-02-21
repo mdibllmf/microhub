@@ -180,6 +180,15 @@ _ACKNOWLEDGMENT_EXCLUSIONS = re.compile(
     re.IGNORECASE,
 )
 
+# Generic institution substrings that cause false matches when isolated
+_GENERIC_INSTITUTION_SUBSTRINGS = {
+    "medical school", "school of medicine", "college of medicine",
+    "research institute", "cancer center", "medical center",
+    "institute of technology", "school of public health",
+    "graduate school", "college of engineering", "school of engineering",
+    "department of", "division of", "center for",
+}
+
 
 class InstitutionAgent(BaseAgent):
     """Extract institutions from author affiliations (NOT from paper body).
@@ -303,12 +312,15 @@ class InstitutionAgent(BaseAgent):
                 if any(e.metadata.get("canonical", "").lower() == name.lower()
                        for e in extractions):
                     continue
-                # Skip very short matches (likely false positives)
-                if len(name) < 5:
+                # Skip short matches — "Medical School" alone is too generic
+                if len(name) < 10:
+                    continue
+                # Skip generic substrings that cause bad matches
+                if name.lower().strip() in _GENERIC_INSTITUTION_SUBSTRINGS:
                     continue
 
                 metadata = {"canonical": name}
-                conf = 0.7
+                conf = 0.65  # Lower default for pattern-only matches
 
                 # LOCAL FIRST: check ROR dump for this institution
                 if self._ror_loaded:
@@ -321,21 +333,33 @@ class InstitutionAgent(BaseAgent):
                         metadata["canonical"] = official_name
                         conf = 0.90
                     else:
-                        # FALLBACK: ROR v2 API lookup
-                        ror_result = self.resolve_ror_via_api(name)
-                        if ror_result:
+                        # FALLBACK: scored ROR v2 API lookup
+                        ror_result = self._resolve_ror_with_context(name, text)
+                        if ror_result and ror_result.get("score", 0) >= 0.8:
+                            # Verify word overlap to prevent cross-entity matches
+                            matched_words = set(ror_result["name"].lower().split())
+                            query_words = set(name.lower().split())
+                            substantive_overlap = [w for w in (matched_words & query_words) if len(w) > 3]
+                            if substantive_overlap:
+                                metadata["ror_id"] = ror_result["ror_id"]
+                                metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
+                                metadata["canonical"] = ror_result["name"]
+                                conf = 0.85
+                            else:
+                                logger.debug("ROR match '%s' rejected — no word overlap with '%s'",
+                                             ror_result["name"], name)
+                else:
+                    # No local dump — try scored ROR v2 API lookup
+                    ror_result = self._resolve_ror_with_context(name, text)
+                    if ror_result and ror_result.get("score", 0) >= 0.8:
+                        matched_words = set(ror_result["name"].lower().split())
+                        query_words = set(name.lower().split())
+                        substantive_overlap = [w for w in (matched_words & query_words) if len(w) > 3]
+                        if substantive_overlap:
                             metadata["ror_id"] = ror_result["ror_id"]
                             metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
                             metadata["canonical"] = ror_result["name"]
                             conf = 0.85
-                else:
-                    # No local dump — try ROR v2 API lookup
-                    ror_result = self.resolve_ror_via_api(name)
-                    if ror_result:
-                        metadata["ror_id"] = ror_result["ror_id"]
-                        metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
-                        metadata["canonical"] = ror_result["name"]
-                        conf = 0.85
 
                 extractions.append(Extraction(
                     text=name,
@@ -350,18 +374,17 @@ class InstitutionAgent(BaseAgent):
         return extractions
 
     # ------------------------------------------------------------------
-    # ROR v2 API fallback for institutions not in the hardcoded map
+    # ROR v2 API fallback with affiliation context for scoring
     # ------------------------------------------------------------------
 
     _ror_api_cache: Dict[str, Optional[Dict]] = {}
-    _last_ror_call: float = 0.0
-    _ROR_DELAY: float = 0.15  # 2000 req/5min = ~6.6/sec
 
-    def resolve_ror_via_api(self, institution_name: str) -> Optional[Dict]:
-        """Look up ROR ID for an institution name via ROR v2 API.
+    def _resolve_ror_with_context(self, institution_name: str,
+                                   full_affiliation: str) -> Optional[Dict]:
+        """Look up ROR ID using the full affiliation string for context.
 
-        Only called for institutions NOT in the hardcoded INSTITUTION_ROR_IDS.
-        Results are cached for the lifetime of this agent instance.
+        Uses the ROR v2 affiliation endpoint (via ror_v2_client) which
+        has proper scoring, rather than the raw search endpoint.
         """
         if not _HAS_REQUESTS:
             return None
@@ -370,46 +393,25 @@ class InstitutionAgent(BaseAgent):
         if cache_key in self._ror_api_cache:
             return self._ror_api_cache[cache_key]
 
-        elapsed = time.time() - self._last_ror_call
-        if elapsed < self._ROR_DELAY:
-            time.sleep(self._ROR_DELAY - elapsed)
-
         try:
-            resp = _requests_lib.get(
-                "https://api.ror.org/v2/organizations",
-                params={"query": institution_name},
-                timeout=10,
-            )
-            InstitutionAgent._last_ror_call = time.time()
+            from ..validation.ror_v2_client import RORv2Client
+            if not hasattr(self, '_ror_client'):
+                self._ror_client = RORv2Client()
 
-            if resp.status_code != 200:
-                self._ror_api_cache[cache_key] = None
-                return None
+            # Use full affiliation string for better disambiguation
+            result = self._ror_client.match_affiliation(full_affiliation)
+            if result and result.get("score", 0) >= 0.8:
+                self._ror_api_cache[cache_key] = result
+                return result
 
-            data = resp.json()
-            items = data.get("items", [])
-            if not items:
-                self._ror_api_cache[cache_key] = None
-                return None
+            self._ror_api_cache[cache_key] = None
+            return None
 
-            # Take the top result — ROR's search is relevance-ranked
-            top = items[0]
-            ror_id_full = top.get("id", "")  # e.g. "https://ror.org/0xxxxxxxx"
-            ror_id = ror_id_full.replace("https://ror.org/", "").strip()
-            official_name = ""
-            for name_entry in top.get("names", []):
-                if "ror_display" in name_entry.get("types", []):
-                    official_name = name_entry.get("value", "")
-                    break
-            if not official_name:
-                names = top.get("names", [])
-                official_name = names[0].get("value", institution_name) if names else institution_name
-
-            result = {"ror_id": ror_id, "name": official_name}
-            self._ror_api_cache[cache_key] = result
-            return result
-
+        except ImportError:
+            logger.debug("ror_v2_client not available, skipping ROR lookup")
+            self._ror_api_cache[cache_key] = None
+            return None
         except Exception as exc:
-            logger.debug("ROR API error for '%s': %s", institution_name, exc)
+            logger.debug("ROR lookup error for '%s': %s", institution_name, exc)
             self._ror_api_cache[cache_key] = None
             return None
