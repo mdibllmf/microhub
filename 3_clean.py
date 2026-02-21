@@ -346,6 +346,12 @@ def main():
                         help="Use local Ollama LLM to verify Methods section tags")
     parser.add_argument("--ollama-model", default=None,
                         help="Ollama model name (default: llama3.1 or OLLAMA_MODEL env)")
+    parser.add_argument("--no-pubtator", action="store_true",
+                        help="Skip PubTator NLP extraction")
+    parser.add_argument("--no-role-classifier", action="store_true",
+                        help="Disable role classifier (over-tagging prevention)")
+    parser.add_argument("--three-tier", action="store_true",
+                        help="Use three-tier waterfall for papers still missing full text")
     parser.add_argument("--workers", type=int, default=4,
                         help="Number of parallel workers for API enrichment (default: 4)")
 
@@ -360,7 +366,10 @@ def main():
 
     id_normalizer = IdentifierNormalizer()
     repo_scanner = ProtocolAgent()
-    institution_scanner = InstitutionAgent()
+    ror_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables", "ror")
+    institution_scanner = InstitutionAgent(
+        ror_local_path=ror_path if os.path.isdir(ror_path) else None
+    )
 
     # --- Resolve input files ---
     if args.input:
@@ -399,10 +408,16 @@ def main():
     enricher = None
     if not args.no_enrich:
         dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
+        lookup_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables")
         enricher = PipelineOrchestrator(
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None,
+            lookup_tables_path=lookup_path if os.path.isdir(lookup_path) else None,
+            use_pubtator=not args.no_pubtator,
+            use_api_validation=True,
             use_ollama=args.ollama,
-            ollama_model=args.ollama_model
+            ollama_model=args.ollama_model,
+            use_role_classifier=not args.no_role_classifier,
+            use_three_tier_waterfall=args.three_tier,
         )
 
     # --- API enrichment (GitHub, S2, CrossRef) — on by default ---
@@ -410,14 +425,24 @@ def main():
     enricher_api = None
     if api_enrich:
         from pipeline.enrichment import Enricher
-        enricher_api = Enricher(max_workers=args.workers)
+        ror_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables", "ror")
+        enricher_api = Enricher(
+            max_workers=args.workers,
+            ror_local_path=ror_path if os.path.isdir(ror_path) else None,
+        )
 
+    lt_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables")
     logger.info("=" * 60)
     logger.info("STEP 3 — CLEAN (re-tag + finalize JSON)")
     logger.info("=" * 60)
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
+    logger.info("Lookup tables: %s",
+                "found" if os.path.isdir(lt_path) else "NOT FOUND (using API fallback)")
     logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
+    logger.info("PubTator:    %s", "no" if args.no_pubtator else "yes")
+    logger.info("Role class.: %s", "no" if args.no_role_classifier else "yes")
+    logger.info("Three-tier:  %s", "yes" if args.three_tier else "no")
     logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
     logger.info("Workers:     %d", args.workers)
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")

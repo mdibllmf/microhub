@@ -7,6 +7,7 @@ citation mentions).  Maps institutions to ROR IDs where known.
 """
 
 import logging
+import os
 import re
 import time
 from typing import Dict, List, Optional
@@ -181,9 +182,65 @@ _ACKNOWLEDGMENT_EXCLUSIONS = re.compile(
 
 
 class InstitutionAgent(BaseAgent):
-    """Extract institutions from author affiliations (NOT from paper body)."""
+    """Extract institutions from author affiliations (NOT from paper body).
+
+    Supports local-first ROR lookup via a downloaded ROR data dump JSON
+    file (downloaded by download_lookup_tables.sh).  Falls back to the
+    live ROR API for institutions not in the local dump.
+    """
 
     name = "institution"
+
+    def __init__(self, ror_local_path: str = None):
+        super().__init__()
+        self._ror_local_index: Dict[str, str] = {}
+        self._ror_local_names: Dict[str, str] = {}  # lowercase name -> official name
+        self._ror_loaded = False
+        if ror_local_path:
+            self._load_ror(ror_local_path)
+
+    def _load_ror(self, path: str):
+        """Load ROR data dump JSON for local institution name -> ROR ID matching."""
+        import glob
+        import json
+        json_path = path
+        if os.path.isdir(path):
+            candidates = glob.glob(os.path.join(path, "v*.json"))
+            if not candidates:
+                candidates = glob.glob(os.path.join(path, "*.json"))
+            if not candidates:
+                logger.warning("No ROR JSON found in %s", path)
+                return
+            json_path = candidates[0]
+
+        if not os.path.exists(json_path):
+            logger.warning("ROR dump not found at %s", json_path)
+            return
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                orgs = json.load(f)
+
+            for org in orgs:
+                ror_id = org.get("id", "").replace("https://ror.org/", "")
+                name = org.get("name", "")
+                if not ror_id or not name:
+                    continue
+                self._ror_local_index[name.lower()] = ror_id
+                self._ror_local_names[name.lower()] = name
+                for name_obj in org.get("names", []):
+                    alt = name_obj.get("value", "")
+                    if alt:
+                        alt_lower = alt.lower()
+                        if alt_lower not in self._ror_local_index:
+                            self._ror_local_index[alt_lower] = ror_id
+                            self._ror_local_names[alt_lower] = name
+
+            self._ror_loaded = True
+            logger.info("InstitutionAgent ROR local: %d lookup keys",
+                        len(self._ror_local_index))
+        except Exception as exc:
+            logger.warning("Failed to load ROR dump: %s", exc)
 
     def analyze(self, text: str, section: str = None) -> List[Extraction]:
         """Only runs on affiliation strings, not general paper text."""
@@ -237,15 +294,36 @@ class InstitutionAgent(BaseAgent):
                 # Skip very short matches (likely false positives)
                 if len(name) < 5:
                     continue
-                # Try ROR v2 API lookup for this institution
-                ror_result = self.resolve_ror_via_api(name)
+
                 metadata = {"canonical": name}
                 conf = 0.7
-                if ror_result:
-                    metadata["ror_id"] = ror_result["ror_id"]
-                    metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
-                    metadata["canonical"] = ror_result["name"]  # Use official name
-                    conf = 0.85  # Higher confidence with API confirmation
+
+                # LOCAL FIRST: check ROR dump for this institution
+                if self._ror_loaded:
+                    local_ror_id = self._ror_local_index.get(name.lower())
+                    if local_ror_id:
+                        official_name = self._ror_local_names.get(
+                            name.lower(), name)
+                        metadata["ror_id"] = local_ror_id
+                        metadata["ror_url"] = f"https://ror.org/{local_ror_id}"
+                        metadata["canonical"] = official_name
+                        conf = 0.90
+                    else:
+                        # FALLBACK: ROR v2 API lookup
+                        ror_result = self.resolve_ror_via_api(name)
+                        if ror_result:
+                            metadata["ror_id"] = ror_result["ror_id"]
+                            metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
+                            metadata["canonical"] = ror_result["name"]
+                            conf = 0.85
+                else:
+                    # No local dump — try ROR v2 API lookup
+                    ror_result = self.resolve_ror_via_api(name)
+                    if ror_result:
+                        metadata["ror_id"] = ror_result["ror_id"]
+                        metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
+                        metadata["canonical"] = ror_result["name"]
+                        conf = 0.85
 
                 extractions.append(Extraction(
                     text=name,
