@@ -49,10 +49,10 @@ _DATACITE_PREFIXES = {
 _ACCESSION_PATTERNS = [
     # EMPIAR: Electron Microscopy Public Image Archive
     (re.compile(r"\b(EMPIAR[- ]?\d{5,})\b", re.I), "EMPIAR",
-     "https://www.ebi.ac.uk/empiar/entry/{id}"),
+     "https://www.ebi.ac.uk/empiar/{id}"),
     # EMDB: Electron Microscopy Data Bank
     (re.compile(r"\b(EMD[- ]?\d{4,})\b", re.I), "EMDB",
-     "https://www.ebi.ac.uk/emdb/entry/{id}"),
+     "https://www.ebi.ac.uk/emdb/{id}"),
     # GEO: Gene Expression Omnibus
     (re.compile(r"\b(GSE\d{4,})\b"), "GEO",
      "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={id}"),

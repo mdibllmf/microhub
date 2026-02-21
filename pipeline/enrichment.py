@@ -653,21 +653,43 @@ class Enricher:
             except (json.JSONDecodeError, TypeError):
                 existing = []
 
-        existing_keys = {
-            (r.get("url") or r.get("accession", "")).lower().rstrip("/")
-            for r in existing if isinstance(r, dict)
-        }
+        existing_urls = set()
+        existing_accessions = set()
+        for r in existing:
+            if isinstance(r, dict):
+                url = (r.get("url") or "").lower().rstrip("/")
+                if url:
+                    existing_urls.add(url)
+                acc = (r.get("accession") or "").lower()
+                name = (r.get("name") or "").lower()
+                if acc:
+                    existing_accessions.add(f"{name}:{acc}")
+                    existing_accessions.add(acc)
 
         for link in links:
-            key = (link.get("url") or link.get("accession", "")).lower().rstrip("/")
-            if key and key not in existing_keys:
-                existing.append({
-                    "name": link.get("repository", "Dataset"),
-                    "url": link.get("url", ""),
-                    "accession": link.get("accession", ""),
-                    "source": link.get("source", "datacite"),
-                })
-                existing_keys.add(key)
+            link_url = (link.get("url") or "").lower().rstrip("/")
+            link_acc = (link.get("accession") or "").lower()
+            link_repo = (link.get("repository") or "").lower()
+
+            # Skip if URL already exists
+            if link_url and link_url in existing_urls:
+                continue
+            # Skip if accession already exists (with or without repo prefix)
+            if link_acc and (link_acc in existing_accessions
+                            or f"{link_repo}:{link_acc}" in existing_accessions):
+                continue
+
+            existing.append({
+                "name": link.get("repository", "Dataset"),
+                "url": link.get("url", ""),
+                "accession": link.get("accession", ""),
+                "source": link.get("source", "datacite"),
+            })
+            if link_url:
+                existing_urls.add(link_url)
+            if link_acc:
+                existing_accessions.add(link_acc)
+                existing_accessions.add(f"{link_repo}:{link_acc}")
 
         paper["repositories"] = existing
         paper["has_data"] = bool(existing)

@@ -144,10 +144,14 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
     ), 0.95),
     # PDB: accession codes + RCSB URLs
     "PDB": (re.compile(
+        # Direct: "PDB ID 7QTG", "PDB: 7QTG", "PDB code 7QTG"
         r"\bPDB(?:\s+(?:ID|accession|code|entry))?\s*[:# ]?\s*\d[A-Za-z0-9]{3}\b"
+        # Separated: "PDB ... accession code 7QTG" (up to 40 chars between)
+        r"|\bPDB\b.{0,40}(?:accession\s+)?(?:code|number|ID)\s*[:# ]?\s*\d[A-Za-z0-9]{3}\b"
+        # RCSB URLs
         r"|(?:https?://)?(?:www\.)?rcsb\.org/structure/[\w]+"
         r"|(?:https?://)?(?:www\.)?rcsb\.org/pdb/explore\.do\?[\w=&]+",
-        re.I,
+        re.I | re.S,
     ), 0.85),
 
     # --- BioImaging repositories ---
@@ -577,12 +581,14 @@ class ProtocolAgent(BaseAgent):
                     url = _accession_to_url(repo_type, matched)
                     if url:
                         meta["url"] = url
-                        # Extract the bare accession ID for metadata
-                        extractor = _ACCESSION_ID_EXTRACTORS.get(repo_type)
-                        if extractor:
-                            id_m = extractor.search(matched)
-                            if id_m:
-                                meta["accession_id"] = id_m.group(1) if id_m.lastindex else id_m.group(0)
+
+                # Always try to extract the bare accession ID, even from URLs
+                # This ensures consistent dedup across pipeline stages
+                extractor = _ACCESSION_ID_EXTRACTORS.get(repo_type)
+                if extractor:
+                    id_m = extractor.search(matched)
+                    if id_m:
+                        meta["accession_id"] = id_m.group(1) if id_m.lastindex else id_m.group(0)
 
                 extractions.append(Extraction(
                     text=matched,
@@ -708,7 +714,7 @@ class ProtocolAgent(BaseAgent):
     def _match_github_urls(self, text: str, section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
         for m in _GITHUB_URL_PATTERN.finditer(text):
-            full_name = m.group(1)
+            full_name = m.group(1).rstrip(".,;)")
             url = f"https://github.com/{full_name}"
             extractions.append(Extraction(
                 text=m.group(0),

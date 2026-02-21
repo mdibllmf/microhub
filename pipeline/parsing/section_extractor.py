@@ -220,7 +220,14 @@ def _extract_data_availability(text: str) -> str:
         r"conflict\s+of\s+interest|ethics\s+(?:statement|approval)|"
         r"extended\s+data|reporting\s+summary|online\s+methods|"
         r"additional\s+information|key\s+resources?\s+table|"
-        r"star\s+methods|(?:experimental|materials?\s+and)\s+methods?)\s*\n",
+        r"star\s+methods|(?:experimental|materials?\s+and)\s+methods?"
+        # Also terminate at the NEXT data/code availability heading so
+        # separate "Data availability" and "Code availability" sections
+        # don't bleed into each other
+        r"|data\s+(?:and\s+(?:code|software|materials?)\s+)?availability"
+        r"|code\s+(?:and\s+data\s+)?availability"
+        r"|(?:availability\s+of\s+(?:data|code|materials?))"
+        r"|accession\s+(?:codes?|numbers?))\s*\n",
         re.IGNORECASE,
     )
 
