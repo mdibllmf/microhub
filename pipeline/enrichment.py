@@ -602,17 +602,17 @@ class Enricher:
             paper["openalex_institutions"] = institutions
             # Also populate ROR IDs if not already present
             existing_rors = paper.get("rors") or []
-            seen_rors = {r.get("id", "") for r in existing_rors if isinstance(r, dict)}
+            seen_rors = {r.get("id", "").lower() for r in existing_rors if isinstance(r, dict)}
             for inst in institutions:
                 ror_id = inst.get("ror_id", "")
-                if ror_id and ror_id not in seen_rors:
+                if ror_id and ror_id.lower() not in seen_rors:
                     existing_rors.append({
                         "id": ror_id,
                         "url": f"https://ror.org/{ror_id}" if not ror_id.startswith("http") else ror_id,
                         "name": inst.get("name", ""),
                         "source": "openalex",
                     })
-                    seen_rors.add(ror_id)
+                    seen_rors.add(ror_id.lower())
             if existing_rors:
                 paper["rors"] = existing_rors
 
@@ -688,7 +688,7 @@ class Enricher:
             return
 
         existing_rors = paper.get("rors") or []
-        seen_rors = {r.get("id", "") for r in existing_rors if isinstance(r, dict)}
+        seen_rors = {r.get("id", "").lower() for r in existing_rors if isinstance(r, dict)}
 
         for aff in affiliations:
             if not isinstance(aff, str) or not aff.strip():
@@ -698,7 +698,7 @@ class Enricher:
             except Exception:
                 continue
 
-            if match and match.get("ror_id") and match["ror_id"] not in seen_rors:
+            if match and match.get("ror_id") and match["ror_id"].lower() not in seen_rors:
                 existing_rors.append({
                     "id": match["ror_id"],
                     "url": match.get("ror_url", ""),
@@ -706,7 +706,7 @@ class Enricher:
                     "country": match.get("country", ""),
                     "source": "ror_v2_affiliation",
                 })
-                seen_rors.add(match["ror_id"])
+                seen_rors.add(match["ror_id"].lower())
 
         if existing_rors:
             paper["rors"] = existing_rors

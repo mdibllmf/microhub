@@ -165,29 +165,13 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         re.I,
     ), 0.9),
     "OMERO": (re.compile(
-        # OMERO URLs — any openmicroscopy.org URL (not just /omero path)
-        r"(?:https?://)?(?:[\w.-]+\.)?openmicroscopy\.org(?:/[\w./]*)?"
-        r"|(?:https?://)?[\w.-]+/omero/(?:webclient|api|webgateway)[\w./]*"
-        # Institutional OMERO servers (hostname contains "omero")
-        r"|(?:https?://)?[\w.-]*omero[\w.-]*\.[\w]+(?:\.[\w]+)+(?:/[\w./]*)?"
-        # OMERO with context words AFTER (server, repository, platform, etc.)
-        r"|\bOMERO\b(?=.{0,40}(?:server|repositor|public|database|instance|"
-        r"gallery|platform|client|image\s*manage))"
-        # "OMERO" + component (OMERO.web, OMERO.figure, OMERO Plus)
-        r"|\bOMERO\s*[.]?\s*(?:web|figure|Plus|insight|cli|server)\b"
-        # OMERO with availability context after
-        r"|\bOMERO\b(?=.{0,50}(?:https?://|available|deposited|hosted|stored|accessible))"
-        # Availability context before OMERO (e.g., "deposited in OMERO", "via OMERO")
-        r"|(?:available|deposited|hosted|stored|accessible|uploaded|shared|import\w*"
-        r"|saving|saved|manage\w*)\s+(?:in|on|via|through|at|to|into)\s+OMERO\b"
-        # OMERO Public / OMERO server with preceding article
-        r"|\b(?:an?|the)\s+OMERO\s+(?:server|instance|database)\b"
-        # OME/OMERO compound reference (e.g., "OME/OMERO ... software used")
-        r"|\bOME\s*/\s*OMERO\b"
-        # OMERO with "used" or "software" context (e.g., "OMERO ... software used in this paper")
-        r"|\bOMERO\b(?=.{0,50}(?:software|used\s+in|used\s+for|used\s+to))",
+        # Actual OMERO data URLs — webclient / webgateway / api with dataset paths
+        r"(?:https?://)?[\w.-]+/omero/(?:webclient|api|webgateway)[\w./?=&-]*"
+        # Institutional OMERO servers with data paths (hostname contains "omero"
+        # AND has a path indicating actual data, not just the homepage)
+        r"|(?:https?://)?[\w.-]*omero[\w.-]*\.[\w]+(?:\.[\w]+)+/[\w./?=&-]+",
         re.I | re.S,
-    ), 0.85),
+    ), 0.90),
     "SSBD": (re.compile(
         r"\bSSBD\b(?=.{0,30}(?:database|repositor|available))"
         r"|(?:https?://)?ssbd\.riken\.jp/[\w./]*",
