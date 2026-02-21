@@ -9,6 +9,7 @@ WordPress JSON export format to prevent upload issues.
 """
 
 import logging
+import os
 import re
 from typing import Any, Dict, List, Optional, Set
 
@@ -41,12 +42,23 @@ class PipelineOrchestrator:
     """Main orchestrator that runs all agents on a paper and assembles output."""
 
     def __init__(self, tag_dictionary_path: str = None, *,
+                 lookup_tables_path: str = None,
                  use_pubtator: bool = True,
                  use_api_validation: bool = True,
                  use_ollama: bool = False,
                  ollama_model: str = None,
                  use_role_classifier: bool = True,
                  use_three_tier_waterfall: bool = False):
+
+        # Resolve lookup table subdirectories
+        lt = lookup_tables_path or ""
+        fpbase_path = os.path.join(lt, "fpbase") if lt else None
+        cellosaurus_path = os.path.join(lt, "cellosaurus") if lt else None
+        taxonomy_path = os.path.join(lt, "ncbi_taxonomy") if lt else None
+        ror_path = os.path.join(lt, "ror") if lt else None
+        fbbi_path = os.path.join(lt, "fbbi_ontology") if lt else None
+        pubtator_path = os.path.join(lt, "pubtator3") if lt else None
+
         # Extraction agents
         self.technique_agent = TechniqueAgent()
         self.equipment_agent = EquipmentAgent()
@@ -58,8 +70,10 @@ class PipelineOrchestrator:
         self.protocol_agent = ProtocolAgent()
         self.institution_agent = InstitutionAgent()
 
-        # Supplemental: PubTator NLP-based extraction (fills regex gaps)
-        self.pubtator_agent = PubTatorAgent() if use_pubtator else None
+        # Supplemental: PubTator NLP-based extraction (with local lookup)
+        self.pubtator_agent = PubTatorAgent(
+            local_path=pubtator_path
+        ) if use_pubtator else None
 
         # Ollama LLM verification (reads Methods, cross-checks regex results)
         self.ollama_agent = None
@@ -74,13 +88,20 @@ class PipelineOrchestrator:
         # Three-tier waterfall for full-text acquisition
         self.use_three_tier_waterfall = use_three_tier_waterfall
 
-        # Validation
+        # Validation (with local lookups)
         self.tag_validator = TagValidator(tag_dictionary_path)
-        self.api_validator = ApiValidator() if use_api_validation else None
+        self.api_validator = ApiValidator(
+            fpbase_path=fpbase_path,
+            cellosaurus_path=cellosaurus_path,
+            taxonomy_path=taxonomy_path,
+        ) if use_api_validation else None
         self.id_normalizer = IdentifierNormalizer()
 
-        # FBbi ontology normalization for microscopy techniques
-        self.ontology_normalizer = OntologyNormalizer()
+        # ROR client (with local lookup)
+        self.ror_client = RORv2Client(local_path=ror_path)
+
+        # FBbi ontology normalization (with local lookup)
+        self.ontology_normalizer = OntologyNormalizer(local_path=fbbi_path)
 
     # ------------------------------------------------------------------
     def process_paper(self, paper: Dict[str, Any]) -> Dict[str, Any]:

@@ -65,19 +65,40 @@ def _get_key(name: str) -> Optional[str]:
 # ======================================================================
 
 class ApiValidator:
-    """Validate extracted entities against authoritative APIs."""
+    """Validate extracted entities against authoritative APIs.
 
-    def __init__(self):
+    Supports local-first validation via downloaded lookup tables.
+    Pass paths to sub-validator constructors for local-first behavior.
+    """
+
+    def __init__(self, fpbase_path: str = None, cellosaurus_path: str = None,
+                 taxonomy_path: str = None):
         self._fpbase_cache: Dict[str, Optional[Dict]] = {}
         self._rrid_cache: Dict[str, Optional[Dict]] = {}
         self._ror_cache: Dict[str, Optional[Dict]] = {}
         self._taxon_cache: Dict[str, Optional[Dict]] = {}
 
-        # Cellosaurus client for cell line validation
+        # FPbase validator with optional local lookup
+        self._fpbase = None
+        try:
+            from .fpbase_validator import FPbaseValidator
+            self._fpbase = FPbaseValidator(lookup_path=fpbase_path)
+        except ImportError:
+            pass
+
+        # Cellosaurus client with optional local lookup
         self._cellosaurus = None
         try:
             from .cellosaurus_client import CellosaurusClient
-            self._cellosaurus = CellosaurusClient()
+            self._cellosaurus = CellosaurusClient(local_path=cellosaurus_path)
+        except ImportError:
+            pass
+
+        # Taxonomy validator with optional local lookup
+        self._taxonomy = None
+        try:
+            from .taxonomy_validator import TaxonomyValidator
+            self._taxonomy = TaxonomyValidator(local_path=taxonomy_path)
         except ImportError:
             pass
 
@@ -181,8 +202,11 @@ class ApiValidator:
                 validated.append(fp_name)
                 continue
 
-            # Check FPbase for fluorescent proteins
-            fp_data = self._query_fpbase(fp_name)
+            # Check FPbase for fluorescent proteins (local-first via validator)
+            if self._fpbase:
+                fp_data = self._fpbase.validate(fp_name)
+            else:
+                fp_data = self._query_fpbase(fp_name)
             if fp_data is not None:
                 # Use canonical name from FPbase if different
                 canonical = fp_data.get("name", fp_name)
@@ -387,12 +411,24 @@ class ApiValidator:
     # ------------------------------------------------------------------
 
     def _validate_organisms(self, organisms: List[str]) -> List[str]:
-        """Validate organism names against NCBI Taxonomy."""
+        """Validate organism names against NCBI Taxonomy.
+
+        Uses the TaxonomyValidator (local-first) when available,
+        falls back to direct API queries.
+        """
         if "ncbi" in self._exhausted:
             return organisms
 
         validated = []
         for org_name in organisms:
+            # Try taxonomy validator (local-first) if available
+            if self._taxonomy:
+                taxid = self._taxonomy.get_taxid(org_name)
+                if taxid is not None:
+                    validated.append(org_name)
+                    continue
+
+            # Fallback: direct API query
             tax_data = self._query_ncbi_taxonomy(org_name)
             if tax_data is not None:
                 # Use NCBI's canonical name

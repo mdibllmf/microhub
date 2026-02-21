@@ -28,7 +28,10 @@ Usage:
     #  'ontology_iri': 'http://purl.obolibrary.org/obo/FBbi_00000332'}
 """
 
+import json
 import logging
+import os
+import re
 import time
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
@@ -273,20 +276,45 @@ _TECHNIQUE_TO_FBBI: Dict[str, Dict[str, str]] = {
 class OntologyNormalizer:
     """Normalize microscopy technique names to FBbi ontology IDs.
 
-    Uses a two-tier approach:
+    Uses a three-tier approach:
       1. Static pre-built mapping for common techniques (fast, no API call)
-      2. OLS4 API search for unmapped techniques (cached)
+      2. Local fbbi_name_lookup.json from downloaded OBO file (comprehensive)
+      3. OLS4 API search for unmapped techniques (cached)
     """
 
-    def __init__(self, delay: float = 0.2):
+    def __init__(self, delay: float = 0.2, local_path: str = None):
         self._cache: Dict[str, Optional[Dict[str, str]]] = {}
         self._last_call = 0.0
         self._delay = delay
         self._exhausted = False
+        self._local_lookup: Dict[str, Dict] = {}
+        self._local_loaded = False
 
         # Pre-populate cache from static mapping
         for name, mapping in _TECHNIQUE_TO_FBBI.items():
             self._cache[name.lower()] = mapping
+
+        if local_path:
+            self._load_local(local_path)
+
+    def _load_local(self, path: str):
+        """Load fbbi_name_lookup.json for comprehensive ontology matching."""
+        json_path = path
+        if os.path.isdir(path):
+            json_path = os.path.join(path, "fbbi_name_lookup.json")
+
+        if not os.path.exists(json_path):
+            logger.warning("FBbi lookup not found at %s", json_path)
+            return
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                self._local_lookup = json.load(f)
+            self._local_loaded = True
+            logger.info("FBbi local lookup loaded: %d entries",
+                        len(self._local_lookup))
+        except Exception as exc:
+            logger.warning("Failed to load FBbi lookup: %s", exc)
 
     # ------------------------------------------------------------------
     # Public API
@@ -320,7 +348,25 @@ class OntologyNormalizer:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        # Try OLS4 API search
+        # LOCAL LOOKUP (comprehensive, from downloaded OBO)
+        if self._local_loaded:
+            entry = self._local_lookup.get(cache_key)
+            if entry and isinstance(entry, dict):
+                fbbi_id = entry.get("id", "")
+                result = {
+                    "fbbi_id": fbbi_id,
+                    "fbbi_label": entry.get("canonical_name", ""),
+                    "ontology_iri": (
+                        f"http://purl.obolibrary.org/obo/"
+                        f"{fbbi_id.replace(':', '_')}"
+                    ) if fbbi_id else "",
+                }
+                if entry.get("definition"):
+                    result["definition"] = entry["definition"]
+                self._cache[cache_key] = result
+                return result
+
+        # FALLBACK: OLS4 API search
         result = self._search_ols4(technique_name.strip())
         self._cache[cache_key] = result
         return result
@@ -479,7 +525,6 @@ class OntologyNormalizer:
             fbbi_id = short_form.replace("FBbi_", "FBbi:")
         elif "FBbi_" in iri:
             # Extract from IRI like http://purl.obolibrary.org/obo/FBbi_00000332
-            import re
             m = re.search(r"FBbi_(\d+)", iri)
             if m:
                 fbbi_id = f"FBbi:{m.group(1)}"

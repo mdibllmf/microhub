@@ -94,15 +94,136 @@ class PubTatorAgent(BaseAgent):
 
     Unlike other agents, this one doesn't operate on raw text.
     It uses the paper's PMID to fetch pre-computed annotations.
+
+    Supports local-first lookup via PubTator entity summary files
+    (downloaded by download_lookup_tables.sh).
     """
 
     name = "pubtator"
 
-    def __init__(self):
+    def __init__(self, local_path: str = None):
         self._last_call = 0.0
         self._delay = 0.35  # PubTator rate limit: ~3 req/sec
         self._exhausted = False
         self._cache: Dict[str, List[Extraction]] = {}
+        self._local_annotations: Dict[str, List[Dict]] = {}
+        self._local_loaded = False
+
+        if local_path:
+            self._load_local(local_path)
+
+    def _load_local(self, path: str):
+        """Load PubTator entity summary files into a PMID-indexed lookup.
+
+        The entity summary format (tab-separated, gzipped):
+            PMID  Type  ConceptID  Mentions  Resource
+
+        Only loads Species, CellLine, and Chemical types to limit memory.
+        """
+        import gzip
+        import glob
+        import os
+
+        if not os.path.isdir(path):
+            logger.warning("PubTator directory not found: %s", path)
+            return
+
+        entity_types_to_load = {"Species", "CellLine", "Chemical"}
+        gz_files = glob.glob(os.path.join(path, "entity2pubtator3_*.gz"))
+
+        if not gz_files:
+            logger.warning("No PubTator entity files found in %s", path)
+            return
+
+        count = 0
+        for gz_path in gz_files:
+            try:
+                with gzip.open(gz_path, "rt", encoding="utf-8") as f:
+                    for line in f:
+                        if line.startswith("#") or not line.strip():
+                            continue
+                        parts = line.strip().split("\t")
+                        if len(parts) < 4:
+                            continue
+
+                        pmid = parts[0]
+                        entity_type = parts[1]
+                        concept_id = parts[2]
+                        mentions = parts[3]
+
+                        if entity_type not in entity_types_to_load:
+                            continue
+
+                        if pmid not in self._local_annotations:
+                            self._local_annotations[pmid] = []
+
+                        self._local_annotations[pmid].append({
+                            "type": entity_type,
+                            "concept_id": concept_id,
+                            "mentions": mentions.split("|"),
+                        })
+                        count += 1
+            except Exception as exc:
+                logger.warning("Failed to parse %s: %s", gz_path, exc)
+
+        if count > 0:
+            self._local_loaded = True
+            logger.info(
+                "PubTator local loaded: %d annotations for %d PMIDs",
+                count, len(self._local_annotations),
+            )
+
+    def _parse_local_annotations(self, pmid: str) -> List[Extraction]:
+        """Convert local PubTator annotations to pipeline Extractions."""
+        extractions: List[Extraction] = []
+        seen: Set[str] = set()
+
+        for ann in self._local_annotations.get(pmid, []):
+            label = _PUBTATOR_TYPE_MAP.get(ann["type"])
+            if not label:
+                continue
+
+            for mention in ann["mentions"]:
+                mention = mention.strip()
+                if not mention:
+                    continue
+
+                # Re-classify known fluorophores
+                effective_label = label
+                if effective_label == "CHEMICAL" and mention.lower() in _FLUOROPHORE_CHEMICALS:
+                    effective_label = "FLUOROPHORE"
+
+                # Normalize organism names
+                canonical = mention
+                if effective_label == "ORGANISM":
+                    canonical = _ORGANISM_TO_SCIENTIFIC.get(mention.lower(), mention)
+                    if canonical == mention and " " in mention:
+                        parts = mention.split()
+                        canonical = parts[0].capitalize() + " " + " ".join(
+                            p.lower() for p in parts[1:]
+                        )
+
+                dedup_key = f"{effective_label}:{canonical.lower()}"
+                if dedup_key in seen:
+                    continue
+                seen.add(dedup_key)
+
+                extractions.append(Extraction(
+                    text=mention,
+                    label=effective_label,
+                    start=0,
+                    end=len(mention),
+                    confidence=0.85,
+                    source_agent=self.name,
+                    section="abstract",
+                    metadata={
+                        "canonical": canonical,
+                        "database_id": ann.get("concept_id", ""),
+                        "source": "pubtator3_local",
+                    },
+                ))
+
+        return extractions
 
     def analyze(self, text: str, section: str = None) -> List[Extraction]:
         """Not used directly — use analyze_pmid() instead."""
@@ -112,13 +233,24 @@ class PubTatorAgent(BaseAgent):
         """Fetch PubTator annotations for a PMID.
 
         Returns Extractions with normalized database IDs in metadata.
+        Checks local entity files first, falls back to API.
         """
-        if not HAS_REQUESTS or self._exhausted or not pmid:
+        if not pmid:
             return []
 
         pmid = str(pmid).strip()
         if pmid in self._cache:
             return self._cache[pmid]
+
+        # LOCAL FIRST
+        if self._local_loaded and pmid in self._local_annotations:
+            extractions = self._parse_local_annotations(pmid)
+            self._cache[pmid] = extractions
+            return extractions
+
+        # FALLBACK: original API call
+        if not HAS_REQUESTS or self._exhausted:
+            return []
 
         data = self._fetch_pubtator(pmid)
         if data is None:
