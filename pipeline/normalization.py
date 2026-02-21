@@ -398,7 +398,7 @@ def normalize_tags(paper: Dict) -> Dict:
     # Ensure acquisition-only software doesn't appear in the analysis list
     # and vice versa (handles legacy data or cross-step contamination)
     _acquisition_only = {
-        "LAS X", "ZEN", "NIS-Elements", "MetaMorph", "SlideBook",
+        "Leica Application Suite X", "ZEN", "NIS-Elements", "MetaMorph", "SlideBook",
         "Volocity", "Volocity Acquisition", "Harmony", "CellSens",
         "FluoView", "Prairie View", "ScanImage", "MicroManager",
         "ThorImage", "SymPhoTime", "Imspector", "HCImage",
