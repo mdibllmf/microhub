@@ -412,7 +412,7 @@ def main():
         enricher = PipelineOrchestrator(
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None,
             lookup_tables_path=lookup_path if os.path.isdir(lookup_path) else None,
-            use_pubtator=not args.no_pubtator,
+            use_pubtator=False,  # PubTator files are multi-GB; skip until pre-filtered
             use_api_validation=True,
             use_ollama=args.ollama,
             ollama_model=args.ollama_model,

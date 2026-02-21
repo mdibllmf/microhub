@@ -196,8 +196,13 @@ class InstitutionAgent(BaseAgent):
         self._ror_local_index: Dict[str, str] = {}
         self._ror_local_names: Dict[str, str] = {}  # lowercase name -> official name
         self._ror_loaded = False
-        if ror_local_path:
-            self._load_ror(ror_local_path)
+        self._ror_local_path = ror_local_path  # deferred to first use
+
+    def _ensure_ror_loaded(self):
+        """Lazy-load ROR data dump on first use."""
+        if not self._ror_loaded and self._ror_local_path:
+            self._load_ror(self._ror_local_path)
+            self._ror_local_path = None  # prevent re-loading
 
     def _load_ror(self, path: str):
         """Load ROR data dump JSON for local institution name -> ROR ID matching."""
@@ -221,6 +226,7 @@ class InstitutionAgent(BaseAgent):
             with open(json_path, "r", encoding="utf-8") as f:
                 orgs = json.load(f)
 
+            count = 0
             for org in orgs:
                 ror_id = org.get("id", "").replace("https://ror.org/", "")
                 name = org.get("name", "")
@@ -235,6 +241,9 @@ class InstitutionAgent(BaseAgent):
                         if alt_lower not in self._ror_local_index:
                             self._ror_local_index[alt_lower] = ror_id
                             self._ror_local_names[alt_lower] = name
+                count += 1
+                if count % 50000 == 0:
+                    logger.info("  ... loaded %d ROR organizations so far", count)
 
             self._ror_loaded = True
             logger.info("InstitutionAgent ROR local: %d lookup keys",
@@ -260,6 +269,9 @@ class InstitutionAgent(BaseAgent):
         extractions: List[Extraction] = []
         if not text:
             return extractions
+
+        # Lazy-load ROR data dump on first use
+        self._ensure_ror_loaded()
 
         # 1. Match against known institutions with ROR IDs
         for inst_name, ror_id in INSTITUTION_ROR_IDS.items():

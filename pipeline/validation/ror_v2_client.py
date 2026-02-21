@@ -76,9 +76,13 @@ class RORv2Client:
         self._lock = threading.Lock()
         self._local_index: Dict[str, Dict] = {}  # lowercase name → {ror_id, name, country}
         self._local_loaded = False
+        self._local_path = local_path  # deferred to first use
 
-        if local_path:
-            self._load_local(local_path)
+    def _ensure_local_loaded(self):
+        """Lazy-load ROR data dump on first use."""
+        if not self._local_loaded and self._local_path:
+            self._load_local(self._local_path)
+            self._local_path = None  # prevent re-loading
 
     def _load_local(self, path: str):
         """Load ROR data dump JSON for local name → ROR ID matching."""
@@ -131,6 +135,8 @@ class RORv2Client:
                             self._local_index[alt_lower] = entry
 
                 count += 1
+                if count % 50000 == 0:
+                    logger.info("  ... loaded %d ROR organizations so far", count)
 
             self._local_loaded = True
             logger.info(
@@ -142,6 +148,7 @@ class RORv2Client:
 
     def lookup_local(self, institution_name: str) -> Optional[Dict]:
         """Fast local lookup by exact institution name."""
+        self._ensure_local_loaded()
         if not self._local_loaded:
             return None
         return self._local_index.get(institution_name.lower())
@@ -177,6 +184,7 @@ class RORv2Client:
             return self._cache[cache_key]
 
         # LOCAL FIRST: try exact name match within the affiliation string
+        self._ensure_local_loaded()
         if self._local_loaded:
             local_result = self._match_affiliation_local(affiliation.strip())
             if local_result:
