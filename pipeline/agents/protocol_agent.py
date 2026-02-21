@@ -123,10 +123,12 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         r"|\bCode\s+Ocean\b",
         re.I,
     ), 0.9),
-    # Mendeley Data: full URLs and text mention
+    # Mendeley Data: full URLs, DOI references (10.17632/xxx), and text mention
     "Mendeley Data": (re.compile(
         r"(?:https?://)?data\.mendeley\.com/datasets/[\w/.-]+"
         r"|(?:https?://)?data\.mendeley\.com/[\w/.-]+"
+        r"|(?:https?://)?doi\.org/10\.17632/[\w.]+"
+        r"|\b10\.17632/[\w.]+"
         r"|\bMendeley\s+Data\b",
         re.I,
     ), 0.9),
@@ -237,9 +239,19 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
     ), 0.9),
     "Dataverse": (re.compile(
         r"(?:https?://)?(?:[\w.-]+\.)?dataverse\.[\w./]+"
+        r"|(?:https?://)?doi\.org/10\.7910/[\w./]+"
+        r"|\b10\.7910/[\w./]+"
         r"|\bDataverse\b(?=.{0,20}(?:dataset|repositor|available))",
         re.I | re.S,
     ), 0.85),
+    # GigaDB: DOI references (10.5524/xxx) and URLs
+    "GigaDB": (re.compile(
+        r"(?:https?://)?(?:www\.)?gigadb\.org/dataset/[\w/.-]+"
+        r"|(?:https?://)?doi\.org/10\.5524/\d+"
+        r"|\b10\.5524/\d+"
+        r"|\bGigaDB\b",
+        re.I,
+    ), 0.9),
     "Hugging Face": (re.compile(
         r"(?:https?://)?huggingface\.co/[\w.-]+/[\w.-]+",
         re.I,
@@ -377,10 +389,11 @@ _DATA_URL_FALLBACK = re.compile(
     r"(?:[\w.-]+\.)*"
     r"(?:zenodo|figshare|dryad|datadryad|osf|omero|openmicroscopy|synapse|"
     r"dandiarchive|bioimage-archive|idr|dataverse|huggingface|"
-    r"codeocean|openneuro|neuromorpho|sciencedb|empiar|"
+    r"codeocean|openneuro|neuromorpho|sciencedb|empiar|gigadb|"
     r"cellimagelibrary|bioimage|biomodels|jcb-dataviewer|"
-    r"rcsb|mendeley)"
-    r"(?:\.[\w]+)+"
+    r"rcsb|mendeley|flowrepository|metabolights|metabolomexchange|"
+    r"ebi\.ac\.uk/(?:biostudies|pride|ena|emdb|empiar|arrayexpress))"
+    r"(?:\.[\w]+)*"
     r"(?:/[\w./%-?=&]*)?",
     re.I,
 )
@@ -410,6 +423,31 @@ _URL_DOMAIN_TO_NAME = {
     "jcb-dataviewer": "JCB DataViewer",
     "rcsb": "PDB",
     "mendeley": "Mendeley Data",
+    "gigadb": "GigaDB",
+    "flowrepository": "FlowRepository",
+    "metabolights": "MetaboLights",
+    "ebi.ac.uk/pride": "PRIDE",
+    "ebi.ac.uk/ena": "ENA",
+    "ebi.ac.uk/emdb": "EMDB",
+    "ebi.ac.uk/empiar": "EMPIAR",
+    "ebi.ac.uk/biostudies": "BioStudies",
+    "ebi.ac.uk/arrayexpress": "ArrayExpress",
+}
+
+# DOI prefix → repository name mapping
+_DOI_PREFIX_TO_NAME = {
+    "10.5281": "Zenodo",
+    "10.6084": "Figshare",
+    "10.5061": "Dryad",
+    "10.17605": "OSF",
+    "10.5524": "GigaDB",
+    "10.17632": "Mendeley Data",
+    "10.7910": "Dataverse",
+    "10.48550": "arXiv",
+    "10.7303": "DANDI",
+    "10.18112": "OpenNeuro",
+    "10.15468": "GBIF",
+    "10.6019": "MetaboLights",
 }
 
 
@@ -418,6 +456,14 @@ def _url_to_repo_name(url: str) -> str:
     url_lower = url.lower()
     for domain, name in _URL_DOMAIN_TO_NAME.items():
         if domain in url_lower:
+            return name
+    return ""
+
+
+def _doi_to_repo_name(doi: str) -> str:
+    """Determine repository name from a DOI prefix."""
+    for prefix, name in _DOI_PREFIX_TO_NAME.items():
+        if doi.startswith(prefix):
             return name
     return ""
 
@@ -615,6 +661,31 @@ class ProtocolAgent(BaseAgent):
                     label="REPOSITORY",
                     start=m.start(), end=m.end(),
                     confidence=0.8,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={"canonical": name, "url": url},
+                ))
+
+        # Catch doi.org URLs that weren't matched by specific repo patterns.
+        # In data availability sections, these often point to datasets.
+        _DOI_URL_RE = re.compile(
+            r"(?:https?://)?doi\.org/(10\.\d{4,}/[\w./-]+)", re.I
+        )
+        for m in _DOI_URL_RE.finditer(text):
+            url = f"https://doi.org/{m.group(1).rstrip('.,;)')}"
+            doi_str = m.group(1).rstrip(".,;)")
+            # Skip if already captured
+            if any(e.metadata.get("url", "").rstrip("/") == url.rstrip("/")
+                   for e in extractions):
+                continue
+            # Classify by DOI prefix
+            name = _doi_to_repo_name(doi_str)
+            if name:
+                extractions.append(Extraction(
+                    text=m.group(0).rstrip(".,;)"),
+                    label="REPOSITORY",
+                    start=m.start(), end=m.end(),
+                    confidence=0.85,
                     source_agent=self.name,
                     section=section or "",
                     metadata={"canonical": name, "url": url},

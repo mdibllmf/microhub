@@ -142,12 +142,22 @@ def from_pubmed_dict(paper: Dict) -> PaperSections:
     """
     full_text = paper.get("full_text", "") or ""
     figures = ""
-    data_availability = ""
+    # Use existing data_availability from the paper dict (e.g., from step 2)
+    # and also extract from full_text if available
+    data_availability = paper.get("data_availability", "") or ""
 
     # Extract figure captions and data availability BEFORE stripping references
     if full_text:
         figures = _extract_figure_captions(full_text)
-        data_availability = _extract_data_availability(full_text)
+        extracted_da = _extract_data_availability(full_text)
+        if extracted_da:
+            # Merge: append extracted text if it adds content
+            if data_availability:
+                # Avoid duplicating if they're basically the same text
+                if extracted_da.strip() not in data_availability:
+                    data_availability = data_availability + "\n\n" + extracted_da
+            else:
+                data_availability = extracted_da
 
     # Strip references/bibliography to avoid tagging entities in citations
     full_text_clean = strip_references(full_text) if full_text else ""

@@ -465,6 +465,14 @@ def main():
                     except (json.JSONDecodeError, TypeError):
                         paper[field] = []
 
+            # Extract data_availability from full_text if not already present.
+            # Step 2 may have stripped full_text but preserved data_availability.
+            # If full_text is still here (e.g., running step 3 directly on raw
+            # data), extract it now so ALL downstream stages can use it.
+            if paper.get("full_text") and not paper.get("data_availability"):
+                from pipeline.parsing.section_extractor import _extract_data_availability
+                paper["data_availability"] = _extract_data_availability(paper["full_text"])
+
             # Preserve original RORs in case rescan can't re-derive them
             # (institution lookup depends on affiliations which may be absent in rescan)
             original_rors = list(paper.get("rors") or [])
