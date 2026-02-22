@@ -423,8 +423,8 @@ def main():
                         help="Skip PubTator NLP extraction")
     parser.add_argument("--no-role-classifier", action="store_true",
                         help="Disable role classifier (over-tagging prevention)")
-    parser.add_argument("--three-tier", action="store_true",
-                        help="Use three-tier waterfall for papers still missing full text")
+    parser.add_argument("--no-scihub", action="store_true",
+                        help="Disable SciHub DOI fallback for papers still missing full text")
     parser.add_argument("--workers", type=int, default=4,
                         help="Number of parallel workers for API enrichment (default: 4)")
 
@@ -495,7 +495,8 @@ def main():
             use_ollama=args.ollama,
             ollama_model=args.ollama_model,
             use_role_classifier=not args.no_role_classifier,
-            use_three_tier_waterfall=args.three_tier,
+            use_three_tier_waterfall=True,
+            use_scihub_fallback=not args.no_scihub,
         )
 
     # --- API enrichment (GitHub, S2, CrossRef) — on by default ---

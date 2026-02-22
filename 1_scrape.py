@@ -8,9 +8,9 @@ Phase A (scraper):
     from PubMed/PMC and store them in SQLite with initial regex-extracted tags.
 
 Phase B (full-text acquisition):
-    Fetches missing full text (and methods when available) using either:
-      - three-tier waterfall (Europe PMC → Unpaywall+GROBID → abstract), or
-      - SciHub fallback.
+    Fetches missing full text (and methods when available) using a combined
+    strategy: three-tier waterfall (Europe PMC → Unpaywall+GROBID → abstract)
+    first, then SciHub DOI fallback for any papers still without full text.
 
     This phase does NOT run tagging agents. Authoritative tagging happens in
     step 3 (`3_clean.py`).
@@ -20,7 +20,7 @@ Usage:
     python 1_scrape.py --skip-fulltext        # scrape only
     python 1_scrape.py --fulltext-only        # skip scraping, fetch full text only
     python 1_scrape.py --fulltext-limit 500   # only fetch full text for 500 papers
-    python 1_scrape.py --three-tier           # use three-tier waterfall
+    python 1_scrape.py --no-scihub             # disable SciHub DOI fallback
 
 Scraper flags (forwarded to backup/microhub_scraper.py):
     --db PATH               Database path (default: microhub.db)
@@ -60,12 +60,19 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 def acquire_fulltext(
     db_path: str,
     limit: Optional[int] = None,
-    use_three_tier_waterfall: bool = False,
+    use_scihub_fallback: bool = True,
 ) -> int:
     """Acquire full text for papers that do not have it yet.
 
+    Uses a combined strategy: three-tier waterfall (Europe PMC →
+    Unpaywall+GROBID → abstract) first, then SciHub DOI fallback for
+    any papers the waterfall couldn't resolve.
+
     This phase does NOT run tagging agents. Tagging happens in step 3.
     """
+    from pipeline.parsing.section_extractor import three_tier_waterfall
+    from pipeline.parsing.scihub_fetcher import fetch_fulltext_via_scihub
+
     conn = sqlite3.connect(db_path, timeout=120.0)
     conn.row_factory = sqlite3.Row
 
@@ -99,12 +106,13 @@ def acquire_fulltext(
     logger.info("=" * 60)
     logger.info("Papers needing full text: %d", total)
     logger.info(
-        "Strategy: %s",
-        "three-tier waterfall" if use_three_tier_waterfall else "SciHub fallback",
+        "Strategy: three-tier waterfall%s",
+        " + SciHub DOI fallback" if use_scihub_fallback else "",
     )
     logger.info("")
 
     acquired = 0
+    acquired_scihub = 0
     errors = 0
 
     for i, row in enumerate(rows):
@@ -113,34 +121,33 @@ def acquire_fulltext(
         pmid = paper.get("pmid", "?")
 
         try:
-            if use_three_tier_waterfall:
-                from pipeline.parsing.section_extractor import three_tier_waterfall
+            # ---- Tier 1-3: three-tier waterfall ----
+            sections = three_tier_waterfall(paper)
+            if sections and sections.full_text:
+                updates_sql = "UPDATE papers SET full_text = ?"
+                params_sql = [sections.full_text]
+                if sections.methods:
+                    updates_sql += ", methods = ?"
+                    params_sql.append(sections.methods)
+                if has_text_acquired:
+                    updates_sql += ", text_acquired = datetime('now')"
+                updates_sql += " WHERE id = ?"
+                params_sql.append(paper["id"])
+                conn.execute(updates_sql, params_sql)
+                conn.commit()
+                acquired += 1
+                logger.info(
+                    "  [%d/%d] PMID %s: full text acquired (%d chars, source=%s)",
+                    i + 1,
+                    total,
+                    pmid,
+                    len(sections.full_text),
+                    getattr(sections, "source", "unknown") or "unknown",
+                )
+                continue
 
-                sections = three_tier_waterfall(paper)
-                if sections and sections.full_text:
-                    updates_sql = "UPDATE papers SET full_text = ?"
-                    params_sql = [sections.full_text]
-                    if sections.methods:
-                        updates_sql += ", methods = ?"
-                        params_sql.append(sections.methods)
-                    if has_text_acquired:
-                        updates_sql += ", text_acquired = datetime('now')"
-                    updates_sql += " WHERE id = ?"
-                    params_sql.append(paper["id"])
-                    conn.execute(updates_sql, params_sql)
-                    conn.commit()
-                    acquired += 1
-                    logger.info(
-                        "  [%d/%d] PMID %s: full text acquired (%d chars, source=%s)",
-                        i + 1,
-                        total,
-                        pmid,
-                        len(sections.full_text),
-                        getattr(sections, "source", "unknown") or "unknown",
-                    )
-            else:
-                from pipeline.parsing.scihub_fetcher import fetch_fulltext_via_scihub
-
+            # ---- SciHub DOI fallback ----
+            if use_scihub_fallback and doi:
                 scihub_text = fetch_fulltext_via_scihub(doi)
                 if scihub_text:
                     if has_text_acquired:
@@ -155,8 +162,9 @@ def acquire_fulltext(
                         )
                     conn.commit()
                     acquired += 1
+                    acquired_scihub += 1
                     logger.info(
-                        "  [%d/%d] PMID %s: full text via SciHub (%d chars)",
+                        "  [%d/%d] PMID %s: full text via SciHub fallback (%d chars)",
                         i + 1,
                         total,
                         pmid,
@@ -176,8 +184,9 @@ def acquire_fulltext(
     logger.info("")
     logger.info("=" * 60)
     logger.info(
-        "PHASE B COMPLETE: %d papers acquired full text (%d errors)",
+        "PHASE B COMPLETE: %d papers acquired full text (%d via SciHub fallback, %d errors)",
         acquired,
+        acquired_scihub,
         errors,
     )
     logger.info("=" * 60)
@@ -201,9 +210,8 @@ def main():
                         help="Skip scraping, only acquire full text for DB papers")
     parser.add_argument("--fulltext-limit", type=int, default=None,
                         help="Max papers to fetch full text for (default: all)")
-    parser.add_argument("--three-tier", action="store_true",
-                        help="Use three-tier waterfall (Europe PMC → Unpaywall+GROBID → abstract) "
-                             "for full-text acquisition instead of SciHub fallback")
+    parser.add_argument("--no-scihub", action="store_true",
+                        help="Disable SciHub DOI fallback (only use three-tier waterfall)")
     parser.add_argument("--db", default="microhub.db",
                         help="Database path (default: microhub.db)")
 
@@ -262,7 +270,7 @@ def main():
         acquire_fulltext(
             db_path=db_path,
             limit=known.fulltext_limit,
-            use_three_tier_waterfall=known.three_tier,
+            use_scihub_fallback=not known.no_scihub,
         )
 
     logger.info("")

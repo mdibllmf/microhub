@@ -52,7 +52,8 @@ class PipelineOrchestrator:
                  use_ollama: bool = False,
                  ollama_model: str = None,
                  use_role_classifier: bool = True,
-                 use_three_tier_waterfall: bool = False):
+                 use_three_tier_waterfall: bool = True,
+                 use_scihub_fallback: bool = True):
 
         if lookup_tables_path is None and os.path.isdir(_DEFAULT_LOOKUP_PATH):
             lookup_tables_path = _DEFAULT_LOOKUP_PATH
@@ -99,8 +100,9 @@ class PipelineOrchestrator:
         # Role classifier for over-tagging prevention
         self.role_classifier = RoleClassifier() if use_role_classifier else None
 
-        # Three-tier waterfall for full-text acquisition
+        # Full-text acquisition strategy
         self.use_three_tier_waterfall = use_three_tier_waterfall
+        self.use_scihub_fallback = use_scihub_fallback
 
         # Validation (with local lookups)
         self.tag_validator = TagValidator(tag_dictionary_path)
@@ -133,11 +135,21 @@ class PipelineOrchestrator:
         dict
             Extraction results keyed by category, ready for the exporter.
         """
-        # Full-text acquisition: use three-tier waterfall if enabled
+        # Full-text acquisition: three-tier waterfall, with SciHub DOI fallback
         if self.use_three_tier_waterfall:
             sections = three_tier_waterfall(paper)
         else:
             sections = from_pubmed_dict(paper)
+
+        # SciHub DOI fallback: if waterfall didn't produce full text, try SciHub
+        if self.use_scihub_fallback and not sections.full_text:
+            doi = paper.get("doi", "") or ""
+            if doi:
+                from .parsing.scihub_fetcher import fetch_fulltext_via_scihub
+                scihub_text = fetch_fulltext_via_scihub(doi)
+                if scihub_text:
+                    sections.full_text = scihub_text
+                    logger.debug("SciHub fallback provided full text for DOI %s", doi)
 
         results = self._run_agents(sections, paper)
 

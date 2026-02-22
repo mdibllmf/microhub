@@ -138,7 +138,7 @@ def from_pubmed_dict(paper: Dict) -> PaperSections:
     """Build PaperSections from a scraper-style dict (DB row or JSON record).
 
     Full text should already be present in the paper dict — the scraper
-    (1_scrape.py) is responsible for fetching it from PMC or SciHub.
+    (1_scrape.py) is responsible for fetching it via the three-tier waterfall.
     """
     full_text = paper.get("full_text", "") or ""
     figures = ""
