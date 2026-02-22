@@ -82,6 +82,11 @@ def segment_paper(paper, *, strip_citations=True, include_introduction=False):
     def _clean(text):
         if not text:
             return ""
+        # Handle list values (e.g. figures stored as list in JSON)
+        if isinstance(text, list):
+            text = " ".join(str(t) for t in text if t)
+        if not isinstance(text, str):
+            text = str(text)
         if strip_citations:
             text = strip_inline_citations(text)
         return text.strip()
