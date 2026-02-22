@@ -16,8 +16,20 @@ import re
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+_OA_STATUSES = {"gold", "green", "bronze", "hybrid", "diamond", "open", "oa"}
+_TRUE_STRINGS = {"1", "true", "yes", "y"}
+_DATASET_SOURCES = {"datacite", "openaire", "crossref-relation", "text_pattern", "data_availability_mining"}
+_IMAGE_REPO_HINTS = {
+    "bioimage", "openmicroscopy", "idr", "omero", "empiar", "emdb", "ssbd", "cellimagelibrary",
+    "biostudies", "image data resource", "zenodo"
+}
+_AMBIGUOUS_PLATE_READER_BRANDS = {
+    "molecular devices", "biotek", "tecan", "bmg labtech", "bmg", "fluostar", "clariostar"
+}
 
 
 # ======================================================================
@@ -132,6 +144,103 @@ class JsonExporter:
         if value is None:
             return default
         return value
+
+    @staticmethod
+    def _boolish(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return bool(value)
+        if isinstance(value, str):
+            return value.strip().lower() in _TRUE_STRINGS
+        return bool(value)
+
+    @staticmethod
+    def _is_open_access_value(row_dict: Dict) -> bool:
+        status = str(row_dict.get("oa_status") or "").strip().lower()
+        return JsonExporter._boolish(row_dict.get("is_open_access")) or status in _OA_STATUSES
+
+    @staticmethod
+    def _has_dataset_repositories(repositories: List[Any]) -> bool:
+        for repo in repositories or []:
+            if not isinstance(repo, dict):
+                continue
+            source = str(repo.get("source") or "").strip().lower()
+            if source in _DATASET_SOURCES:
+                return True
+            url = str(repo.get("url") or "")
+            if url and any(hint in url.lower() for hint in ("zenodo", "figshare", "dryad", "datadryad", "osf.io", "doi.org/10.")):
+                return True
+        return False
+
+    @staticmethod
+    def _filter_image_repositories(repositories: List[Any]) -> List[Any]:
+        filtered: List[Any] = []
+        for repo in repositories or []:
+            if not isinstance(repo, dict):
+                continue
+            name = str(repo.get("name") or "").lower()
+            url = str(repo.get("url") or "")
+            domain = ""
+            if url:
+                parsed = urlparse(url if "://" in url else f"https://{url}")
+                domain = parsed.netloc.lower()
+            haystack = f"{name} {domain} {url.lower()}"
+            if any(hint in haystack for hint in _IMAGE_REPO_HINTS):
+                filtered.append(repo)
+        return filtered
+
+    @staticmethod
+    def _deduplicate_protocols(protocols: List[Any]) -> List[Any]:
+        deduped: List[Any] = []
+        seen = set()
+        for proto in protocols or []:
+            if isinstance(proto, dict):
+                key = (str(proto.get("name") or "").strip().lower(), str(proto.get("url") or "").strip().lower())
+                if key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(proto)
+            elif isinstance(proto, str):
+                key = proto.strip().lower()
+                if not key or key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(proto)
+        return deduped
+
+    @staticmethod
+    def _deduplicate_rors(rors: List[Any]) -> List[Any]:
+        deduped: List[Any] = []
+        seen = set()
+        for item in rors or []:
+            if isinstance(item, dict):
+                rid = str(item.get("id") or "").strip().lower()
+                url = str(item.get("url") or "").strip().lower().rstrip("/")
+                key = rid or url
+                if not key or key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(item)
+            elif isinstance(item, str):
+                key = item.strip().lower().rstrip("/")
+                if not key or key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(item)
+        return deduped
+
+    @staticmethod
+    def _filter_ambiguous_reagent_suppliers(suppliers: List[Any]) -> List[Any]:
+        filtered: List[Any] = []
+        for supplier in suppliers or []:
+            if isinstance(supplier, str):
+                if supplier.strip().lower() in _AMBIGUOUS_PLATE_READER_BRANDS:
+                    continue
+                filtered.append(supplier)
+            else:
+                filtered.append(supplier)
+        return filtered
 
     # ------------------------------------------------------------------
     # Main export
@@ -259,23 +368,10 @@ class JsonExporter:
         # Parse all JSON array fields
         microscopy_techniques = self.safe_json_parse(row_dict.get("microscopy_techniques"))
         microscope_brands = self.safe_json_parse(row_dict.get("microscope_brands"))
-        # Filter out ambiguous brands that are plate readers, not microscopes
-        if microscope_brands:
-            _plate_reader_re = re.compile(
-                r"\b(?:SpectraMax|FlexStation|FilterMax|SoftMax|VersaMax|"
-                r"Cytation|Synergy|Epoch|plate\s*reader|microplate\s*reader)\b", re.I)
-            _microscope_check_re = re.compile(
-                r"\b(?:ImageXpress|MetaXpress|confocal|microscop[ey])\b", re.I)
-            _ambiguous_brands = {"Molecular Devices", "BioTek", "Tecan"}
-            full_text_check = str(row_dict.get("abstract", "")) + " " + str(row_dict.get("methods", ""))
-            microscope_brands = [
-                b for b in microscope_brands
-                if b not in _ambiguous_brands
-                or not _plate_reader_re.search(full_text_check)
-                or _microscope_check_re.search(full_text_check)
-            ]
         microscope_models = self.safe_json_parse(row_dict.get("microscope_models"))
-        reagent_suppliers = self.safe_json_parse(row_dict.get("reagent_suppliers"))
+        reagent_suppliers = self._filter_ambiguous_reagent_suppliers(
+            self.safe_json_parse(row_dict.get("reagent_suppliers"))
+        )
         image_analysis_software = self.safe_json_parse(row_dict.get("image_analysis_software"))
         image_acquisition_software = self.safe_json_parse(row_dict.get("image_acquisition_software"))
         general_software = self.safe_json_parse(row_dict.get("general_software"))
@@ -284,12 +380,12 @@ class JsonExporter:
         organisms = self.safe_json_parse(row_dict.get("organisms"))
         antibody_sources = self.safe_json_parse(row_dict.get("antibody_sources"))
         cell_lines = self.safe_json_parse(row_dict.get("cell_lines"))
-        protocols = self.safe_json_parse(row_dict.get("protocols"))
+        protocols = self._deduplicate_protocols(self.safe_json_parse(row_dict.get("protocols")))
         repositories = self.safe_json_parse(row_dict.get("repositories"))
         supplementary = self.safe_json_parse(row_dict.get("supplementary_materials"))
         rrids = self.safe_json_parse(row_dict.get("rrids"))
         rors = self.safe_json_parse(row_dict.get("rors"))
-        # Deduplicate ROR entries by ID at parse time
+        # Deduplicate ROR entries by ID
         if rors:
             seen_ror_ids = set()
             deduped_rors = []
@@ -321,6 +417,10 @@ class JsonExporter:
         techniques = self.safe_json_parse(row_dict.get("techniques"))
         software = self.safe_json_parse(row_dict.get("software"))
         tags = self.safe_json_parse(row_dict.get("tags"))
+        openalex_topics = self.safe_json_parse(row_dict.get("openalex_topics"))
+        openalex_institutions = self.safe_json_parse(row_dict.get("openalex_institutions"))
+        fields_of_study = self.safe_json_parse(row_dict.get("fields_of_study"))
+        is_open_access = self._is_open_access_value(row_dict)
 
         citation_count = self.safe_get(row_dict, "citation_count", 0) or 0
         tag_source = self.safe_get(row_dict, "tag_source", "unknown")
@@ -425,7 +525,7 @@ class JsonExporter:
             "mounting_media": mounting_media,
 
             # === RESOURCES ===
-            "protocols": self._deduplicate_protocols(protocols),
+            "protocols": protocols,
             "repositories": repositories,
             "image_repositories": [
                 r for r in repositories
@@ -440,7 +540,7 @@ class JsonExporter:
             ],
             "supplementary_materials": supplementary,
             "rrids": rrids,
-            "rors": self._deduplicate_rors(rors),
+            "rors": rors,
             "references": references,
             "antibodies": antibodies,
 
@@ -477,16 +577,14 @@ class JsonExporter:
             "has_detectors": bool(detectors),
             "has_filters": bool(filters),
             "links_validated": bool(self.safe_get(row_dict, "links_validated")),
-
-            # === ENRICHMENT FLAGS (derived from actual data) ===
-            "has_openalex": bool(self.safe_get(row_dict, "openalex_id")),
-            "has_oa": bool(self.safe_get(row_dict, "oa_status")) and str(self.safe_get(row_dict, "oa_status", "")).lower() != "closed",
-            "has_fwci": self.safe_get(row_dict, "fwci") is not None and self.safe_get(row_dict, "fwci") != "",
-            "is_open_access": str(self.safe_get(row_dict, "oa_status", "")).lower().strip() in ("gold", "green", "hybrid", "bronze") or bool(self.safe_get(row_dict, "is_open_access")),
-            "has_openalex_topics": bool(self.safe_json_parse(row_dict.get("openalex_topics"))),
-            "has_openalex_institutions": bool(self.safe_json_parse(row_dict.get("openalex_institutions"))),
-            "has_fields_of_study": bool(self.safe_json_parse(row_dict.get("fields_of_study"))),
-            "has_datasets": bool([r for r in repositories if isinstance(r, dict) and r.get("source") in ("datacite", "openaire", "crossref-relation", "text_pattern")]),
+            "has_openalex": bool(self.safe_get(row_dict, "openalex_id")) or bool(openalex_topics) or bool(openalex_institutions),
+            "has_oa": is_open_access,
+            "has_fwci": self.safe_get(row_dict, "fwci") not in (None, ""),
+            "has_datasets": self._has_dataset_repositories(repositories),
+            "is_open_access": is_open_access,
+            "has_openalex_topics": bool(openalex_topics),
+            "has_openalex_institutions": bool(openalex_institutions),
+            "has_fields_of_study": bool(fields_of_study),
 
             # === TAG EXTRACTION METADATA ===
             "tag_source": tag_source,
@@ -529,78 +627,6 @@ class JsonExporter:
             del paper["full_text"]
 
         return paper
-
-    # ------------------------------------------------------------------
-    # Deduplication helpers
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _deduplicate_protocols(protocols: list) -> list:
-        """Deduplicate protocols by URL and fix corrupted URLs."""
-        if not protocols:
-            return []
-
-        seen_urls = set()
-        deduped = []
-        for p in protocols:
-            if not isinstance(p, dict):
-                continue
-            url = str(p.get("url", "")).strip()
-            if not url:
-                continue
-
-            # Fix corrupted URLs — remove stray numeric sequences injected mid-word
-            # e.g., "shut-427down" → "shutdown"
-            url_clean = re.sub(r'(?<=[a-z])-?\d{2,4}(?=[a-z])', '', url)
-
-            # Normalize URL for dedup
-            url_key = url_clean.lower().rstrip("/")
-            if url_key in seen_urls:
-                continue
-            seen_urls.add(url_key)
-
-            p_copy = dict(p)
-            p_copy["url"] = url_clean
-            deduped.append(p_copy)
-
-        return deduped
-
-    @staticmethod
-    def _deduplicate_rors(rors: list) -> list:
-        """Deduplicate ROR entries by ID, preferring ror_v2_affiliation source."""
-        if not rors:
-            return []
-
-        SOURCE_PRIORITY = {
-            "ror_v2_affiliation": 0,
-            "openalex": 1,
-            "institution_lookup": 2,
-            "text": 3,
-            "url": 4,
-        }
-
-        by_id = {}
-        for r in rors:
-            if not isinstance(r, dict):
-                continue
-            ror_id = str(r.get("id", r.get("ror_id", ""))).strip()
-            if not ror_id:
-                continue
-            ror_id = ror_id.replace("https://ror.org/", "").strip()
-            source = str(r.get("source", "unknown")).lower()
-            priority = SOURCE_PRIORITY.get(source, 99)
-
-            if ror_id not in by_id or priority < by_id[ror_id][1]:
-                by_id[ror_id] = (r, priority)
-
-        result = []
-        for ror_id, (entry, _) in by_id.items():
-            entry_copy = dict(entry)
-            entry_copy["id"] = ror_id
-            entry_copy["url"] = f"https://ror.org/{ror_id}"
-            result.append(entry_copy)
-
-        return result
 
     # ------------------------------------------------------------------
     # Merge agent results back into DB row

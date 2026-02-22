@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import time
+import json
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
@@ -71,20 +72,17 @@ class ApiValidator:
     Pass paths to sub-validator constructors for local-first behavior.
     """
 
-    def __init__(self, fpbase_path: str = None, cellosaurus_path: str = None,
-                 taxonomy_path: str = None):
+    def __init__(self, local_lookup=None, fpbase_path: str = None,
+                 cellosaurus_path: str = None, taxonomy_path: str = None):
+        self._local_lookup = local_lookup
         self._fpbase_cache: Dict[str, Optional[Dict]] = {}
         self._rrid_cache: Dict[str, Optional[Dict]] = {}
         self._ror_cache: Dict[str, Optional[Dict]] = {}
         self._taxon_cache: Dict[str, Optional[Dict]] = {}
 
-        # FPbase validator with optional local lookup
-        self._fpbase = None
-        try:
-            from .fpbase_validator import FPbaseValidator
-            self._fpbase = FPbaseValidator(lookup_path=fpbase_path)
-        except ImportError:
-            pass
+        self._fpbase_local: Dict[str, Dict] = {}
+        self._fpbase_local_loaded = False
+        self._fpbase_path = fpbase_path
 
         # Cellosaurus client with optional local lookup
         self._cellosaurus = None
@@ -94,13 +92,9 @@ class ApiValidator:
         except ImportError:
             pass
 
-        # Taxonomy validator with optional local lookup
-        self._taxonomy = None
-        try:
-            from .taxonomy_validator import TaxonomyValidator
-            self._taxonomy = TaxonomyValidator(local_path=taxonomy_path)
-        except ImportError:
-            pass
+        self._taxonomy_local: Dict[str, int] = {}
+        self._taxonomy_local_loaded = False
+        self._taxonomy_path = taxonomy_path
 
         # Rate limiting
         self._last_call: Dict[str, float] = {}
@@ -115,6 +109,102 @@ class ApiValidator:
         # Track exhaustion per API
         self._exhausted: Set[str] = set()
 
+    def _ensure_fpbase_loaded(self) -> None:
+        if not self._fpbase_local_loaded and self._fpbase_path:
+            self._load_fpbase_local(self._fpbase_path)
+
+    def _ensure_taxonomy_loaded(self) -> None:
+        if not self._taxonomy_local_loaded and self._taxonomy_path:
+            self._load_taxonomy_local(self._taxonomy_path)
+
+    def _load_fpbase_local(self, path: str) -> None:
+        """Load fpbase_name_lookup.json into a case-insensitive index."""
+        json_path = path
+        if os.path.isdir(path):
+            json_path = os.path.join(path, "fpbase_name_lookup.json")
+        if not os.path.exists(json_path):
+            logger.warning("FPbase lookup not found at %s", json_path)
+            return
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+
+            count = 0
+            for key, entry in raw.items():
+                key_lower = str(key).strip().lower()
+                if not key_lower or not isinstance(entry, dict):
+                    continue
+
+                canonical = (
+                    entry.get("canonical_name")
+                    or entry.get("name")
+                    or str(key).strip()
+                )
+                normalized_entry = {
+                    "name": canonical,
+                    "type": entry.get("type", ""),
+                }
+                self._fpbase_local[key_lower] = normalized_entry
+                self._fpbase_local[canonical.lower()] = normalized_entry
+                count += 1
+                if count % 50000 == 0:
+                    logger.info("FPbase local load progress: %d entries", count)
+
+            self._fpbase_local_loaded = True
+            logger.info("FPbase local lookup loaded: %d entries", len(self._fpbase_local))
+        except Exception as exc:
+            logger.warning("Failed to load FPbase lookup: %s", exc)
+
+    def _load_taxonomy_local(self, path: str) -> None:
+        """Load NCBI names.dmp into a case-insensitive name->taxid map."""
+        names_path = path
+        if os.path.isdir(path):
+            names_path = os.path.join(path, "names.dmp")
+        if not os.path.exists(names_path):
+            logger.warning("NCBI names.dmp not found at %s", names_path)
+            return
+
+        count = 0
+        try:
+            with open(names_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    parts = line.strip().split("\t|\t")
+                    if len(parts) < 4:
+                        continue
+
+                    try:
+                        taxid = int(parts[0].strip())
+                    except ValueError:
+                        continue
+
+                    name = parts[1].strip()
+                    name_class = parts[3].rstrip("\t|").strip()
+                    if name_class not in (
+                        "scientific name",
+                        "common name",
+                        "synonym",
+                        "equivalent name",
+                        "genbank common name",
+                    ):
+                        continue
+
+                    key = name.lower()
+                    if key not in self._taxonomy_local or name_class == "scientific name":
+                        self._taxonomy_local[key] = taxid
+                    count += 1
+                    if count % 500000 == 0:
+                        logger.info("NCBI taxonomy local load progress: %d rows", count)
+
+            self._taxonomy_local_loaded = True
+            logger.info(
+                "NCBI taxonomy loaded: %d entries, %d unique names",
+                count,
+                len(self._taxonomy_local),
+            )
+        except Exception as exc:
+            logger.warning("Failed to load NCBI taxonomy: %s", exc)
+
     # ------------------------------------------------------------------
     # Public: validate a full paper result dict
     # ------------------------------------------------------------------
@@ -125,9 +215,6 @@ class ApiValidator:
         Adds ``_validated`` metadata to indicate API confirmation.
         Removes clearly false-positive extractions.
         """
-        if not HAS_REQUESTS:
-            return results
-
         # 1. Validate fluorophores against FPbase
         if "fluorophores" in results:
             results["fluorophores"] = self._validate_fluorophores(
@@ -202,11 +289,15 @@ class ApiValidator:
                 validated.append(fp_name)
                 continue
 
-            # Check FPbase for fluorescent proteins (local-first via validator)
-            if self._fpbase:
-                fp_data = self._fpbase.validate(fp_name)
-            else:
-                fp_data = self._query_fpbase(fp_name)
+            # Check local FPbase index first
+            if self._local_lookup:
+                local_fp = self._local_lookup.fluorophore(fp_name)
+                if local_fp is not None:
+                    validated.append(local_fp.get("name", fp_name))
+                    continue
+
+            # API fallback: check FPbase for fluorescent proteins
+            fp_data = self._query_fpbase(fp_name)
             if fp_data is not None:
                 # Use canonical name from FPbase if different
                 canonical = fp_data.get("name", fp_name)
@@ -222,6 +313,18 @@ class ApiValidator:
         """Query FPbase for a fluorescent protein by name."""
         if name in self._fpbase_cache:
             return self._fpbase_cache[name]
+
+        self._ensure_fpbase_loaded()
+
+        if self._fpbase_local_loaded:
+            local_hit = self._fpbase_local.get(name.lower())
+            if local_hit is not None:
+                self._fpbase_cache[name] = local_hit
+                return local_hit
+
+        if not HAS_REQUESTS:
+            self._fpbase_cache[name] = None
+            return None
 
         self._rate_limit("fpbase")
         try:
@@ -413,18 +516,17 @@ class ApiValidator:
     def _validate_organisms(self, organisms: List[str]) -> List[str]:
         """Validate organism names against NCBI Taxonomy.
 
-        Uses the TaxonomyValidator (local-first) when available,
-        falls back to direct API queries.
+        Uses local names.dmp lookup first, then falls back to API.
         """
         if "ncbi" in self._exhausted:
             return organisms
 
         validated = []
         for org_name in organisms:
-            # Try taxonomy validator (local-first) if available
-            if self._taxonomy:
-                taxid = self._taxonomy.get_taxid(org_name)
-                if taxid is not None:
+            # Check local taxonomy first
+            if self._local_lookup:
+                local_tax = self._local_lookup.taxon(org_name)
+                if local_tax:
                     validated.append(org_name)
                     continue
 
@@ -444,6 +546,8 @@ class ApiValidator:
         """Query NCBI Taxonomy for organism validation."""
         if name in self._taxon_cache:
             return self._taxon_cache[name]
+
+        self._ensure_taxonomy_loaded()
 
         # Map common names to Latin for direct lookup
         COMMON_TO_LATIN = {
@@ -474,6 +578,24 @@ class ApiValidator:
 
         # Use Latin name for NCBI lookup
         query_name = COMMON_TO_LATIN.get(name, name)
+
+        if self._taxonomy_local_loaded:
+            taxid = self._taxonomy_local.get(query_name.lower())
+            if taxid is None:
+                taxid = self._taxonomy_local.get(name.lower())
+            if taxid is not None:
+                result = {
+                    "tax_id": str(taxid),
+                    "scientific_name": query_name if query_name != name else name,
+                    "common_name": name if query_name != name else "",
+                    "rank": "",
+                }
+                self._taxon_cache[name] = result
+                return result
+
+        if not HAS_REQUESTS:
+            self._taxon_cache[name] = None
+            return None
 
         self._rate_limit("ncbi")
         try:
@@ -556,7 +678,24 @@ class ApiValidator:
 
         metadata: List[Dict[str, Any]] = []
         for name in cell_lines:
-            result = self._cellosaurus.validate(name)
+            # Check local Cellosaurus first
+            if self._local_lookup:
+                local_cl = self._local_lookup.cell_line(name)
+                if local_cl:
+                    entry = {
+                        "name": name,
+                        "validated": True,
+                        "cellosaurus_accession": local_cl.get("accession", ""),
+                        "canonical_name": local_cl.get("name", name),
+                        "species": local_cl.get("species", ""),
+                        "disease": local_cl.get("disease", ""),
+                        "category": local_cl.get("category", ""),
+                    }
+                    metadata.append(entry)
+                    continue
+
+            # API fallback
+            result = self._cellosaurus.validate(name) if self._cellosaurus else None
             if result:
                 entry = {
                     "name": name,

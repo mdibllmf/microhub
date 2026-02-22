@@ -80,13 +80,15 @@ class Enricher:
     # S2 batch endpoint accepts up to 500 IDs per request
     S2_BATCH_SIZE = 500
 
-    def __init__(self, max_workers: int = 4, ror_local_path: str = None):
+    def __init__(self, max_workers: int = 4, ror_local_path: Optional[str] = None,
+                 local_lookup=None):
         self.github_token = _get_key("GITHUB_TOKEN")
         self.s2_api_key = _get_key("SEMANTIC_SCHOLAR_API_KEY")
         self.openalex_email = _get_key("OPENALEX_EMAIL") or "microhub@example.com"
         self.openalex_api_key = _get_key("OPENALEX_API_KEY")
         self.ror_client_id = _get_key("ROR_CLIENT_ID")
         self._ror_local_path = ror_local_path
+        self._local_lookup = local_lookup
 
         self._last_github_call = 0.0
         self._last_s2_call = 0.0
@@ -146,6 +148,7 @@ class Enricher:
                     self._ror_client = RORv2Client(
                         client_id=self.ror_client_id,
                         local_path=self._ror_local_path,
+                        local_lookup=self._local_lookup,
                     )
         return self._ror_client
 

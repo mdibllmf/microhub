@@ -102,19 +102,18 @@ class PubTatorAgent(BaseAgent):
     name = "pubtator"
 
     def __init__(self, local_path: str = None):
+        super().__init__()
         self._last_call = 0.0
         self._delay = 0.35  # PubTator rate limit: ~3 req/sec
         self._exhausted = False
         self._cache: Dict[str, List[Extraction]] = {}
         self._local_annotations: Dict[str, List[Dict]] = {}
         self._local_loaded = False
-        self._local_path = local_path  # deferred to first use
+        self._local_path = local_path
 
-    def _ensure_local_loaded(self):
-        """Lazy-load PubTator entity files on first use."""
+    def _ensure_local_loaded(self) -> None:
         if not self._local_loaded and self._local_path:
             self._load_local(self._local_path)
-            self._local_path = None  # prevent re-loading
 
     def _load_local(self, path: str):
         """Load PubTator entity summary files into a PMID-indexed lookup.
@@ -134,6 +133,8 @@ class PubTatorAgent(BaseAgent):
 
         entity_types_to_load = {"Species", "CellLine", "Chemical"}
         gz_files = glob.glob(os.path.join(path, "entity2pubtator3_*.gz"))
+        if not gz_files:
+            gz_files = glob.glob(os.path.join(path, "*2pubtator3.gz"))
 
         if not gz_files:
             logger.warning("No PubTator entity files found in %s", path)
@@ -141,6 +142,7 @@ class PubTatorAgent(BaseAgent):
 
         count = 0
         for gz_path in gz_files:
+            logger.info("PubTator local loading: %s", os.path.basename(gz_path))
             try:
                 with gzip.open(gz_path, "rt", encoding="utf-8") as f:
                     for line in f:
@@ -168,7 +170,7 @@ class PubTatorAgent(BaseAgent):
                         })
                         count += 1
                         if count % 500000 == 0:
-                            logger.info("  ... loaded %d PubTator annotations so far", count)
+                            logger.info("PubTator local load progress: %d annotations", count)
             except Exception as exc:
                 logger.warning("Failed to parse %s: %s", gz_path, exc)
 
@@ -198,6 +200,8 @@ class PubTatorAgent(BaseAgent):
                 effective_label = label
                 if effective_label == "CHEMICAL" and mention.lower() in _FLUOROPHORE_CHEMICALS:
                     effective_label = "FLUOROPHORE"
+                elif effective_label == "CHEMICAL":
+                    continue
 
                 # Normalize organism names
                 canonical = mention
@@ -220,7 +224,7 @@ class PubTatorAgent(BaseAgent):
                     start=0,
                     end=len(mention),
                     confidence=0.85,
-                    source_agent=self.name,
+                    source_agent="pubtator_local",
                     section="abstract",
                     metadata={
                         "canonical": canonical,
@@ -248,8 +252,9 @@ class PubTatorAgent(BaseAgent):
         if pmid in self._cache:
             return self._cache[pmid]
 
-        # LOCAL FIRST (lazy-load on first use)
         self._ensure_local_loaded()
+
+        # LOCAL FIRST
         if self._local_loaded and pmid in self._local_annotations:
             extractions = self._parse_local_annotations(pmid)
             self._cache[pmid] = extractions

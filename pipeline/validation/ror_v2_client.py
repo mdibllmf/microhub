@@ -59,7 +59,9 @@ class RORv2Client:
     live API for fuzzy affiliation matching.
     """
 
-    def __init__(self, client_id: str = None, local_path: str = None):
+    def __init__(self, client_id: Optional[str] = None,
+                 local_path: Optional[str] = None,
+                 local_lookup=None):
         """
         Parameters
         ----------
@@ -74,15 +76,12 @@ class RORv2Client:
         self._last_call = 0.0
         self._cache: Dict[str, Optional[Dict]] = {}
         self._lock = threading.Lock()
-        self._local_index: Dict[str, Dict] = {}  # lowercase name → {ror_id, name, country}
+        self._local_index: Dict[str, Dict] = {}  # lowercase name → match payload
         self._local_loaded = False
-        self._local_path = local_path  # deferred to first use
+        self._local_lookup = local_lookup
 
-    def _ensure_local_loaded(self):
-        """Lazy-load ROR data dump on first use."""
-        if not self._local_loaded and self._local_path:
-            self._load_local(self._local_path)
-            self._local_path = None  # prevent re-loading
+        if local_path:
+            self._load_local(local_path)
 
     def _load_local(self, path: str):
         """Load ROR data dump JSON for local name → ROR ID matching."""
@@ -109,12 +108,29 @@ class RORv2Client:
             for org in orgs:
                 ror_url = org.get("id", "")
                 ror_id = ror_url.replace("https://ror.org/", "")
-                name = org.get("name", "")
+                name = (org.get("name") or "").strip()
+                if not name:
+                    names = org.get("names", [])
+                    if isinstance(names, list) and names:
+                        preferred = ""
+                        for item in names:
+                            types = item.get("types", []) if isinstance(item, dict) else []
+                            if "ror_display" in types:
+                                preferred = (item.get("value") or "").strip()
+                                break
+                        if not preferred and isinstance(names[0], dict):
+                            preferred = (names[0].get("value") or "").strip()
+                        name = preferred
 
                 if not ror_id or not name:
                     continue
 
-                entry = {"ror_id": ror_id, "name": name, "country": ""}
+                entry = {
+                    "ror_id": ror_id,
+                    "name": name,
+                    "country": "",
+                    "ror_url": ror_url,
+                }
 
                 # Get country
                 locations = org.get("locations", [])
@@ -135,8 +151,8 @@ class RORv2Client:
                             self._local_index[alt_lower] = entry
 
                 count += 1
-                if count % 50000 == 0:
-                    logger.info("  ... loaded %d ROR organizations so far", count)
+                if count % 20000 == 0:
+                    logger.info("ROR local load progress: %d organizations", count)
 
             self._local_loaded = True
             logger.info(
@@ -148,10 +164,9 @@ class RORv2Client:
 
     def lookup_local(self, institution_name: str) -> Optional[Dict]:
         """Fast local lookup by exact institution name."""
-        self._ensure_local_loaded()
         if not self._local_loaded:
             return None
-        return self._local_index.get(institution_name.lower())
+        return self._local_index.get(institution_name.lower().strip())
 
     # ------------------------------------------------------------------
     # Affiliation matching
@@ -160,9 +175,8 @@ class RORv2Client:
     def match_affiliation(self, affiliation: str) -> Optional[Dict[str, Any]]:
         """Match a raw affiliation string to a ROR organization.
 
-        Checks local ROR dump first for exact name matches within the
-        affiliation string, then falls back to the v2 affiliation matching
-        endpoint for fuzzy matching.
+        Uses the v2 affiliation matching endpoint with single_search
+        parameter for improved precision.
 
         Parameters
         ----------
@@ -183,58 +197,39 @@ class RORv2Client:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        # LOCAL FIRST: try exact name match within the affiliation string
-        self._ensure_local_loaded()
-        if self._local_loaded:
-            local_result = self._match_affiliation_local(affiliation.strip())
+        # Check local ROR index first
+        if self._local_lookup:
+            local_result = self._local_lookup.ror_fuzzy(affiliation)
             if local_result:
-                self._cache[cache_key] = local_result
-                return local_result
+                result = {
+                    "ror_id": local_result["ror_id"],
+                    "ror_url": f"https://ror.org/{local_result['ror_id']}",
+                    "name": local_result["name"],
+                    "country": local_result.get("country", ""),
+                    "country_code": local_result.get("country_code", ""),
+                    "types": local_result.get("types", []),
+                    "score": 1.0,
+                    "chosen": True,
+                    "status": "active",
+                    "relationships": [],
+                }
+                self._cache[cache_key] = result
+                return result
 
-        # FALLBACK: ROR v2 API fuzzy affiliation matching
+        # Local exact match first
+        if self._local_loaded:
+            local_hit = self.lookup_local(affiliation)
+            if local_hit is not None:
+                self._cache[cache_key] = local_hit
+                return local_hit
+
         if not HAS_REQUESTS:
+            self._cache[cache_key] = None
             return None
 
         result = self._query_affiliation(affiliation.strip())
         self._cache[cache_key] = result
         return result
-
-    def _match_affiliation_local(self, affiliation: str) -> Optional[Dict[str, Any]]:
-        """Try to match an affiliation string against the local ROR index.
-
-        Checks if any known institution name appears in the affiliation.
-        Returns the longest matching name to avoid partial matches.
-        """
-        aff_lower = affiliation.lower()
-
-        # Direct exact match (entire affiliation is an institution name)
-        entry = self._local_index.get(aff_lower)
-        if entry:
-            result = dict(entry)
-            result.setdefault("ror_url", f"https://ror.org/{entry.get('ror_id', '')}")
-            result["score"] = 1.0
-            result["chosen"] = True
-            return result
-
-        # Check if any known name is a substring of the affiliation
-        # Prefer the longest matching name to reduce false positives
-        best_match = None
-        best_len = 0
-        for name_lower, entry in self._local_index.items():
-            if len(name_lower) < 4:
-                continue  # Skip very short names to avoid false positives
-            if name_lower in aff_lower and len(name_lower) > best_len:
-                best_match = entry
-                best_len = len(name_lower)
-
-        if best_match and best_len >= 8:
-            result = dict(best_match)
-            result.setdefault("ror_url", f"https://ror.org/{best_match.get('ror_id', '')}")
-            result["score"] = 0.9
-            result["chosen"] = True
-            return result
-
-        return None
 
     def match_affiliations_batch(self,
                                   affiliations: List[str]) -> List[Optional[Dict]]:

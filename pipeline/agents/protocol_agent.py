@@ -171,7 +171,6 @@ REPOSITORY_PATTERNS: Dict[str, tuple] = {
         re.I,
     ), 0.9),
     "OMERO": (re.compile(
-        # Name-based: "OMERO server", "OMERO instance", "OMERO database", etc.
         r"\bOMERO\b(?=.{0,30}(?:server|instance|database|repositor|available|public|image))"
         # Actual OMERO data URLs — webclient / webgateway / api with dataset paths
         r"|(?:https?://)?[\w.-]+/omero/(?:webclient|api|webgateway)[\w./?=&-]*"

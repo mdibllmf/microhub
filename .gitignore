@@ -1,9 +1,19 @@
 # API keys (never commit)
 .env
+.env.*
+!.env.example
+key/
+keys/
 
 # Database files - too large for GitHub
 microhub.db
 *.db
+*.db-shm
+*.db-wal
+
+# Large generated lookup/data artifacts
+microhub_lookup_tables/
+raw_export/
 
 # Python
 __pycache__/

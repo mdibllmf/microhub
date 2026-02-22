@@ -7,10 +7,12 @@ citation mentions).  Maps institutions to ROR IDs where known.
 """
 
 import logging
+import glob
+import json
 import os
 import re
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .base_agent import BaseAgent, Extraction
 
@@ -180,43 +182,47 @@ _ACKNOWLEDGMENT_EXCLUSIONS = re.compile(
     re.IGNORECASE,
 )
 
-# Generic institution substrings that cause false matches when isolated
-_GENERIC_INSTITUTION_SUBSTRINGS = {
-    "medical school", "school of medicine", "college of medicine",
-    "research institute", "cancer center", "medical center",
-    "institute of technology", "school of public health",
-    "graduate school", "college of engineering", "school of engineering",
-    "department of", "division of", "center for",
+_GENERIC_AFFILIATION_FRAGMENTS = (
+    "department of",
+    "division of",
+    "faculty of",
+    "school of",
+    "program in",
+    "unit of",
+)
+
+_INSTITUTION_ANCHORS = (
+    "university",
+    "institute",
+    "hospital",
+    "college",
+    "academy",
+    "laboratory",
+    "centre",
+    "center",
+    "medical school",
+)
+
+_ROR_STOPWORDS = {
+    "the", "of", "and", "for", "at", "in", "to", "a", "an", "department", "division", "faculty", "school", "program", "unit", "laboratory", "center", "centre"
 }
 
 
 class InstitutionAgent(BaseAgent):
-    """Extract institutions from author affiliations (NOT from paper body).
-
-    Supports local-first ROR lookup via a downloaded ROR data dump JSON
-    file (downloaded by download_lookup_tables.sh).  Falls back to the
-    live ROR API for institutions not in the local dump.
-    """
+    """Extract institutions from author affiliations (NOT from paper body)."""
 
     name = "institution"
 
-    def __init__(self, ror_local_path: str = None):
+    def __init__(self, local_lookup=None, ror_local_path: str = None):
+        self._local_lookup = local_lookup
         super().__init__()
         self._ror_local_index: Dict[str, str] = {}
-        self._ror_local_names: Dict[str, str] = {}  # lowercase name -> official name
         self._ror_loaded = False
-        self._ror_local_path = ror_local_path  # deferred to first use
+        if ror_local_path:
+            self._load_ror(ror_local_path)
 
-    def _ensure_ror_loaded(self):
-        """Lazy-load ROR data dump on first use."""
-        if not self._ror_loaded and self._ror_local_path:
-            self._load_ror(self._ror_local_path)
-            self._ror_local_path = None  # prevent re-loading
-
-    def _load_ror(self, path: str):
-        """Load ROR data dump JSON for local institution name -> ROR ID matching."""
-        import glob
-        import json
+    def _load_ror(self, path: str) -> None:
+        """Load local ROR dump and index organization names to ROR IDs."""
         json_path = path
         if os.path.isdir(path):
             candidates = glob.glob(os.path.join(path, "v*.json"))
@@ -233,30 +239,42 @@ class InstitutionAgent(BaseAgent):
 
         try:
             with open(json_path, "r", encoding="utf-8") as f:
-                orgs = json.load(f)
+                orgs: List[Dict[str, Any]] = json.load(f)
 
             count = 0
             for org in orgs:
-                ror_id = org.get("id", "").replace("https://ror.org/", "")
-                name = org.get("name", "")
+                ror_url = org.get("id", "")
+                ror_id = ror_url.replace("https://ror.org/", "").strip()
+                name = (org.get("name") or "").strip()
+                if not name:
+                    names = org.get("names", [])
+                    if isinstance(names, list) and names:
+                        preferred = ""
+                        for item in names:
+                            types = item.get("types", []) if isinstance(item, dict) else []
+                            if "ror_display" in types:
+                                preferred = (item.get("value") or "").strip()
+                                break
+                        if not preferred and isinstance(names[0], dict):
+                            preferred = (names[0].get("value") or "").strip()
+                        name = preferred
                 if not ror_id or not name:
                     continue
+
                 self._ror_local_index[name.lower()] = ror_id
-                self._ror_local_names[name.lower()] = name
                 for name_obj in org.get("names", []):
-                    alt = name_obj.get("value", "")
+                    alt = (name_obj.get("value") or "").strip()
                     if alt:
-                        alt_lower = alt.lower()
-                        if alt_lower not in self._ror_local_index:
-                            self._ror_local_index[alt_lower] = ror_id
-                            self._ror_local_names[alt_lower] = name
+                        self._ror_local_index.setdefault(alt.lower(), ror_id)
                 count += 1
-                if count % 50000 == 0:
-                    logger.info("  ... loaded %d ROR organizations so far", count)
+                if count % 20000 == 0:
+                    logger.info("InstitutionAgent ROR load progress: %d organizations", count)
 
             self._ror_loaded = True
-            logger.info("InstitutionAgent ROR local: %d lookup keys",
-                        len(self._ror_local_index))
+            logger.info(
+                "InstitutionAgent ROR local loaded: %d lookup keys",
+                len(self._ror_local_index),
+            )
         except Exception as exc:
             logger.warning("Failed to load ROR dump: %s", exc)
 
@@ -279,10 +297,8 @@ class InstitutionAgent(BaseAgent):
         if not text:
             return extractions
 
-        # Lazy-load ROR data dump on first use
-        self._ensure_ror_loaded()
-
         # 1. Match against known institutions with ROR IDs
+        matched_spans = set()
         for inst_name, ror_id in INSTITUTION_ROR_IDS.items():
             pattern = re.compile(r"\b" + re.escape(inst_name) + r"\b", re.I)
             for m in pattern.finditer(text):
@@ -299,6 +315,25 @@ class InstitutionAgent(BaseAgent):
                         "ror_url": f"https://ror.org/{ror_id}",
                     },
                 ))
+                matched_spans.add((m.start(), m.end()))
+
+        # 1b. Try local ROR lookup for full affiliation string
+        if self._local_lookup and not extractions:
+            local_result = self._local_lookup.ror_fuzzy(text)
+            if local_result:
+                extractions.append(Extraction(
+                    text=local_result["name"],
+                    label="INSTITUTION",
+                    start=0, end=len(text),
+                    confidence=0.90,
+                    source_agent=self.name,
+                    section=section or "",
+                    metadata={
+                        "canonical": local_result["name"],
+                        "ror_id": local_result["ror_id"],
+                        "ror_url": f"https://ror.org/{local_result['ror_id']}",
+                    },
+                ))
 
         # 2. Pattern-based extraction for institutions not in the dictionary
         #    Skip text that looks like acknowledgment/funding context
@@ -307,59 +342,36 @@ class InstitutionAgent(BaseAgent):
 
         for pattern, _ in _INSTITUTION_PATTERNS:
             for m in pattern.finditer(text):
+                if any(m.start() >= s and m.end() <= e for s, e in matched_spans):
+                    continue
                 name = m.group(0).strip().rstrip(",.")
                 # Skip if already found by known institutions
                 if any(e.metadata.get("canonical", "").lower() == name.lower()
                        for e in extractions):
                     continue
-                # Skip short matches — "Medical School" alone is too generic
-                if len(name) < 10:
+                # Skip very short matches (likely false positives)
+                if len(name) < 8:
                     continue
-                # Skip generic substrings that cause bad matches
-                if name.lower().strip() in _GENERIC_INSTITUTION_SUBSTRINGS:
+                if self._is_generic_fragment(name):
                     continue
-
-                metadata = {"canonical": name}
-                conf = 0.65  # Lower default for pattern-only matches
-
-                # LOCAL FIRST: check ROR dump for this institution
+                # Try local ROR lookup first
+                ror_result = None
                 if self._ror_loaded:
                     local_ror_id = self._ror_local_index.get(name.lower())
                     if local_ror_id:
-                        official_name = self._ror_local_names.get(
-                            name.lower(), name)
-                        metadata["ror_id"] = local_ror_id
-                        metadata["ror_url"] = f"https://ror.org/{local_ror_id}"
-                        metadata["canonical"] = official_name
-                        conf = 0.90
-                    else:
-                        # FALLBACK: scored ROR v2 API lookup
-                        ror_result = self._resolve_ror_with_context(name, text)
-                        if ror_result and ror_result.get("score", 0) >= 0.8:
-                            # Verify word overlap to prevent cross-entity matches
-                            matched_words = set(ror_result["name"].lower().split())
-                            query_words = set(name.lower().split())
-                            substantive_overlap = [w for w in (matched_words & query_words) if len(w) > 3]
-                            if substantive_overlap:
-                                metadata["ror_id"] = ror_result["ror_id"]
-                                metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
-                                metadata["canonical"] = ror_result["name"]
-                                conf = 0.85
-                            else:
-                                logger.debug("ROR match '%s' rejected — no word overlap with '%s'",
-                                             ror_result["name"], name)
-                else:
-                    # No local dump — try scored ROR v2 API lookup
-                    ror_result = self._resolve_ror_with_context(name, text)
-                    if ror_result and ror_result.get("score", 0) >= 0.8:
-                        matched_words = set(ror_result["name"].lower().split())
-                        query_words = set(name.lower().split())
-                        substantive_overlap = [w for w in (matched_words & query_words) if len(w) > 3]
-                        if substantive_overlap:
-                            metadata["ror_id"] = ror_result["ror_id"]
-                            metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
-                            metadata["canonical"] = ror_result["name"]
-                            conf = 0.85
+                        ror_result = {"ror_id": local_ror_id, "name": name}
+
+                # Fallback to ROR API lookup
+                if ror_result is None:
+                    ror_result = self.resolve_ror_via_api(name)
+
+                metadata = {"canonical": name}
+                conf = 0.7
+                if ror_result:
+                    metadata["ror_id"] = ror_result["ror_id"]
+                    metadata["ror_url"] = f"https://ror.org/{ror_result['ror_id']}"
+                    metadata["canonical"] = ror_result["name"]
+                    conf = 0.85
 
                 extractions.append(Extraction(
                     text=name,
@@ -374,44 +386,207 @@ class InstitutionAgent(BaseAgent):
         return extractions
 
     # ------------------------------------------------------------------
-    # ROR v2 API fallback with affiliation context for scoring
+    # ROR v2 API fallback for institutions not in the hardcoded map
     # ------------------------------------------------------------------
 
     _ror_api_cache: Dict[str, Optional[Dict]] = {}
+    _last_ror_call: float = 0.0
+    _ROR_DELAY: float = 0.15  # 2000 req/5min = ~6.6/sec
+
+    @staticmethod
+    def _is_generic_fragment(name: str) -> bool:
+        lower = name.strip().lower()
+        if not lower:
+            return True
+        if any(fragment in lower for fragment in _GENERIC_AFFILIATION_FRAGMENTS):
+            if not any(anchor in lower for anchor in _INSTITUTION_ANCHORS):
+                return True
+        return False
+
+    @staticmethod
+    def _tokenize_for_overlap(value: str) -> set:
+        tokens = set(re.findall(r"[a-z0-9]{3,}", (value or "").lower()))
+        return {tok for tok in tokens if tok not in _ROR_STOPWORDS}
+
+    @classmethod
+    def _word_overlap(cls, left: str, right: str) -> float:
+        left_tokens = cls._tokenize_for_overlap(left)
+        right_tokens = cls._tokenize_for_overlap(right)
+        if not left_tokens or not right_tokens:
+            return 0.0
+        overlap = len(left_tokens & right_tokens)
+        return overlap / max(1, min(len(left_tokens), len(right_tokens)))
+
+    @staticmethod
+    def _official_name(item: Dict[str, Any], fallback: str) -> str:
+        name = (item.get("name") or "").strip()
+        if name:
+            return name
+        for name_entry in item.get("names", []):
+            if isinstance(name_entry, dict) and "ror_display" in name_entry.get("types", []):
+                display = (name_entry.get("value") or "").strip()
+                if display:
+                    return display
+        names = item.get("names", [])
+        if names and isinstance(names[0], dict):
+            return (names[0].get("value") or fallback).strip()
+        return fallback
 
     def _resolve_ror_with_context(self, institution_name: str,
-                                   full_affiliation: str) -> Optional[Dict]:
-        """Look up ROR ID using the full affiliation string for context.
-
-        Uses the ROR v2 affiliation endpoint (via ror_v2_client) which
-        has proper scoring, rather than the raw search endpoint.
-        """
+                                  affiliation_text: str = "") -> Optional[Dict]:
         if not _HAS_REQUESTS:
+            return None
+
+        key = institution_name.lower().strip()
+        if key in self._ror_api_cache:
+            return self._ror_api_cache[key]
+
+        elapsed = time.time() - self._last_ror_call
+        if elapsed < self._ROR_DELAY:
+            time.sleep(self._ROR_DELAY - elapsed)
+
+        try:
+            params = {"affiliation": affiliation_text} if affiliation_text else {"query": institution_name}
+            resp = _requests_lib.get(
+                "https://api.ror.org/v2/organizations",
+                params=params,
+                timeout=10,
+            )
+            InstitutionAgent._last_ror_call = time.time()
+            if resp.status_code != 200:
+                self._ror_api_cache[key] = None
+                return None
+
+            items = resp.json().get("items", [])
+            if not items:
+                self._ror_api_cache[key] = None
+                return None
+
+            best = None
+            best_tuple = (0.0, 0.0)
+            wanted = institution_name.strip().lower()
+            for item in items[:8]:
+                official = self._official_name(item, institution_name)
+                overlap = self._word_overlap(institution_name, official)
+                score_raw = item.get("score", 0.0)
+                try:
+                    score = float(score_raw)
+                except (TypeError, ValueError):
+                    score = 0.0
+
+                official_lower = official.lower()
+                exact = official_lower == wanted
+                if not (exact or overlap >= 0.60 or (score >= 0.90 and overlap >= 0.34)):
+                    continue
+
+                if (score, overlap) > best_tuple:
+                    best_tuple = (score, overlap)
+                    best = item
+
+            if not best:
+                self._ror_api_cache[key] = None
+                return None
+
+            ror_id_full = str(best.get("id") or "")
+            ror_id = ror_id_full.replace("https://ror.org/", "").strip()
+            if not ror_id:
+                self._ror_api_cache[key] = None
+                return None
+
+            result = {"ror_id": ror_id, "name": self._official_name(best, institution_name)}
+            self._ror_api_cache[key] = result
+            return result
+
+        except Exception as exc:
+            logger.debug("ROR API error for '%s': %s", institution_name, exc)
+            self._ror_api_cache[key] = None
+            return None
+
+    def resolve_ror_via_api(self, institution_name: str) -> Optional[Dict]:
+        """Look up ROR ID for an institution name via ROR v2 API.
+
+        Strategy: local lookup first → API fallback for misses only.
+        """
+        if not institution_name:
             return None
 
         cache_key = institution_name.lower().strip()
         if cache_key in self._ror_api_cache:
             return self._ror_api_cache[cache_key]
 
-        try:
-            from ..validation.ror_v2_client import RORv2Client
-            if not hasattr(self, '_ror_client'):
-                self._ror_client = RORv2Client()
-
-            # Use full affiliation string for better disambiguation
-            result = self._ror_client.match_affiliation(full_affiliation)
-            if result and result.get("score", 0) >= 0.8:
+        # === LOCAL FIRST ===
+        if self._local_lookup:
+            local_result = self._local_lookup.ror_fuzzy(institution_name)
+            if local_result:
+                result = {
+                    "ror_id": local_result["ror_id"],
+                    "name": local_result["name"],
+                }
                 self._ror_api_cache[cache_key] = result
                 return result
 
+        # === API FALLBACK (only if not found locally) ===
+        if not _HAS_REQUESTS:
             self._ror_api_cache[cache_key] = None
             return None
 
-        except ImportError:
-            logger.debug("ror_v2_client not available, skipping ROR lookup")
-            self._ror_api_cache[cache_key] = None
-            return None
+        elapsed = time.time() - self._last_ror_call
+        if elapsed < self._ROR_DELAY:
+            time.sleep(self._ROR_DELAY - elapsed)
+
+        try:
+            resp = _requests_lib.get(
+                "https://api.ror.org/v2/organizations",
+                params={"query": institution_name},
+                timeout=10,
+            )
+            InstitutionAgent._last_ror_call = time.time()
+
+            if resp.status_code != 200:
+                self._ror_api_cache[cache_key] = None
+                return None
+
+            data = resp.json()
+            items = data.get("items", [])
+            if not items:
+                self._ror_api_cache[cache_key] = None
+                return None
+
+            # Take the top result — but verify it actually matches
+            top = items[0]
+
+            # ROR v2 includes a score field — reject low-confidence matches
+            score = top.get("score", 0)
+            if score < 0.5:
+                logger.debug("ROR low score %.2f for '%s'", score, institution_name)
+                self._ror_api_cache[cache_key] = None
+                return None
+
+            ror_id_full = top.get("id", "")
+            ror_id = ror_id_full.replace("https://ror.org/", "").strip()
+            official_name = ""
+            for name_entry in top.get("names", []):
+                if "ror_display" in name_entry.get("types", []):
+                    official_name = name_entry.get("value", "")
+                    break
+            if not official_name:
+                names = top.get("names", [])
+                official_name = names[0].get("value", institution_name) if names else institution_name
+
+            # Verify name similarity — reject if no content words overlap
+            _stop = {"of", "the", "and", "for", "in", "at", "de", "la", "le"}
+            query_words = set(institution_name.lower().split()) - _stop
+            official_words = set(official_name.lower().split()) - _stop
+            if len(query_words & official_words) < 1 and score < 0.8:
+                logger.debug("ROR name mismatch: '%s' vs '%s'", official_name, institution_name)
+                self._ror_api_cache[cache_key] = None
+                return None
+
+            result = {"ror_id": ror_id, "name": official_name}
+            self._ror_api_cache[cache_key] = result
+            return result
+
         except Exception as exc:
-            logger.debug("ROR lookup error for '%s': %s", institution_name, exc)
+            logger.debug("ROR API error for '%s': %s", institution_name, exc)
             self._ror_api_cache[cache_key] = None
             return None

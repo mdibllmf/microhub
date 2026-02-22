@@ -33,9 +33,13 @@ from .validation.api_validator import ApiValidator
 from .validation.identifier_normalizer import IdentifierNormalizer
 from .validation.ror_v2_client import RORv2Client
 from .validation.ontology_normalizer import OntologyNormalizer
+from .validation.local_lookup import LocalLookup
 from .role_classifier import RoleClassifier, EntityRole
 
 logger = logging.getLogger(__name__)
+
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DEFAULT_LOOKUP_PATH = os.path.join(_PROJECT_ROOT, "microhub_lookup_tables")
 
 
 class PipelineOrchestrator:
@@ -50,6 +54,10 @@ class PipelineOrchestrator:
                  use_role_classifier: bool = True,
                  use_three_tier_waterfall: bool = False):
 
+        if lookup_tables_path is None and os.path.isdir(_DEFAULT_LOOKUP_PATH):
+            lookup_tables_path = _DEFAULT_LOOKUP_PATH
+            logger.info("Auto-detected lookup tables at: %s", lookup_tables_path)
+
         # Resolve lookup table subdirectories
         lt = lookup_tables_path or ""
         fpbase_path = os.path.join(lt, "fpbase") if lt else None
@@ -58,6 +66,9 @@ class PipelineOrchestrator:
         ror_path = os.path.join(lt, "ror") if lt else None
         fbbi_path = os.path.join(lt, "fbbi_ontology") if lt else None
         pubtator_path = os.path.join(lt, "pubtator3") if lt else None
+
+        # Local-first lookup tables (ROR, Cellosaurus, Taxonomy, FPbase)
+        self.local_lookup = LocalLookup(lookup_dir=lt if lt else None)
 
         # Extraction agents
         self.technique_agent = TechniqueAgent()
@@ -68,7 +79,10 @@ class PipelineOrchestrator:
         self.sample_prep_agent = SamplePrepAgent()
         self.cell_line_agent = CellLineAgent()
         self.protocol_agent = ProtocolAgent()
-        self.institution_agent = InstitutionAgent(ror_local_path=ror_path)
+        self.institution_agent = InstitutionAgent(
+            local_lookup=self.local_lookup,
+            ror_local_path=ror_path,
+        )
 
         # Supplemental: PubTator NLP-based extraction (with local lookup)
         self.pubtator_agent = PubTatorAgent(
@@ -91,6 +105,7 @@ class PipelineOrchestrator:
         # Validation (with local lookups)
         self.tag_validator = TagValidator(tag_dictionary_path)
         self.api_validator = ApiValidator(
+            local_lookup=self.local_lookup,
             fpbase_path=fpbase_path,
             cellosaurus_path=cellosaurus_path,
             taxonomy_path=taxonomy_path,
@@ -98,7 +113,7 @@ class PipelineOrchestrator:
         self.id_normalizer = IdentifierNormalizer()
 
         # ROR client (with local lookup)
-        self.ror_client = RORv2Client(local_path=ror_path)
+        self.ror_client = RORv2Client(local_path=ror_path, local_lookup=self.local_lookup)
 
         # FBbi ontology normalization (with local lookup)
         self.ontology_normalizer = OntologyNormalizer(local_path=fbbi_path)

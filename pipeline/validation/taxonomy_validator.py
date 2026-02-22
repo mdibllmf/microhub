@@ -52,13 +52,9 @@ class TaxonomyValidator:
         self._cache: Dict[str, Optional[int]] = {}
         self._local_names: Dict[str, int] = {}  # lowercase name → taxid
         self._local_loaded = False
-        self._local_path = local_path  # deferred to first use
 
-    def _ensure_local_loaded(self):
-        """Lazy-load NCBI names.dmp on first use."""
-        if not self._local_loaded and self._local_path:
-            self._load_local(self._local_path)
-            self._local_path = None  # prevent re-loading
+        if local_path:
+            self._load_local(local_path)
 
     def _load_local(self, path: str):
         """Parse NCBI names.dmp for comprehensive name → TaxID mapping."""
@@ -95,8 +91,6 @@ class TaxonomyValidator:
                                     or name_class == "scientific name"):
                                 self._local_names[name_lower] = taxid
                             count += 1
-                            if count % 500000 == 0:
-                                logger.info("  ... loaded %d taxonomy entries so far", count)
 
             self._local_loaded = True
             logger.info(
@@ -117,8 +111,7 @@ class TaxonomyValidator:
         if organism in self._cache:
             return self._cache[organism]
 
-        # LOCAL LOOKUP (lazy-load on first use)
-        self._ensure_local_loaded()
+        # LOCAL LOOKUP (comprehensive)
         if self._local_loaded:
             taxid = self._local_names.get(organism.lower())
             if taxid is not None:

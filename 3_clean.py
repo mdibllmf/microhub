@@ -34,6 +34,37 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_TRUE_STRINGS = {"1", "true", "yes", "y"}
+_OA_STATUSES = {"gold", "green", "bronze", "hybrid", "diamond", "open", "oa"}
+_DATASET_SOURCE_HINTS = {"datacite", "openaire", "crossref-relation", "text_pattern", "data_availability_mining"}
+
+
+def _boolish(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in _TRUE_STRINGS
+    return bool(value)
+
+
+def _is_open_access_value(paper):
+    status = str(paper.get("oa_status") or "").strip().lower()
+    return _boolish(paper.get("is_open_access")) or status in _OA_STATUSES
+
+
+def _has_dataset_repositories(paper):
+    for repo in paper.get("repositories", []) or []:
+        if not isinstance(repo, dict):
+            continue
+        source = str(repo.get("source") or "").strip().lower()
+        if source in _DATASET_SOURCE_HINTS:
+            return True
+        url = str(repo.get("url") or "").lower()
+        if any(hint in url for hint in ("zenodo", "figshare", "dryad", "datadryad", "osf.io", "doi.org/10.")):
+            return True
+    return False
 
 # ======================================================================
 # Natural-language data-availability patterns
@@ -386,7 +417,9 @@ def main():
                         help="Use local Ollama LLM to verify Methods section tags")
     parser.add_argument("--ollama-model", default=None,
                         help="Ollama model name (default: llama3.1 or OLLAMA_MODEL env)")
-    parser.add_argument("--no-pubtator", action="store_true",
+    parser.add_argument("--pubtator", dest="use_pubtator", action="store_true",
+                        help="Enable PubTator NLP extraction")
+    parser.add_argument("--no-pubtator", dest="use_pubtator", action="store_false",
                         help="Skip PubTator NLP extraction")
     parser.add_argument("--no-role-classifier", action="store_true",
                         help="Disable role classifier (over-tagging prevention)")
@@ -395,19 +428,25 @@ def main():
     parser.add_argument("--workers", type=int, default=4,
                         help="Number of parallel workers for API enrichment (default: 4)")
 
+    parser.set_defaults(use_pubtator=False)
+
     args = parser.parse_args()
 
     from pipeline.export.json_exporter import is_protocol_paper, get_protocol_type
     from pipeline.normalization import normalize_tags
     from pipeline.orchestrator import PipelineOrchestrator
     from pipeline.validation.identifier_normalizer import IdentifierNormalizer
+    from pipeline.validation.local_lookup import LocalLookup
     from pipeline.agents.protocol_agent import ProtocolAgent
     from pipeline.agents.institution_agent import InstitutionAgent
 
     id_normalizer = IdentifierNormalizer()
+    local_lookup = LocalLookup()
     repo_scanner = ProtocolAgent()
-    ror_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables", "ror")
+    lookup_root = os.path.join(SCRIPT_DIR, "microhub_lookup_tables")
+    ror_path = os.path.join(lookup_root, "ror")
     institution_scanner = InstitutionAgent(
+        local_lookup=local_lookup,
         ror_local_path=ror_path if os.path.isdir(ror_path) else None
     )
 
@@ -448,11 +487,10 @@ def main():
     enricher = None
     if not args.no_enrich:
         dict_path = os.path.join(SCRIPT_DIR, "MASTER_TAG_DICTIONARY.json")
-        lookup_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables")
         enricher = PipelineOrchestrator(
             tag_dictionary_path=dict_path if os.path.exists(dict_path) else None,
-            lookup_tables_path=lookup_path if os.path.isdir(lookup_path) else None,
-            use_pubtator=False,  # PubTator files are multi-GB; skip until pre-filtered
+            lookup_tables_path=lookup_root if os.path.isdir(lookup_root) else None,
+            use_pubtator=args.use_pubtator,
             use_api_validation=True,
             use_ollama=args.ollama,
             ollama_model=args.ollama_model,
@@ -465,24 +503,21 @@ def main():
     enricher_api = None
     if api_enrich:
         from pipeline.enrichment import Enricher
-        ror_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables", "ror")
         enricher_api = Enricher(
             max_workers=args.workers,
             ror_local_path=ror_path if os.path.isdir(ror_path) else None,
+            local_lookup=local_lookup,
         )
 
-    lt_path = os.path.join(SCRIPT_DIR, "microhub_lookup_tables")
     logger.info("=" * 60)
     logger.info("STEP 3 — CLEAN (re-tag + finalize JSON)")
     logger.info("=" * 60)
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
-    logger.info("Lookup tables: %s",
-                "found" if os.path.isdir(lt_path) else "NOT FOUND (using API fallback)")
+    logger.info("Lookup tables: %s", "found" if os.path.isdir(lookup_root) else "NOT FOUND (using API fallback)")
     logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
-    logger.info("PubTator:    %s", "no" if args.no_pubtator else "yes")
+    logger.info("PubTator:    %s", "yes" if args.use_pubtator else "no")
     logger.info("Role class.: %s", "no" if args.no_role_classifier else "yes")
-    logger.info("Three-tier:  %s", "yes" if args.three_tier else "no")
     logger.info("Ollama LLM:  %s", "yes" if args.ollama else "no")
     logger.info("Workers:     %d", args.workers)
     logger.info("API enrich:  %s", "yes" if api_enrich else "no")
@@ -652,20 +687,16 @@ def main():
             paper["has_detectors"] = bool(paper.get("detectors"))
             paper["has_filters"] = bool(paper.get("filters"))
 
-            # New enrichment boolean flags (v6.1) — derived from actual data
-            paper["has_openalex"] = bool(paper.get("openalex_id"))
-            paper["has_oa"] = bool(paper.get("oa_status")) and str(paper.get("oa_status", "")).lower() != "closed"
+            # New enrichment boolean flags (v6.1)
+            is_open_access = _is_open_access_value(paper)
+            paper["has_openalex"] = bool(paper.get("openalex_id")) or bool(paper.get("openalex_topics")) or bool(paper.get("openalex_institutions"))
+            paper["has_oa"] = is_open_access
             paper["has_fwci"] = paper.get("fwci") is not None and paper.get("fwci") != ""
-            paper["has_datasets"] = bool([
-                r for r in paper.get("repositories", [])
-                if isinstance(r, dict) and r.get("source") in ("datacite", "openaire", "crossref-relation", "text_pattern")
-            ])
-            # Derive is_open_access from oa_status, not just pass through
-            oa_status = str(paper.get("oa_status", "") or "").lower().strip()
-            paper["is_open_access"] = oa_status in ("gold", "green", "hybrid", "bronze") or bool(paper.get("is_open_access"))
-            paper["has_openalex_topics"] = bool(paper.get("openalex_topics")) and paper.get("openalex_topics") != "[]"
-            paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions")) and paper.get("openalex_institutions") != "[]"
-            paper["has_fields_of_study"] = bool(paper.get("fields_of_study")) and paper.get("fields_of_study") != "[]"
+            paper["has_datasets"] = _has_dataset_repositories(paper)
+            paper["is_open_access"] = is_open_access
+            paper["has_openalex_topics"] = bool(paper.get("openalex_topics"))
+            paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions"))
+            paper["has_fields_of_study"] = bool(paper.get("fields_of_study"))
 
             # Remove full_text from output (tags already extracted)
             paper.pop("full_text", None)

@@ -53,13 +53,11 @@ class CellosaurusClient:
         self._exhausted = False
         self._local_index: Dict[str, Dict[str, Any]] = {}
         self._local_loaded = False
-        self._local_path = local_path  # deferred to first use
+        self._local_path = local_path
 
-    def _ensure_local_loaded(self):
-        """Lazy-load local flat file on first use."""
+    def _ensure_local_loaded(self) -> None:
         if not self._local_loaded and self._local_path:
             self._load_local(self._local_path)
-            self._local_path = None  # prevent re-loading
 
     def _load_local(self, path: str):
         """Parse cellosaurus.txt flat file into a fast lookup index."""
@@ -72,6 +70,7 @@ class CellosaurusClient:
             return
 
         count = 0
+        next_progress_log = 50000
         current: Dict[str, Any] = {}
         try:
             with open(txt_path, "r", encoding="utf-8") as f:
@@ -96,8 +95,9 @@ class CellosaurusClient:
                                 if syn_lower and syn_lower not in self._local_index:
                                     self._local_index[syn_lower] = entry
                             count += 1
-                            if count % 50000 == 0:
-                                logger.info("  ... loaded %d cell lines so far", count)
+                            if count >= next_progress_log:
+                                logger.info("Cellosaurus local load progress: %d records", count)
+                                next_progress_log += 50000
                         current = {}
                     elif line.startswith("ID   "):
                         current["name"] = line[5:].strip()
@@ -166,8 +166,9 @@ class CellosaurusClient:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        # LOCAL FIRST (lazy-load on first use)
         self._ensure_local_loaded()
+
+        # LOCAL FIRST
         if self._local_loaded:
             entry = self._local_index.get(cache_key)
             if entry:
