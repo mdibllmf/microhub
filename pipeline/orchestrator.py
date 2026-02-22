@@ -399,6 +399,52 @@ class PipelineOrchestrator:
         if role_report:
             results["_role_classification"] = role_report
 
+        # KB cross-inference (model → brand, model → techniques metadata)
+        results = self._kb_cross_inference(results)
+
+        return results
+
+    # ------------------------------------------------------------------
+    # KB cross-inference
+    # ------------------------------------------------------------------
+
+    def _kb_cross_inference(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        """Use KB to cross-infer between equipment, software, and techniques.
+
+        Conservative: only infer brand↔model (high confidence).
+        Technique inferences are stored as metadata only (not as tags).
+        """
+        try:
+            from .kb_loader import (
+                resolve_alias, infer_techniques_from_system,
+            )
+        except ImportError:
+            return results
+
+        # 1. Model → Brand: If we found a model but no brand, infer it
+        models = results.get("microscope_models", [])
+        brands = results.get("microscope_brands", [])
+        for model in models:
+            system = resolve_alias(model)
+            if system:
+                brand = system.get("brand")
+                if brand and brand not in brands:
+                    brands.append(brand)
+        if brands:
+            results["microscope_brands"] = brands
+
+        # 2. Model → Technique inference (CONSERVATIVE: metadata only, not tags)
+        inferred_techniques = []
+        for model in models:
+            techniques = infer_techniques_from_system(model)
+            if techniques:
+                inferred_techniques.append({
+                    "model": model,
+                    "techniques": techniques,
+                })
+        if inferred_techniques:
+            results["_kb_inferred_techniques"] = inferred_techniques
+
         return results
 
     # ------------------------------------------------------------------
