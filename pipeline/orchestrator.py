@@ -135,8 +135,17 @@ class PipelineOrchestrator:
         dict
             Extraction results keyed by category, ready for the exporter.
         """
-        # Full-text acquisition: three-tier waterfall, with SciHub DOI fallback
-        if self.use_three_tier_waterfall:
+        # If paper has _segmented_* fields (from step 2b), use those
+        has_segmented = any(
+            paper.get(f"_segmented_{f}")
+            for f in ("methods", "results", "discussion", "figures",
+                       "data_availability")
+        )
+
+        if has_segmented:
+            sections = self._build_from_segmented(paper)
+        elif self.use_three_tier_waterfall:
+            # Full-text acquisition: three-tier waterfall, with SciHub DOI fallback
             sections = three_tier_waterfall(paper)
         else:
             sections = from_pubmed_dict(paper)
@@ -460,29 +469,43 @@ class PipelineOrchestrator:
 
     @staticmethod
     def _section_texts(sections: PaperSections):
-        """Yield (text, section_type) pairs for each available section."""
-        if sections.title:
-            yield sections.title, "title"
-        if sections.abstract:
-            yield sections.abstract, "abstract"
-        if sections.methods:
-            yield sections.methods, "methods"
-        if sections.results:
-            yield sections.results, "results"
-        if sections.introduction:
-            yield sections.introduction, "introduction"
-        if sections.discussion:
-            yield sections.discussion, "discussion"
-        if sections.figures:
-            yield sections.figures, "figures"
-        if sections.data_availability:
-            yield sections.data_availability, "data_availability"
-        # If we only have full_text (no section segmentation),
-        # yield it as "full_text" to give agents something to work with
-        if (not sections.methods and not sections.results
-                and sections.full_text
-                and sections.full_text != sections.abstract):
-            yield sections.full_text, "full_text"
+        """Yield (text, section_type) pairs for taggable sections.
+
+        Uses PaperSections.taggable_sections() which excludes
+        introduction by default to prevent over-tagging from
+        literature-review mentions of equipment/techniques.
+        """
+        yield from sections.taggable_sections()
+
+    @staticmethod
+    def _build_from_segmented(paper: Dict[str, Any]) -> PaperSections:
+        """Build PaperSections from _segmented_* fields added by step 2b.
+
+        If segmented fields are present, uses them for methods/results/etc.
+        instead of the raw full_text.  This ensures agents only see
+        citation-stripped, reference-stripped, introduction-excluded text.
+        """
+        has_segmented = any(
+            paper.get(f"_segmented_{f}")
+            for f in ("methods", "results", "discussion", "figures",
+                       "data_availability")
+        )
+
+        if has_segmented:
+            return PaperSections(
+                title=paper.get("title", "") or "",
+                abstract=paper.get("abstract", "") or "",
+                methods=paper.get("_segmented_methods", "") or paper.get("methods", "") or "",
+                results=paper.get("_segmented_results", "") or "",
+                discussion=paper.get("_segmented_discussion", "") or "",
+                figures=paper.get("_segmented_figures", "") or "",
+                data_availability=paper.get("_segmented_data_availability", "") or paper.get("data_availability", "") or "",
+                full_text=paper.get("full_text", "") or "",
+                metadata=paper,
+            )
+
+        # No segmented fields — fall through to standard parsing
+        return from_pubmed_dict(paper)
 
     def _canonicals(self, extractions: List[Extraction],
                     validation_category: str = None) -> List[str]:

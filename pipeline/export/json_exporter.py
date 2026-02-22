@@ -258,6 +258,7 @@ class JsonExporter:
         methods_only: bool = False,
         chunk_size: int = 500,
         enricher=None,
+        strip_full_text: bool = False,
     ) -> int:
         """Export papers to JSON with ALL fields.
 
@@ -323,7 +324,8 @@ class JsonExporter:
                 agent_results = enricher.process_paper(row_dict)
                 row_dict = self._merge_agent_results(row_dict, agent_results)
 
-            paper = self._build_paper_dict(row_dict, github_tools_map)
+            paper = self._build_paper_dict(row_dict, github_tools_map,
+                                           strip_full_text=strip_full_text)
             self._update_stats(stats, paper, row_dict)
 
             chunk_papers.append(paper)
@@ -363,7 +365,8 @@ class JsonExporter:
     # Build the EXACT paper dict that WordPress expects
     # ------------------------------------------------------------------
 
-    def _build_paper_dict(self, row_dict: Dict, github_tools_map: Dict) -> Dict:
+    def _build_paper_dict(self, row_dict: Dict, github_tools_map: Dict,
+                          strip_full_text: bool = False) -> Dict:
         """Construct paper JSON matching the v5.1 schema exactly."""
         # Parse all JSON array fields
         microscopy_techniques = self.safe_json_parse(row_dict.get("microscopy_techniques"))
@@ -622,8 +625,9 @@ class JsonExporter:
             from pipeline.parsing.section_extractor import _extract_data_availability
             paper["data_availability"] = _extract_data_availability(paper["full_text"])
 
-        # Remove full_text from output (tags already extracted)
-        if "full_text" in paper:
+        # Optionally remove full_text from output.
+        # Default: preserve for step 2b segmentation.
+        if strip_full_text and "full_text" in paper:
             del paper["full_text"]
 
         return paper

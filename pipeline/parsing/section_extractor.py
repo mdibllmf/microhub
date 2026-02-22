@@ -77,6 +77,35 @@ class PaperSections:
     def tag_source(self) -> str:
         return "methods" if self.has_methods else "title_abstract"
 
+    def taggable_sections(self, *, include_introduction: bool = False):
+        """Yield (text, section_type) pairs for sections safe to tag.
+
+        Excludes introduction by default (introduction mentions entities
+        from OTHER papers, causing over-tagging).  Also excludes full_text
+        when structured sections are available.
+        """
+        if self.title:
+            yield self.title, "title"
+        if self.abstract:
+            yield self.abstract, "abstract"
+        if self.methods:
+            yield self.methods, "methods"
+        if self.results:
+            yield self.results, "results"
+        if include_introduction and self.introduction:
+            yield self.introduction, "introduction"
+        if self.discussion:
+            yield self.discussion, "discussion"
+        if self.figures:
+            yield self.figures, "figures"
+        if self.data_availability:
+            yield self.data_availability, "data_availability"
+        # Only yield full_text if we have NO structured sections at all
+        if (not self.methods and not self.results
+                and self.full_text
+                and self.full_text != self.abstract):
+            yield self.full_text, "full_text"
+
 
 def from_sections_list(sections: List[Dict[str, str]],
                        metadata: Dict = None) -> PaperSections:
@@ -272,6 +301,323 @@ def strip_references(text: str) -> str:
     if m:
         return text[:m.start()].rstrip()
     return text
+
+
+# ======================================================================
+# Inline citation stripping
+# ======================================================================
+
+# Numeric citations: [1], [1,2], [1-5], [1, 3, 7-9]
+_NUMERIC_CITATION_RE = re.compile(
+    r"\[(?:\d+(?:\s*[-–—]\s*\d+)?(?:\s*,\s*\d+(?:\s*[-–—]\s*\d+)?)*)\]"
+)
+
+# Author-year citations: (Smith et al., 2020), (Smith and Jones, 2019),
+# (Smith, 2020; Jones et al., 2021), (Smith 2020)
+_AUTHOR_YEAR_CITATION_RE = re.compile(
+    r"\(\s*(?:[A-Z][a-z]+(?:\s+(?:et\s+al\.?|and\s+[A-Z][a-z]+))?)"
+    r"(?:\s*,?\s*\d{4}[a-z]?)"
+    r"(?:\s*;\s*(?:[A-Z][a-z]+(?:\s+(?:et\s+al\.?|and\s+[A-Z][a-z]+))?)"
+    r"(?:\s*,?\s*\d{4}[a-z]?))*\s*\)"
+)
+
+# Superscript-style: text¹ or text¹⁻³ or text¹˒²˒³
+_SUPERSCRIPT_CITATION_RE = re.compile(
+    r"[⁰¹²³⁴⁵⁶⁷⁸⁹]+(?:[⁻˒,][⁰¹²³⁴⁵⁶⁷⁸⁹]+)*"
+)
+
+# Protect patterns — things that LOOK like citations but are scientific
+# (488 nm), (60x/1.4 NA), [Ca2+], [K+], [Na+], (pH 7.4), (n = 5)
+_PROTECTED_BRACKET_RE = re.compile(
+    r"\["
+    r"(?:[A-Z][a-z]?\d*[+\-−])"  # ions like Ca2+, K+, Na+
+    r"|(?:\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?\s*"
+    r"(?:nm|µm|μm|mm|cm|mM|µM|μM|nM|kDa|Da|mg|µg|µl|mL|ml|°C|K|s|ms|min|hr?|Hz|kHz|MHz|GHz|V|mV|kV|A|mA|W|mW))"  # units
+    r"\]"
+)
+_PROTECTED_PAREN_RE = re.compile(
+    r"\("
+    r"(?:\d+(?:\.\d+)?\s*(?:nm|µm|μm|mm|cm|mM|µM|μM|nM|kDa|Da|mg|µg|µl|mL|ml|°C|K|s|ms|min|hr?|Hz|kHz|MHz|GHz|V|mV|kV|A|mA|W|mW))"
+    r"|(?:\d+[xX]/\d+(?:\.\d+)?\s*(?:NA|Oil|oil|Water|water|Air|air))"  # objectives
+    r"|(?:n\s*=\s*\d+)"  # sample sizes
+    r"|(?:pH?\s*\d+(?:\.\d+)?)"  # pH values
+    r"|(?:P?\s*[<>=]+\s*\d)"  # p-values
+    r"|(?:Fig(?:ure|\.)\s*\w)"  # figure refs
+    r"|(?:Table\s*\w)"  # table refs
+    r"\)"
+)
+
+
+def strip_inline_citations(text: str) -> str:
+    """Remove inline citations while preserving scientific notation.
+
+    Strips:
+      - Numeric: [1], [1,2], [1-5], [1, 3, 7-9]
+      - Author-year: (Smith et al., 2020), (Smith and Jones, 2019)
+      - Superscript: ¹²³
+
+    Preserves:
+      - Ion concentrations: [Ca2+], [K+]
+      - Measurements: (488 nm), (60x/1.4 NA)
+      - Sample sizes: (n = 5)
+      - pH values: (pH 7.4)
+      - P-values: (P < 0.05)
+      - Figure/Table references: (Fig. 1), (Table 2)
+    """
+    if not text:
+        return text
+
+    # Step 1: protect scientific brackets/parens with placeholders
+    protected = {}
+    counter = [0]
+
+    def _protect(m):
+        key = f"\x00PROT{counter[0]}\x00"
+        protected[key] = m.group(0)
+        counter[0] += 1
+        return key
+
+    text = _PROTECTED_BRACKET_RE.sub(_protect, text)
+    text = _PROTECTED_PAREN_RE.sub(_protect, text)
+
+    # Step 2: strip citations
+    text = _NUMERIC_CITATION_RE.sub("", text)
+    text = _AUTHOR_YEAR_CITATION_RE.sub("", text)
+    text = _SUPERSCRIPT_CITATION_RE.sub("", text)
+
+    # Step 3: restore protected tokens
+    for key, val in protected.items():
+        text = text.replace(key, val)
+
+    # Clean up double spaces left by removal
+    text = re.sub(r"  +", " ", text)
+    return text
+
+
+# ======================================================================
+# Heuristic section segmentation from full text
+# ======================================================================
+
+# Heading detection regex: matches typical section headings
+_HEADING_RE = re.compile(
+    r"(?:^|\n)\s*"
+    r"(?:(?:\d+\.?(?:\d+\.?)*)\s+)?"  # optional numbering: 1., 2.1, etc.
+    r"("
+    # Core section headings
+    r"abstract|introduction|background"
+    r"|(?:materials?\s+and\s+)?methods?"
+    r"|experimental\s+(?:procedures?|section|methods?|design)"
+    r"|(?:materials?\s+and\s+methods?)"
+    r"|(?:methods?\s+and\s+materials?)"
+    r"|results?\s+(?:and\s+discussion)?"
+    r"|results?"
+    r"|discussion"
+    r"|conclusions?"
+    r"|summary"
+    r"|acknowledge?ments?"
+    r"|references?|bibliography|works\s+cited|literature\s+cited"
+    r"|(?:supplementary|supporting)\s+(?:information|data|materials?|methods?|figures?|tables?)"
+    r"|(?:data|code)\s+(?:and\s+(?:code|data)\s+)?availability"
+    r"|(?:availability\s+of\s+(?:data|code|materials?))"
+    r"|accession\s+(?:codes?|numbers?)"
+    r"|resource\s+availability"
+    r"|author\s+contributions?"
+    r"|competing\s+interests?"
+    r"|conflict\s+of\s+interests?"
+    r"|ethics\s+(?:statement|approval|declaration)"
+    r"|funding\s*(?:information|sources?|statement)?"
+    r"|(?:key\s+resources?\s+table)"
+    r"|(?:star|lead\s+contact)\s+methods?"
+    r"|(?:online|extended)\s+methods?"
+    r"|figure\s+legends?"
+    r"|(?:additional|extended)\s+(?:data|information)"
+    r"|(?:reporting\s+summary)"
+    r"|image\s+(?:acquisition|analysis|processing)"
+    r"|microscopy"
+    r"|(?:sample|specimen)\s+preparation"
+    r"|(?:cell|tissue)\s+culture"
+    r"|(?:statistical|data)\s+analysis"
+    r"|immunofluorescence\s*(?:staining|microscopy)?"
+    r"|immunohistochemistry"
+    r"|western\s+blot(?:ting)?"
+    r"|(?:confocal|fluorescence|electron|light)\s+microscopy"
+    r")"
+    r"\s*(?:\n|$)",
+    re.IGNORECASE,
+)
+
+# Map heading text to section type
+_HEADING_TYPE_MAP = {
+    "abstract": "abstract",
+    "introduction": "introduction",
+    "background": "introduction",
+    "methods": "methods",
+    "method": "methods",
+    "materials and methods": "methods",
+    "methods and materials": "methods",
+    "material and methods": "methods",
+    "materials and method": "methods",
+    "experimental procedures": "methods",
+    "experimental procedure": "methods",
+    "experimental section": "methods",
+    "experimental methods": "methods",
+    "experimental method": "methods",
+    "experimental design": "methods",
+    "online methods": "methods",
+    "extended methods": "methods",
+    "star methods": "methods",
+    "lead contact methods": "methods",
+    "image acquisition": "methods",
+    "image analysis": "methods",
+    "image processing": "methods",
+    "microscopy": "methods",
+    "sample preparation": "methods",
+    "specimen preparation": "methods",
+    "cell culture": "methods",
+    "tissue culture": "methods",
+    "statistical analysis": "methods",
+    "data analysis": "methods",
+    "immunofluorescence": "methods",
+    "immunofluorescence staining": "methods",
+    "immunofluorescence microscopy": "methods",
+    "immunohistochemistry": "methods",
+    "western blotting": "methods",
+    "western blot": "methods",
+    "confocal microscopy": "methods",
+    "fluorescence microscopy": "methods",
+    "electron microscopy": "methods",
+    "light microscopy": "methods",
+    "results": "results",
+    "results and discussion": "results",
+    "result": "results",
+    "discussion": "discussion",
+    "conclusions": "discussion",
+    "conclusion": "discussion",
+    "summary": "discussion",
+    "acknowledgements": "acknowledgements",
+    "acknowledgments": "acknowledgements",
+    "acknowledgement": "acknowledgements",
+    "acknowledgment": "acknowledgements",
+    "references": "references",
+    "reference": "references",
+    "bibliography": "references",
+    "works cited": "references",
+    "literature cited": "references",
+    "author contributions": "other",
+    "author contribution": "other",
+    "competing interests": "other",
+    "conflict of interests": "other",
+    "conflict of interest": "other",
+    "ethics statement": "other",
+    "ethics approval": "other",
+    "ethics declaration": "other",
+    "funding": "other",
+    "funding information": "other",
+    "funding sources": "other",
+    "funding source": "other",
+    "funding statement": "other",
+    "key resources table": "methods",
+    "figure legends": "figures",
+    "figure legend": "figures",
+    "additional data": "other",
+    "additional information": "other",
+    "extended data": "other",
+    "reporting summary": "other",
+    "supplementary information": "supplementary",
+    "supplementary data": "supplementary",
+    "supplementary materials": "supplementary",
+    "supplementary material": "supplementary",
+    "supplementary methods": "methods",
+    "supplementary figures": "figures",
+    "supplementary tables": "other",
+    "supporting information": "supplementary",
+    "supporting data": "supplementary",
+    "supporting materials": "supplementary",
+    "supporting material": "supplementary",
+    "supporting methods": "methods",
+    "supporting figures": "figures",
+    "supporting tables": "other",
+    "data availability": "data_availability",
+    "code availability": "data_availability",
+    "data and code availability": "data_availability",
+    "code and data availability": "data_availability",
+    "availability of data": "data_availability",
+    "availability of code": "data_availability",
+    "availability of materials": "data_availability",
+    "accession codes": "data_availability",
+    "accession code": "data_availability",
+    "accession numbers": "data_availability",
+    "accession number": "data_availability",
+    "resource availability": "data_availability",
+}
+
+
+def _classify_heading(heading: str) -> str:
+    """Classify a heading string into a section type."""
+    # Strip numbering and whitespace
+    clean = re.sub(r"^\d+\.?\s*(?:\d+\.?\s*)*", "", heading.strip()).strip()
+    clean_lower = clean.lower()
+
+    # Exact match
+    if clean_lower in _HEADING_TYPE_MAP:
+        return _HEADING_TYPE_MAP[clean_lower]
+
+    # Partial match: check if any key is contained in the heading
+    for key, stype in _HEADING_TYPE_MAP.items():
+        if key in clean_lower:
+            return stype
+
+    return "other"
+
+
+def heuristic_segment(text: str) -> List[Dict[str, str]]:
+    """Segment full text into sections using heading detection heuristics.
+
+    Returns a list of {heading, text, type} dicts, similar to what
+    GROBID or Europe PMC parsers produce.  Falls back to a single
+    'full_text' section if no headings are detected.
+    """
+    if not text:
+        return []
+
+    headings = list(_HEADING_RE.finditer(text))
+
+    if not headings:
+        # No headings found — return full text as a single section
+        return [{"heading": "", "text": text, "type": "full_text"}]
+
+    sections = []
+
+    # Text before the first heading (if any) — treat as preamble/abstract
+    if headings[0].start() > 50:
+        preamble = text[:headings[0].start()].strip()
+        if preamble:
+            sections.append({
+                "heading": "",
+                "text": preamble,
+                "type": "other",
+            })
+
+    for i, m in enumerate(headings):
+        heading_text = m.group(1).strip()
+        section_type = _classify_heading(heading_text)
+
+        # Section body: from end of this heading to start of next heading
+        body_start = m.end()
+        if i + 1 < len(headings):
+            body_end = headings[i + 1].start()
+        else:
+            body_end = len(text)
+
+        body = text[body_start:body_end].strip()
+        if body:
+            sections.append({
+                "heading": heading_text,
+                "text": body,
+                "type": section_type,
+            })
+
+    return sections
 
 
 def from_pdf(pdf_path: str, grobid_url: str = "http://localhost:8070") -> PaperSections:

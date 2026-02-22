@@ -273,6 +273,37 @@ def main():
             use_scihub_fallback=not known.no_scihub,
         )
 
+    # ---- Full-text coverage stats ----
+    if os.path.exists(db_path):
+        try:
+            conn = sqlite3.connect(db_path, timeout=30.0)
+            total = conn.execute("SELECT COUNT(*) FROM papers").fetchone()[0]
+            with_ft = conn.execute(
+                "SELECT COUNT(*) FROM papers WHERE full_text IS NOT NULL AND full_text != ''"
+            ).fetchone()[0]
+            with_methods = conn.execute(
+                "SELECT COUNT(*) FROM papers WHERE methods IS NOT NULL AND methods != '' AND length(methods) > 100"
+            ).fetchone()[0]
+            with_doi = conn.execute(
+                "SELECT COUNT(*) FROM papers WHERE doi IS NOT NULL AND doi != ''"
+            ).fetchone()[0]
+            conn.close()
+
+            pct_ft = (with_ft / total * 100) if total else 0
+            pct_methods = (with_methods / total * 100) if total else 0
+
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info("FULL-TEXT COVERAGE")
+            logger.info("=" * 60)
+            logger.info("  Total papers:     %d", total)
+            logger.info("  With DOI:         %d", with_doi)
+            logger.info("  With full text:   %d (%.1f%%)", with_ft, pct_ft)
+            logger.info("  With methods:     %d (%.1f%%)", with_methods, pct_methods)
+            logger.info("  Missing text:     %d", total - with_ft)
+        except Exception as exc:
+            logger.debug("Could not compute coverage stats: %s", exc)
+
     logger.info("")
     logger.info("Done. Next step: python 2_export.py")
     return 0
