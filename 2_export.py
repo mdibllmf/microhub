@@ -89,7 +89,7 @@ def main():
 
     logger.info("")
     logger.info("Done. %d papers exported to %s", count, out_dir)
-    logger.info("Next step: python 3_clean.py --input-dir %s", out_dir)
+    logger.info("Next step: python 2b_segment.py --input-dir %s", out_dir)
 
 
 if __name__ == "__main__":

@@ -15,8 +15,9 @@ WordPress-ready files.
     python 3_clean.py --no-datacite                       # skip DataCite/OpenAIRE dataset linking
     python 3_clean.py --no-ror                            # skip ROR v2 affiliation matching
 
-Input:  raw_export/*_chunk_*.json   (from step 2)
-Output: cleaned_export/*_chunk_*.json (ready for step 4 and WordPress)
+Input:  segmented_export/*_chunk_*.json  (from step 2b, preferred)
+        raw_export/*_chunk_*.json        (from step 2, fallback)
+Output: cleaned_export/*_chunk_*.json    (ready for step 4 and WordPress)
 """
 
 import argparse
@@ -462,9 +463,12 @@ def main():
             if not os.path.isabs(input_dir):
                 input_dir = os.path.join(SCRIPT_DIR, input_dir)
         else:
-            # Auto-detect: prefer raw_export/, fall back to project root
+            # Auto-detect: prefer segmented_export/ > raw_export/ > project root
+            segmented_dir = os.path.join(SCRIPT_DIR, "segmented_export")
             raw_export_dir = os.path.join(SCRIPT_DIR, "raw_export")
-            if os.path.isdir(raw_export_dir) and glob.glob(os.path.join(raw_export_dir, "*.json")):
+            if os.path.isdir(segmented_dir) and glob.glob(os.path.join(segmented_dir, "*.json")):
+                input_dir = segmented_dir
+            elif os.path.isdir(raw_export_dir) and glob.glob(os.path.join(raw_export_dir, "*.json")):
                 input_dir = raw_export_dir
             else:
                 input_dir = SCRIPT_DIR
@@ -699,8 +703,12 @@ def main():
             paper["has_openalex_institutions"] = bool(paper.get("openalex_institutions"))
             paper["has_fields_of_study"] = bool(paper.get("fields_of_study"))
 
-            # Remove full_text from output (tags already extracted)
+            # Remove full_text and _segmented_* fields from output
+            # (tags already extracted — these are internal pipeline fields)
             paper.pop("full_text", None)
+            for _seg_key in list(paper.keys()):
+                if _seg_key.startswith("_segmented_") or _seg_key.startswith("_segmentation_"):
+                    paper.pop(_seg_key, None)
 
             cleaned.append(paper)
 
