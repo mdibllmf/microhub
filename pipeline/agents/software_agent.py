@@ -67,7 +67,9 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "yolo": "YOLOv",
     "scikit-image": "scikit-image",
     "skimage": "scikit-image",
-    "arivis": "Arivis",
+    "arivis": "arivis Pro",
+    "arivis pro": "arivis Pro",
+    "arivis vision4d": "arivis Vision4D",
     "omero": "OMERO",
     "omero.web": "OMERO", "omero server": "OMERO",
     "definiens": "Definiens", "definiens tissue studio": "Definiens",
@@ -75,6 +77,17 @@ IMAGE_ANALYSIS_SOFTWARE: Dict[str, str] = {
     "morphographx": "MorphoGraphX",
     "nucleisegnet": "NucleiSegNet",
     "bioimage suite": "BioImage Suite",
+    # KB v2 additions
+    "avizo": "Avizo",
+    "atlas 5": "ATLAS 5",
+    "maps software": "MAPS",
+    "caseviewer": "CaseViewer",
+    "slideviewer": "SlideViewer",
+    "quantcenter": "QuantCenter",
+    "ndp.view": "NDP.view",
+    "cistem": "CisTEM",
+    "warp software": "Warp",
+    "bz-x analyzer": "BZ-X Analyzer",
 }
 
 # ======================================================================
@@ -122,6 +135,34 @@ IMAGE_ACQUISITION_SOFTWARE: Dict[str, str] = {
     "columbus image analysis": "Columbus",
     "perkinelmer columbus": "Columbus",
     "arrayscan": "ArrayScan",
+    # KB v2 additions
+    "las x": "LAS X",
+    "las af": "LAS AF",
+    "fv40-sw": "FluoView",
+    "fv31s-sw": "FluoView",
+    "fv10-asw": "FluoView",
+    "thorimage ls": "ThorImageLS",
+    "thorimagels": "ThorImageLS",
+    "imspectorpro": "ImspectorPro",
+    "sciscan": "SciScan",
+    "cellpathfinder": "CellPathfinder",
+    "metaxpress": "MetaXpress",
+    "hcs studio": "HCS Studio",
+    "epu": "EPU",
+    "leginon": "Leginon",
+    "smartsem": "SmartSEM",
+    "ndp.scan": "NDP.scan",
+    "bz-x viewer": "BZ-X Viewer",
+    "cellsens": "cellSens",
+    "cell sens": "cellSens",
+    "olyvia": "OlyVIA",
+    "zen blue": "ZEN Blue",
+    "zen black": "ZEN Black",
+    "zen pro": "ZEN Pro",
+    "zen lite": "ZEN Lite",
+    "axiovision": "AxioVision",
+    "mesospim-control": "mesoSPIM-control",
+    "spcimage": "SPCImage",
 }
 
 # Context pattern for "ZEN" to avoid matching the word "zen"
@@ -138,6 +179,15 @@ _IN_CELL_CONTEXT = re.compile(
     r"|\bIN\s+Cell\s+(?:Analyzer|Investigator|imaging|system|platform|\d{4})\b"
     r"|\bIN\s+Cell\b(?=.{0,30}(?:high[- ]?content|screening|imager|system))",
     re.IGNORECASE | re.DOTALL,
+)
+
+# Context pattern for "Fusion" software (Andor/Oxford Instruments)
+# Disambiguate from ORCA-Fusion camera and generic data fusion
+_FUSION_SOFTWARE_RE = re.compile(
+    r"\bFusion\s+(?:software|acquisition|imaging)\b|"
+    r"\bAndor\s+Fusion\b|"
+    r"\b(?:Dragonfly|BC43).{0,50}Fusion\b",
+    re.I,
 )
 
 # Context patterns for ambiguous software names
@@ -323,6 +373,17 @@ class SoftwareAgent(BaseAgent):
                     section=section or "",
                     metadata={"canonical": "ZEN"},
                 ))
+
+        # Handle "Fusion" acquisition software with context
+        for m in _FUSION_SOFTWARE_RE.finditer(text):
+            extractions.append(Extraction(
+                text=m.group(0),
+                label="IMAGE_ACQUISITION_SOFTWARE",
+                start=m.start(), end=m.end(),
+                confidence=0.80, source_agent=self.name,
+                section=section or "",
+                metadata={"canonical": "Fusion"},
+            ))
 
         # Handle "IN Cell" with context (avoid matching generic "in cell" phrases)
         for m in _IN_CELL_CONTEXT.finditer(text):

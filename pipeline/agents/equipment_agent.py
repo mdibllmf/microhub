@@ -1,9 +1,12 @@
 """
 Equipment extraction agent -- microscope brands, models, and related hardware.
 
-Uses a hybrid regex + dictionary approach since no pre-trained NER model
-exists for laboratory equipment.  Pattern matching follows the convention
-of manufacturer name followed by alphanumeric model identifier.
+Uses a hybrid regex + dictionary + knowledge base approach since no pre-trained
+NER model exists for laboratory equipment.  Pattern matching follows the
+convention of manufacturer name followed by alphanumeric model identifier.
+
+The Microscope Knowledge Base (microscopy_kb/) provides 65+ systems with
+518+ aliases, enabling alias-based model detection and brand↔model inference.
 
 Also detects reagent suppliers (separated from microscope brands in v5.2).
 
@@ -16,6 +19,10 @@ from typing import Dict, List, Optional, Set
 
 from .base_agent import BaseAgent, Extraction
 from ..confidence import get_confidence
+from ..kb_loader import (
+    load_kb, resolve_alias, infer_brand_from_model,
+    get_all_aliases, is_ambiguous, has_microscopy_context,
+)
 
 # ======================================================================
 # Microscope brand dictionary -- canonical names
@@ -88,6 +95,25 @@ MICROSCOPE_BRANDS: Dict[str, str] = {
     "mpb communications": "MPB Communications",
     "luigs & neumann": "Luigs & Neumann",
     "luigs and neumann": "Luigs & Neumann",
+    # KB v2 additions
+    "revvity": "Revvity",
+    "thermo fisher": "Thermo Fisher",
+    "thermo fisher scientific": "Thermo Fisher",
+    "gatan": "Gatan",
+    "lifecanvas": "LifeCanvas",
+    "life canvas": "LifeCanvas",
+    "femtonics": "Femtonics",
+    "scientifica": "Scientifica",
+    "keyence": "Keyence",
+    "3dhistech": "3DHISTECH",
+    "oxford nanoimaging": "ONI",
+    "nkt photonics": "NKT Photonics",
+    "nkt": "NKT Photonics",
+    "miltenyi biotec": "Miltenyi Biotec",
+    "crestoptics": "CrestOptics",
+    "lumencor": "Lumencor",
+    "coolled": "CoolLED",
+    "molecular devices": "Molecular Devices",
 }
 
 # ======================================================================
@@ -108,7 +134,7 @@ _PRIOR_PATTERNS = [
 # context patterns in _BRAND_CONTEXT_PATTERNS.  The acronym is still the
 # canonical display name.
 _ACRONYM_ONLY_BRANDS: Set[str] = {
-    "asi", "pco", "fei", "3i", "jeol",
+    "asi", "pco", "fei", "3i", "jeol", "oni", "nkt",
 }
 
 # Additional patterns that need context to avoid false positives
@@ -123,6 +149,11 @@ _BRAND_CONTEXT_PATTERNS = [
     (re.compile(r"\bFEI\s+(?:Tecnai|Talos|Titan|Helios|Magellan|Quanta|Scios|Verios)", re.I), "FEI"),
     # "JEOL" needs context
     (re.compile(r"\bJEOL\s+(?:JEM|JSM|ARM|JBIC|\d{3,4})", re.I), "JEOL"),
+    # "ONI" needs context (Oxford Nanoimaging)
+    (re.compile(r"\bONI\s+(?:Nanoimager|EV|microscop)", re.I), "ONI"),
+    (re.compile(r"\bOxford\s+Nanoimaging\b", re.I), "ONI"),
+    # "NKT" needs context
+    (re.compile(r"\bNKT\s+(?:Photonics|SuperK|laser)", re.I), "NKT Photonics"),
 ]
 
 # ======================================================================
@@ -189,6 +220,77 @@ MODEL_PATTERNS: List[tuple] = [
     # Zeiss light sheet specific patterns
     (re.compile(r"\bZeiss\s+Lightsheet\b", re.I), lambda m: "Zeiss Lightsheet", "Zeiss"),
     (re.compile(r"\bZ\.?1\b(?=.{0,30}(?:light|zeiss|sheet))", re.I), lambda m: "Z.1", "Zeiss"),
+
+    # ---- KB v2: new Zeiss models ----
+    (re.compile(r"\bLattice\s+(?:Light\s*[Ss]heet|SIM)\s+[357]\b", re.I), lambda m: m.group(0).strip(), "Zeiss"),
+    (re.compile(r"\bAxioscan\s+7\b", re.I), lambda m: "Axioscan 7", "Zeiss"),
+    (re.compile(r"\bCrossbeam\s+\d+\b", re.I), lambda m: m.group(0).strip(), "Zeiss"),
+    (re.compile(r"\bGeminiSEM\s+\d+\b", re.I), lambda m: m.group(0).strip(), "Zeiss"),
+    (re.compile(r"\bXradia\s+(?:Versa|Ultra)\b", re.I), lambda m: m.group(0).strip(), "Zeiss"),
+
+    # ---- KB v2: new Leica models ----
+    (re.compile(r"\bSTELLARIS\s+[58]\b", re.I), lambda m: m.group(0).strip(), "Leica"),
+    (re.compile(r"\bSTELLARIS\s+8\s+(?:FALCON|DIVE|STED)\b", re.I), lambda m: m.group(0).strip(), "Leica"),
+    (re.compile(r"\bFALCON\b(?=.{0,50}(?:Leica|STELLARIS|FLIM|lifetime))", re.I), lambda m: "FALCON", "Leica"),
+    (re.compile(r"\bTauSTED\b", re.I), lambda m: "TauSTED", "Leica"),
+    (re.compile(r"\bMica\b(?=.{0,50}(?:Leica|microscop|imaging))", re.I), lambda m: "Mica", "Leica"),
+    (re.compile(r"\bAperio\s+(?:GT|AT|CS|VERSA|LV)\s*\d*\b", re.I), lambda m: m.group(0).strip(), "Leica"),
+
+    # ---- KB v2: new Nikon models ----
+    (re.compile(r"\bAX\s*R?\s*(?:MP)?\b(?=.{0,30}(?:Nikon|confocal|NSPARC))", re.I), lambda m: "AX R", "Nikon"),
+    (re.compile(r"\bNSPARC\b", re.I), lambda m: "NSPARC", "Nikon"),
+    (re.compile(r"\bDUX-?(?:VB|ST)\b", re.I), lambda m: m.group(0).upper(), "Nikon"),
+    (re.compile(r"\bC2\+?\b(?=.{0,30}(?:Nikon|confocal))", re.I), lambda m: "C2+", "Nikon"),
+
+    # ---- KB v2: new Evident/Olympus models ----
+    (re.compile(r"\bFV[45]000\b"), lambda m: m.group(0), "Evident (Olympus)"),
+    (re.compile(r"\bIX85\b"), lambda m: "IX85", "Evident (Olympus)"),
+    (re.compile(r"\bSpinSR\b(?=.{0,30}(?:IX85|spinning|SoRa))", re.I), lambda m: "SpinSR", "Evident (Olympus)"),
+    (re.compile(r"\bSpinXL\b", re.I), lambda m: "SpinXL", "Evident (Olympus)"),
+    (re.compile(r"\bSilVIR\b", re.I), lambda m: "SilVIR", "Evident (Olympus)"),
+    (re.compile(r"\bVS200\b"), lambda m: "VS200", "Evident (Olympus)"),
+    (re.compile(r"\bAPX100\b"), lambda m: "APX100", "Evident (Olympus)"),
+
+    # ---- KB v2: new Andor models ----
+    (re.compile(r"\bDragonfly\s*(?:200|400|500|505|600)\b", re.I), lambda m: m.group(0).strip(), "Andor"),
+    (re.compile(r"\bBC43\b(?=.{0,30}(?:Andor|confocal|benchtop))", re.I), lambda m: "BC43", "Andor"),
+
+    # ---- KB v2: new spinning disk models ----
+    (re.compile(r"\bCSU-?W1\s+SoRa\b", re.I), lambda m: "CSU-W1 SoRa", "Yokogawa"),
+    (re.compile(r"\bSoRa\b(?=.{0,30}(?:Yokogawa|CSU|spinning|disk))", re.I), lambda m: "SoRa", "Yokogawa"),
+    (re.compile(r"\bCV[78]000\b"), lambda m: m.group(0), "Yokogawa"),
+    (re.compile(r"\bCQ1\b(?=.{0,30}(?:Yokogawa|CellVoyager))", re.I), lambda m: "CQ1", "Yokogawa"),
+
+    # ---- KB v2: HCS patterns ----
+    (re.compile(r"\bOpera\s+Phenix(?:\s+Plus)?\b", re.I), lambda m: m.group(0).strip(), "Revvity"),
+    (re.compile(r"\bOperetta\s+CLS\b", re.I), lambda m: "Operetta CLS", "Revvity"),
+    (re.compile(r"\bImageXpress\s+(?:Micro|Pico|Confocal)\b", re.I), lambda m: m.group(0).strip(), "Molecular Devices"),
+    (re.compile(r"\bCellInsight\s+CX7\b", re.I), lambda m: "CellInsight CX7", "Thermo Fisher"),
+
+    # ---- KB v2: multiphoton models ----
+    (re.compile(r"\bUltima\s+(?:Investigator|2Pplus)\b", re.I), lambda m: m.group(0).strip(), "Bruker"),
+    (re.compile(r"\bBergamo\s*(?:II)?\b(?=.{0,30}(?:Thorlabs|multiphoton|two.?photon))", re.I), lambda m: "Bergamo", "Thorlabs"),
+    (re.compile(r"\bHyperScope\b(?=.{0,30}(?:Scientifica|multiphoton))", re.I), lambda m: "HyperScope", "Scientifica"),
+    (re.compile(r"\bFEMTO3D\b", re.I), lambda m: "FEMTO3D", "Femtonics"),
+    (re.compile(r"\bTriM\s*Scope\b", re.I), lambda m: "TriM Scope", "LaVision BioTec"),
+
+    # ---- KB v2: STED models ----
+    (re.compile(r"\bSTEDYCON\b", re.I), lambda m: "STEDYCON", "Abberior"),
+    (re.compile(r"\bFacility\s+Line\b(?=.{0,30}(?:Abberior|STED))", re.I), lambda m: "Facility Line", "Abberior"),
+
+    # ---- KB v2: EM models ----
+    (re.compile(r"\bKrios\s*(?:G[34]i?)?\b", re.I), lambda m: "Titan Krios", "Thermo Fisher"),
+    (re.compile(r"\bGlacios\s*2?\b", re.I), lambda m: "Glacios", "Thermo Fisher"),
+    (re.compile(r"\bAquilos\s*2?\b", re.I), lambda m: "Aquilos", "Thermo Fisher"),
+    (re.compile(r"\bScios\s*2?\b", re.I), lambda m: "Scios", "Thermo Fisher"),
+    (re.compile(r"\bHelios\s*(?:5|G4|NanoLab)?\b", re.I), lambda m: m.group(0).strip(), "Thermo Fisher"),
+    (re.compile(r"\bApreo\s*2?\b", re.I), lambda m: "Apreo", "Thermo Fisher"),
+    (re.compile(r"\bCRYO\s*ARM\b", re.I), lambda m: "CRYO ARM 300", "JEOL"),
+    (re.compile(r"\bJEM-?F200\b"), lambda m: "JEM-F200", "JEOL"),
+
+    # ---- KB v2: slide scanner models ----
+    (re.compile(r"\bNanoZoomer\s*(?:S\d+|2\.0.HT|XR)?\b", re.I), lambda m: m.group(0).strip(), "Hamamatsu"),
+    (re.compile(r"\bPannoramic\s*(?:SCAN|MIDI|250|DESK)?\b", re.I), lambda m: m.group(0).strip(), "3DHISTECH"),
 ]
 
 # ======================================================================
@@ -447,6 +549,27 @@ DETECTOR_PATTERNS = [
     # Zeiss detectors
     (re.compile(r"\bAiryscan(?:\s+2)?\b", re.I), None, "Zeiss"),
     (re.compile(r"\bBiG(?:\.2)?\b(?=.{0,30}(?:Zeiss|detector|GaAsP))", re.I), None, "Zeiss"),
+    # ---- KB v2: new detector patterns ----
+    # Leica Power HyD family
+    (re.compile(r"\bPower\s+HyD\s+[SRXP]\b", re.I), None, "Leica"),
+    # Evident SilVIR detector
+    (re.compile(r"\bSilVIR\s+detector\b", re.I), "SilVIR", "Evident (Olympus)"),
+    # Nikon NSPARC detector
+    (re.compile(r"\bNSPARC\s+detector\b", re.I), "NSPARC", "Nikon"),
+    # Nikon DUX detectors
+    (re.compile(r"\bDUX-?(?:VB|ST)\s*(?:detector)?\b", re.I), None, "Nikon"),
+    # Hamamatsu new cameras
+    (re.compile(r"\bORCA[- ]?Fire\b", re.I), None, "Hamamatsu"),
+    (re.compile(r"\bORCA[- ]?Lightning\b", re.I), None, "Hamamatsu"),
+    (re.compile(r"\bORCA[- ]?Quest\s*2\b", re.I), None, "Hamamatsu"),
+    # Gatan direct electron detectors
+    (re.compile(r"\bGatan\s+K[23]\b", re.I), None, "Gatan"),
+    (re.compile(r"\bK3\s+(?:direct\s+electron|camera|detector)\b", re.I), None, "Gatan"),
+    # Falcon direct electron detectors
+    (re.compile(r"\bFalcon\s*(?:4i?|III|3)\b", re.I), None, "Thermo Fisher"),
+    # Photometrics new cameras
+    (re.compile(r"\bKinetix\s*\d*\b(?=.{0,30}(?:Photometrics|camera|sCMOS))", re.I), None, "Photometrics"),
+    (re.compile(r"\bPrime\s+BSI\s*(?:Express)?\b", re.I), None, "Photometrics"),
 ]
 
 # ======================================================================
@@ -494,22 +617,171 @@ class EquipmentAgent(BaseAgent):
 
     All equipment extractions include brand/vendor metadata when it can be
     determined from the text, naming conventions, or nearby brand mentions.
+
+    The Microscope Knowledge Base provides alias-based model detection
+    (catching models the hardcoded regex patterns miss) and brand inference.
     """
 
     name = "equipment"
+
+    def __init__(self):
+        self.kb = load_kb()
+        self._kb_alias_re = self._compile_alias_patterns()
+
+    def _compile_alias_patterns(self) -> Optional[re.Pattern]:
+        """Build a single compiled regex from all KB aliases for broad model detection.
+
+        Aliases are sorted longest-first to prevent partial matches.
+        Short or ambiguous aliases are excluded from the broad regex —
+        they are handled separately with context checks.
+        """
+        all_aliases = get_all_aliases()
+        if not all_aliases:
+            return None
+
+        # Collect unique aliases, skip short/ambiguous ones
+        alias_set: Set[str] = set()
+        for alias_lower in all_aliases:
+            if len(alias_lower) < 3:
+                continue
+            if is_ambiguous(alias_lower):
+                continue
+            alias_set.add(alias_lower)
+
+        if not alias_set:
+            return None
+
+        # Sort longest-first
+        sorted_aliases = sorted(alias_set, key=len, reverse=True)
+        # Build alternation pattern with word boundaries
+        escaped = [re.escape(a) for a in sorted_aliases]
+        pattern_str = r"\b(?:" + "|".join(escaped) + r")\b"
+        try:
+            return re.compile(pattern_str, re.IGNORECASE)
+        except re.error:
+            return None
 
     def analyze(self, text: str, section: str = None) -> List[Extraction]:
         results: List[Extraction] = []
         # Extract brands first — needed for proximity-based brand detection
         brand_exts = self._match_brands(text, section)
         results.extend(brand_exts)
-        results.extend(self._match_models(text, section))
+        model_exts = self._match_models(text, section)
+        results.extend(model_exts)
+        # KB-powered alias matching (second pass for models the regex missed)
+        results.extend(self._match_kb_aliases(text, section, model_exts))
         results.extend(self._match_objectives(text, section, brand_exts))
         results.extend(self._match_lasers(text, section, brand_exts))
         results.extend(self._match_detectors(text, section, brand_exts))
         results.extend(self._match_filters(text, section, brand_exts))
         results.extend(self._match_reagent_suppliers(text, section))
+        # KB-powered inference (brand from model, etc.)
+        results = self._kb_inference(results, text, section)
         return self._deduplicate(results)
+
+    # ------------------------------------------------------------------
+    # KB-powered alias matching
+    # ------------------------------------------------------------------
+
+    def _match_kb_aliases(self, text: str, section: str = None,
+                          existing_models: List[Extraction] = None) -> List[Extraction]:
+        """Match KB aliases against text to detect models the regex patterns miss.
+
+        Skips aliases that overlap with already-detected models (from _match_models).
+        """
+        if not self._kb_alias_re:
+            return []
+
+        # Build set of character ranges already covered by regex model matches
+        covered: Set[int] = set()
+        for ext in (existing_models or []):
+            if ext.start >= 0 and ext.end >= 0:
+                covered.update(range(ext.start, ext.end))
+
+        all_aliases = get_all_aliases()
+        extractions: List[Extraction] = []
+        seen_canonicals: Set[str] = set()
+
+        # Also track canonicals already found by regex
+        for ext in (existing_models or []):
+            seen_canonicals.add(ext.canonical().lower())
+
+        for m in self._kb_alias_re.finditer(text):
+            # Skip if overlapping with existing model extraction
+            if any(pos in covered for pos in range(m.start(), m.end())):
+                continue
+
+            matched_lower = m.group(0).lower()
+            canonical = all_aliases.get(matched_lower)
+            if not canonical:
+                continue
+
+            # Skip if we already have this canonical model
+            if canonical.lower() in seen_canonicals:
+                continue
+
+            # Look up the system in KB for brand info
+            system = resolve_alias(matched_lower)
+            brand = system.get("brand") if system else None
+
+            conf = get_confidence("MICROSCOPE_MODEL", section)
+            # Slightly lower confidence for KB alias matches vs direct regex
+            conf *= 0.95
+
+            meta: Dict = {"canonical": canonical, "source": "kb_alias"}
+            if brand:
+                meta["brand"] = brand
+
+            extractions.append(Extraction(
+                text=m.group(0),
+                label="MICROSCOPE_MODEL",
+                start=m.start(),
+                end=m.end(),
+                confidence=conf,
+                source_agent=self.name,
+                section=section or "",
+                metadata=meta,
+            ))
+            seen_canonicals.add(canonical.lower())
+
+        return extractions
+
+    # ------------------------------------------------------------------
+    # KB-powered inference
+    # ------------------------------------------------------------------
+
+    def _kb_inference(self, extractions: List[Extraction],
+                      text: str, section: str = None) -> List[Extraction]:
+        """Use KB to infer missing brand metadata from detected models."""
+        # 1. For each detected model, fill in brand if missing
+        for ext in extractions:
+            if ext.label == "MICROSCOPE_MODEL" and not ext.metadata.get("brand"):
+                brand = infer_brand_from_model(ext.canonical())
+                if brand:
+                    ext.metadata["brand"] = brand
+
+        # 2. If we found a model but the corresponding brand is missing
+        #    from extractions, synthesize a brand extraction
+        found_brands = {e.canonical() for e in extractions
+                        if e.label == "MICROSCOPE_BRAND"}
+        for ext in extractions:
+            if ext.label == "MICROSCOPE_MODEL":
+                brand = ext.metadata.get("brand") or infer_brand_from_model(ext.canonical())
+                if brand and brand not in found_brands:
+                    extractions.append(Extraction(
+                        text=brand,
+                        label="MICROSCOPE_BRAND",
+                        start=ext.start,
+                        end=ext.end,
+                        confidence=ext.confidence * 0.95,
+                        source_agent=self.name,
+                        section=section or "",
+                        metadata={"canonical": brand,
+                                  "inferred_from": ext.canonical()},
+                    ))
+                    found_brands.add(brand)
+
+        return extractions
 
     # ------------------------------------------------------------------
     # Brand proximity detection
