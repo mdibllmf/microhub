@@ -1,0 +1,113 @@
+{
+  "Confocal": {
+    "typical_lasers": [
+      405,
+      445,
+      488,
+      514,
+      561,
+      594,
+      633,
+      640,
+      647
+    ],
+    "notes": "Standard point-scanning confocal."
+  },
+  "Two-Photon": {
+    "typical_lasers": "680-1080 nm (tunable)",
+    "common_excitation": "800-920 nm",
+    "notes": "Ti:Sapphire laser. 2x wavelength of 1P equivalent."
+  },
+  "Three-Photon": {
+    "typical_lasers": "1300-1700 nm",
+    "notes": "Requires OPO or specialized laser. Deep tissue."
+  },
+  "STED": {
+    "typical_excitation": [
+      488,
+      561,
+      594,
+      640
+    ],
+    "depletion_lasers": [
+      592,
+      595,
+      660,
+      775
+    ],
+    "notes": "Depletion laser must be red-shifted from excitation."
+  },
+  "SIM": {
+    "typical_lasers": [
+      405,
+      488,
+      561,
+      640
+    ],
+    "notes": "Structured illumination. Standard laser lines."
+  },
+  "STORM/PALM/SMLM": {
+    "typical_lasers": [
+      405,
+      488,
+      561,
+      640,
+      647
+    ],
+    "notes": "High-power lasers needed. 405nm for activation."
+  },
+  "TIRF": {
+    "typical_lasers": [
+      405,
+      445,
+      488,
+      514,
+      561,
+      640,
+      647
+    ],
+    "notes": "Requires high-NA objective (>1.4). Evanescent wave <200nm."
+  },
+  "Light Sheet": {
+    "typical_lasers": [
+      405,
+      445,
+      488,
+      515,
+      561,
+      594,
+      638
+    ],
+    "notes": "Orthogonal excitation. sCMOS detection."
+  },
+  "FRAP": {
+    "typical_lasers": [
+      405,
+      488,
+      561
+    ],
+    "notes": "Bleach + recovery monitoring."
+  },
+  "FLIM": {
+    "typical_lasers": "Pulsed (WLL or pulsed diode)",
+    "rep_rate": "40-80 MHz",
+    "notes": "Requires pulsed excitation and time-correlated detection (TCSPC)."
+  },
+  "FCS": {
+    "typical_lasers": [
+      488,
+      561,
+      633
+    ],
+    "notes": "Fluorescence correlation spectroscopy."
+  },
+  "CARS/SRS": {
+    "typical_lasers": "Dual synchronized ps lasers",
+    "notes": "Coherent Raman scattering. Label-free."
+  },
+  "SHG": {
+    "typical_lasers": "800-1040 nm (multiphoton)",
+    "detection": "half the excitation wavelength",
+    "notes": "Second harmonic generation. Label-free. Collagen, myosin."
+  }
+}

@@ -1,0 +1,5349 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "build_date": "2026-02-22",
+    "description": "Comprehensive microscopy equipment knowledge base for MicroHub tag inference",
+    "total_systems": 124,
+    "data_sources": [
+      "Manufacturer product pages (Zeiss, Leica, Nikon, Olympus/Evident, Andor, etc.)",
+      "Core facility instrument listings (Duke, Stanford, Caltech, Northwestern, etc.)",
+      "4DN-BINA-OME Microscopy Metadata specifications",
+      "Community resources (image.sc, MicroscopyDB)"
+    ],
+    "schema_version": "2.0",
+    "total_brands": 28,
+    "total_aliases": 543,
+    "total_unique_software": 123,
+    "categories": {
+      "confocal": 26,
+      "super_resolution": 11,
+      "light_sheet": 11,
+      "widefield": 20,
+      "slide_scanner": 7,
+      "electron": 16,
+      "other": 3,
+      "multiphoton": 10,
+      "spinning_disk": 11,
+      "high_content_screening": 7,
+      "detector": 2
+    },
+    "brands_list": [
+      "3DHISTECH",
+      "3i",
+      "ASI",
+      "Abberior",
+      "Andor",
+      "Bruker",
+      "Community",
+      "Evident",
+      "Femtonics",
+      "Gatan",
+      "Hamamatsu",
+      "Hitachi",
+      "JEOL",
+      "Keyence",
+      "LaVision BioTec",
+      "Leica",
+      "LifeCanvas",
+      "Luxendo",
+      "Molecular Devices",
+      "Nikon",
+      "Olympus",
+      "Revvity",
+      "Scientifica",
+      "Sutter",
+      "Thermo Fisher",
+      "Thorlabs",
+      "Yokogawa",
+      "Zeiss"
+    ]
+  },
+  "systems": [
+    {
+      "brand": "Zeiss",
+      "model": "LSM 990",
+      "aliases": [
+        "LSM990",
+        "LSM 990",
+        "Zeiss LSM990",
+        "Zeiss LSM 990"
+      ],
+      "category": "confocal",
+      "year_introduced": 2025,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN",
+          "arivis Pro",
+          "arivis Vision4D"
+        ],
+        "ai_features": [
+          "Microscopy Copilot"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Airyscan",
+        "Airyscan 2",
+        "Airyscan jDCV",
+        "Lightfield 4D",
+        "FRAP",
+        "FRET",
+        "FCS",
+        "Spectral Imaging",
+        "Multiplex"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        633,
+        640
+      ],
+      "laser_details": {
+        "diode_405": "50-100 mW",
+        "argon_multiline": "458/488/514 nm (25-65 mW)",
+        "dpss_561": "10-20 mW",
+        "hene_594": "2 mW",
+        "hene_633": "5 mW",
+        "diode_640": "5-40 mW",
+        "notes": "Exact laser configuration varies by order; WLL option possible"
+      },
+      "detectors": [
+        "Airyscan 2",
+        "GaAsP-PMT",
+        "MA-PMT",
+        "T-PMT"
+      ],
+      "detector_details": {
+        "Airyscan 2": "32-element GaAsP array, Multiplex 4Y/8Y/CO modes",
+        "GaAsP-PMT": "Spectral GaAsP photomultiplier",
+        "MA-PMT": "Multi-alkali PMT",
+        "T-PMT": "Transmitted light PMT"
+      },
+      "objectives_compatible": [
+        "Plan-Apochromat",
+        "C-Apochromat",
+        "EC Plan-Neofluar",
+        "LD LCI Plan-Apochromat",
+        "LD C-Apochromat"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7",
+        "Axio Imager 2",
+        "Axio Examiner"
+      ],
+      "discontinued": false,
+      "predecessor": "LSM 980",
+      "notes": "Flagship confocal 2025. Adds Lightfield 4D for instant volumetric imaging (up to 80 vol/sec). New high-bandwidth electronics. Airyscan jDCV for all Multiplex modes."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 910",
+      "aliases": [
+        "LSM910",
+        "LSM 910",
+        "Zeiss LSM910",
+        "Zeiss LSM 910"
+      ],
+      "category": "confocal",
+      "year_introduced": 2025,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN",
+          "arivis Pro"
+        ],
+        "ai_features": [
+          "Microscopy Copilot"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Airyscan",
+        "Airyscan jDCV",
+        "Lightfield 4D",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        633,
+        640
+      ],
+      "detectors": [
+        "Airyscan 2",
+        "GaAsP-PMT",
+        "MA-PMT",
+        "T-PMT"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7",
+        "Axio Imager 2"
+      ],
+      "discontinued": false,
+      "predecessor": "LSM 900",
+      "notes": "Mid-range confocal 2025 with Lightfield 4D and Microscopy Copilot AI assistant. High-bandwidth electronics."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 980",
+      "aliases": [
+        "LSM980",
+        "LSM 980",
+        "Zeiss LSM980",
+        "Zeiss LSM 980"
+      ],
+      "category": "confocal",
+      "year_introduced": 2021,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN",
+          "arivis Pro",
+          "arivis Vision4D"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Airyscan 2",
+        "Multiplex",
+        "FRAP",
+        "FRET",
+        "FCS",
+        "Spectral Imaging",
+        "Lambda Mode",
+        "Photomanipulation"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        458,
+        488,
+        514,
+        561,
+        594,
+        633,
+        640
+      ],
+      "detectors": [
+        "Airyscan 2",
+        "GaAsP-PMT",
+        "MA-PMT",
+        "T-PMT"
+      ],
+      "detector_details": {
+        "Airyscan 2": "32-element GaAsP array with Multiplex 4Y and 8Y modes",
+        "notes": "CO-detection mode for multiplex confocal + super-resolution"
+      },
+      "microscope_stands": [
+        "Axio Observer 7",
+        "Axio Imager 2",
+        "Axio Examiner"
+      ],
+      "discontinued": false,
+      "successor": "LSM 990",
+      "notes": "Flagship confocal with Airyscan 2. 4Y/8Y Multiplex modes for fast super-resolution. ~120nm lateral resolution with Airyscan."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 900",
+      "aliases": [
+        "LSM900",
+        "LSM 900",
+        "Zeiss LSM900",
+        "Zeiss LSM 900"
+      ],
+      "category": "confocal",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Airyscan 2",
+        "FRAP",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "Airyscan 2",
+        "GaAsP-PMT",
+        "MA-PMT"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7",
+        "Axio Imager 2"
+      ],
+      "discontinued": false,
+      "successor": "LSM 910",
+      "notes": "Compact confocal, small footprint. Airyscan 2 standard. Ideal entry point."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 880",
+      "aliases": [
+        "LSM880",
+        "LSM 880",
+        "Zeiss LSM880",
+        "Zeiss LSM 880",
+        "LSM880 Airyscan",
+        "LSM 880 with Airyscan",
+        "LSM 880 Airyscan"
+      ],
+      "category": "confocal",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black",
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN",
+          "Imaris",
+          "Huygens"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Airyscan",
+        "FCS",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging",
+        "Lambda Mode",
+        "Photomanipulation",
+        "Multiphoton"
+      ],
+      "laser_lines_nm": [
+        405,
+        458,
+        488,
+        514,
+        561,
+        594,
+        633
+      ],
+      "laser_details": {
+        "diode_405": "30 mW",
+        "argon_multiline": "458/488/514 nm (25 mW each)",
+        "dpss_561": "20 mW",
+        "hene_594": "2 mW",
+        "hene_633": "5 mW",
+        "optional_multiphoton": "Coherent Chameleon or MaiTai (680-1080nm)"
+      },
+      "detectors": [
+        "Airyscan",
+        "GaAsP-PMT",
+        "MA-PMT",
+        "T-PMT",
+        "BiG.2"
+      ],
+      "detector_details": {
+        "Airyscan": "32-element hexagonal GaAsP array detector",
+        "BiG.2": "BiG (Big GaAsP) 2-channel non-descanned detector for multiphoton"
+      },
+      "microscope_stands": [
+        "Axio Observer",
+        "Axio Examiner"
+      ],
+      "discontinued": true,
+      "successor": "LSM 980",
+      "predecessor": "LSM 780",
+      "notes": "Very widely installed system. First commercial Airyscan. Often found with multiphoton laser. ~140nm lateral, ~400nm axial with Airyscan."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 800",
+      "aliases": [
+        "LSM800",
+        "LSM 800",
+        "Zeiss LSM800",
+        "Zeiss LSM 800"
+      ],
+      "category": "confocal",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Airyscan",
+        "FRAP",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "Airyscan",
+        "GaAsP-PMT",
+        "MA-PMT"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7",
+        "Axio Imager 2"
+      ],
+      "discontinued": true,
+      "successor": "LSM 900",
+      "notes": "Budget-friendly confocal with solid-state laser module. Compact design."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 780",
+      "aliases": [
+        "LSM780",
+        "LSM 780",
+        "Zeiss LSM780",
+        "Zeiss LSM 780"
+      ],
+      "category": "confocal",
+      "year_introduced": 2011,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FCS",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging",
+        "Lambda Mode",
+        "Multiphoton"
+      ],
+      "laser_lines_nm": [
+        405,
+        458,
+        488,
+        514,
+        561,
+        594,
+        633
+      ],
+      "detectors": [
+        "GaAsP array (32-ch spectral)",
+        "MA-PMT",
+        "T-PMT",
+        "NDD"
+      ],
+      "detector_details": {
+        "GaAsP_spectral": "QUASAR: 32-channel GaAsP spectral detector (410-690nm)"
+      },
+      "microscope_stands": [
+        "Axio Observer",
+        "Axio Examiner"
+      ],
+      "discontinued": true,
+      "successor": "LSM 880",
+      "predecessor": "LSM 710",
+      "notes": "First confocal with 32-channel GaAsP spectral detector (QUASAR). Still in many facilities."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 710",
+      "aliases": [
+        "LSM710",
+        "LSM 710",
+        "Zeiss LSM710",
+        "Zeiss LSM 710"
+      ],
+      "category": "confocal",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black",
+          "ZEN 2009/2010/2011/2012"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging",
+        "Multiphoton"
+      ],
+      "laser_lines_nm": [
+        405,
+        458,
+        488,
+        514,
+        543,
+        561,
+        594,
+        633
+      ],
+      "detectors": [
+        "MA-PMT (spectral)",
+        "T-PMT",
+        "NDD"
+      ],
+      "microscope_stands": [
+        "Axio Observer",
+        "Axio Examiner",
+        "Axio Imager"
+      ],
+      "discontinued": true,
+      "successor": "LSM 780",
+      "predecessor": "LSM 510",
+      "notes": "Introduced spectral detection to mainstream confocal. Large install base."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 700",
+      "aliases": [
+        "LSM700",
+        "LSM 700",
+        "Zeiss LSM700",
+        "Zeiss LSM 700"
+      ],
+      "category": "confocal",
+      "year_introduced": 2009,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN 2009"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FRAP"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        555,
+        639
+      ],
+      "detectors": [
+        "MA-PMT",
+        "T-PMT"
+      ],
+      "discontinued": true,
+      "successor": "LSM 800",
+      "notes": "Entry-level solid-state laser confocal. Four fixed laser lines."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 510",
+      "aliases": [
+        "LSM510",
+        "LSM 510",
+        "Zeiss LSM510",
+        "Zeiss LSM 510",
+        "LSM 510 META",
+        "LSM510 META"
+      ],
+      "category": "confocal",
+      "year_introduced": 2000,
+      "software": {
+        "acquisition": [
+          "LSM 510 software",
+          "ZEN 2008"
+        ],
+        "analysis": [
+          "LSM Image Browser"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FRAP",
+        "Spectral Imaging",
+        "Multiphoton"
+      ],
+      "laser_lines_nm": [
+        351,
+        364,
+        405,
+        458,
+        477,
+        488,
+        514,
+        543,
+        561,
+        594,
+        633
+      ],
+      "detectors": [
+        "MA-PMT",
+        "META spectral detector",
+        "T-PMT",
+        "NDD"
+      ],
+      "microscope_stands": [
+        "Axiovert 200M",
+        "Axio Imager"
+      ],
+      "discontinued": true,
+      "successor": "LSM 710",
+      "predecessor": "LSM 410",
+      "notes": "Legacy workhorse. META version added spectral detector. Still referenced in many older papers."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "LSM 5 Live",
+      "aliases": [
+        "LSM5 Live",
+        "LSM 5Live",
+        "Zeiss LSM 5 Live"
+      ],
+      "category": "confocal",
+      "year_introduced": 2004,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "LSM 510 software"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Fast Live Cell Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        489,
+        532,
+        635
+      ],
+      "detectors": [
+        "Linear CCD"
+      ],
+      "discontinued": true,
+      "notes": "Line-scanning confocal for high-speed live imaging."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Elyra 7",
+      "aliases": [
+        "Elyra7",
+        "Elyra 7",
+        "Zeiss Elyra 7",
+        "Zeiss Elyra7",
+        "ELYRA 7",
+        "Elyra 7 with Lattice SIM"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN Black",
+          "ZEN Blue"
+        ]
+      },
+      "techniques": [
+        "SIM",
+        "Lattice SIM",
+        "Lattice SIM\u00b2",
+        "SIM\u00b2 Apotome",
+        "SMLM",
+        "PALM",
+        "dSTORM",
+        "TIRF",
+        "HILO",
+        "Widefield",
+        "DIC"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        637,
+        642
+      ],
+      "laser_details": {
+        "405nm": "50-100 mW",
+        "488nm": "100-500 mW",
+        "561nm": "100-500 mW",
+        "637/642nm": "150-500 mW",
+        "notes": "High-power lasers for SMLM; power varies by configuration"
+      },
+      "detectors": [
+        "sCMOS (PCO.edge 4.2)",
+        "Dual-camera (DuoLink)"
+      ],
+      "detector_details": {
+        "PCO.edge 4.2": "sCMOS, 82% QE, 16-bit, liquid cooling",
+        "DuoLink": "Dual-camera for simultaneous two-color SIM"
+      },
+      "resolution": {
+        "SIM_lateral": "100-120 nm",
+        "SIM2_lateral": "~60 nm",
+        "SIM_axial": "~300 nm",
+        "SIM2_axial": "~200 nm",
+        "SMLM_lateral": "20-30 nm",
+        "TIRF_penetration": "<200 nm"
+      },
+      "objectives_compatible": [
+        "EC Plan-Neofluar 10x/0.30",
+        "Plan-Apochromat 20x/0.8",
+        "Plan-Apochromat 40x/1.4 Oil DIC",
+        "Plan-Apochromat 63x/1.4 Oil DIC",
+        "Alpha Plan-Apo 63x/1.46 Oil Corr (TIRF)"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7"
+      ],
+      "speed": "Up to 255 fps with Lattice SIM",
+      "max_sample_thickness": "~70 \u00b5m (Lattice SIM), ~20 \u00b5m (classic SIM)",
+      "discontinued": false,
+      "predecessor": "Elyra PS.1",
+      "notes": "Multi-technique super-resolution platform. SIM\u00b2 reconstruction doubles conventional SIM resolution. Lattice SIM uses lattice spot pattern instead of grid lines. R&D 100 Award winner 2019."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Lattice SIM 5",
+      "aliases": [
+        "Lattice SIM5",
+        "Zeiss Lattice SIM 5",
+        "ZEISS Lattice SIM 5"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2023,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Lattice SIM",
+        "Lattice SIM\u00b2",
+        "SIM\u00b2 Apotome",
+        "Widefield"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        642
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7"
+      ],
+      "discontinued": false,
+      "notes": "New Lattice SIM family member (2023). Structured illumination super-resolution."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Lattice SIM 3",
+      "aliases": [
+        "Lattice SIM3",
+        "Zeiss Lattice SIM 3",
+        "ZEISS Lattice SIM 3"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2023,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Lattice SIM",
+        "Lattice SIM\u00b2",
+        "SIM\u00b2 Apotome",
+        "Widefield"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        642
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "microscope_stands": [
+        "Axio Observer 7"
+      ],
+      "discontinued": false,
+      "notes": "Entry-level Lattice SIM family member (2023)."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Elyra PS.1",
+      "aliases": [
+        "Elyra PS1",
+        "Elyra PS.1",
+        "Zeiss Elyra PS.1",
+        "PALM/SIM"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2010,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN Black"
+        ]
+      },
+      "techniques": [
+        "SIM",
+        "PALM",
+        "dSTORM",
+        "TIRF"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        642
+      ],
+      "detectors": [
+        "EMCCD (Andor iXon)"
+      ],
+      "microscope_stands": [
+        "Axio Observer"
+      ],
+      "discontinued": true,
+      "successor": "Elyra 7",
+      "notes": "First generation Zeiss super-resolution. PALM + SIM in one system."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Lattice Lightsheet 7",
+      "aliases": [
+        "Lattice Lightsheet 7",
+        "Zeiss Lattice Lightsheet 7",
+        "ZEISS Lattice Lightsheet 7",
+        "LLS7"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2022,
+      "software": {
+        "acquisition": [
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN Blue",
+          "arivis Pro"
+        ]
+      },
+      "techniques": [
+        "Lattice Light Sheet",
+        "Light Sheet Fluorescence Microscopy"
+      ],
+      "laser_lines_nm": [
+        488,
+        561,
+        640
+      ],
+      "laser_details": {
+        "notes": "Three laser lines standard. Spatial Light Modulator (SLM) for lattice pattern generation."
+      },
+      "detectors": [
+        "Hamamatsu ORCA-Fusion sCMOS (x2)"
+      ],
+      "detector_details": {
+        "cameras": "Two Hamamatsu Fusion sCMOS cameras for simultaneous dual-color",
+        "detection_objective": "48x/1.0 NA"
+      },
+      "objectives_compatible": [
+        "48x/1.0 NA detection objective (dedicated)"
+      ],
+      "sample_format": "Standard sample carriers: 35mm glass-bottom dishes, LabTek chambers, IBIDI slides",
+      "discontinued": false,
+      "notes": "Inverted lattice light sheet. Uses standard sample carriers (coverglass #1.5 bottom). Fully incubated. Automated alignment. Near-isotropic resolution in confocal range."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Lightsheet 7",
+      "aliases": [
+        "Lightsheet7",
+        "Lightsheet 7",
+        "Zeiss Lightsheet 7",
+        "ZEISS Lightsheet 7",
+        "Z.1 successor"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN Blue",
+          "arivis Pro"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "SPIM",
+        "Dual-Side Illumination",
+        "Pivot Scan",
+        "Tiling Light Sheet"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        515,
+        561,
+        638
+      ],
+      "detectors": [
+        "sCMOS (PCO.edge or Hamamatsu Flash4)"
+      ],
+      "discontinued": false,
+      "predecessor": "Lightsheet Z.1",
+      "notes": "Classical SPIM geometry for large cleared samples. Dual illumination. Up to 6 laser lines."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Lightsheet Z.1",
+      "aliases": [
+        "Lightsheet Z1",
+        "Lightsheet Z.1",
+        "Zeiss Lightsheet Z.1",
+        "Z.1",
+        "Z1"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Black"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "SPIM"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        515,
+        561,
+        638
+      ],
+      "detectors": [
+        "sCMOS (PCO.edge)"
+      ],
+      "discontinued": true,
+      "successor": "Lightsheet 7",
+      "notes": "First commercial Zeiss light sheet. SPIM geometry. Still in many facilities."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Axio Observer 7",
+      "aliases": [
+        "Axio Observer 7",
+        "Observer 7",
+        "Zeiss Axio Observer 7",
+        "Axio Observer",
+        "AxioObserver"
+      ],
+      "category": "widefield",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue",
+          "ZEN Pro"
+        ],
+        "analysis": [
+          "ZEN Blue"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "ApoTome.2"
+      ],
+      "illumination": {
+        "fluorescence": "Colibri 7 LED (385, 423, 469, 511, 555, 590, 631 nm)",
+        "transmitted": "HAL100 halogen or LED"
+      },
+      "detectors": [
+        "Various cameras (see camera_database)"
+      ],
+      "objectives_compatible": [
+        "Plan-Apochromat",
+        "EC Plan-Neofluar",
+        "LD Plan-Neofluar",
+        "C-Apochromat",
+        "Fluar"
+      ],
+      "microscope_type": "inverted",
+      "discontinued": false,
+      "predecessor": "Axio Observer",
+      "notes": "Motorized inverted research microscope. Base stand for LSM, Elyra, Celldiscoverer systems. Definite Focus.2 for drift compensation."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Axio Imager 2",
+      "aliases": [
+        "Axio Imager 2",
+        "Axio Imager.Z2",
+        "Zeiss Axio Imager",
+        "Axio Imager Z2",
+        "AxioImager"
+      ],
+      "category": "widefield",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue",
+          "ZEN Pro"
+        ],
+        "analysis": [
+          "ZEN Blue"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "Darkfield",
+        "Polarization",
+        "ApoTome.2"
+      ],
+      "microscope_type": "upright",
+      "discontinued": false,
+      "notes": "Motorized upright research microscope. Used as stand for upright confocal."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Celldiscoverer 7",
+      "aliases": [
+        "Celldiscoverer 7",
+        "Celldiscoverer7",
+        "CD7",
+        "Zeiss Celldiscoverer 7",
+        "ZEISS Celldiscoverer 7"
+      ],
+      "category": "widefield",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN Blue",
+          "arivis Pro"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "Spinning Disk Confocal",
+        "ApoTome.2",
+        "LSM"
+      ],
+      "illumination": {
+        "fluorescence": "Colibri 7 LED",
+        "optional": "LSM module, spinning disk module"
+      },
+      "detectors": [
+        "Axiocam cameras",
+        "optional spinning disk camera"
+      ],
+      "objectives_compatible": [
+        "Autocorr objectives (2.5x-100x)"
+      ],
+      "features": [
+        "Automated sample detection",
+        "Auto-immersion",
+        "Automated objective changing",
+        "Multi-well plate imaging",
+        "Incubation"
+      ],
+      "discontinued": false,
+      "notes": "Automated box microscope for walk-away imaging. Self-correcting optics. Modular."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Axio Examiner",
+      "aliases": [
+        "Axio Examiner",
+        "Zeiss Axio Examiner",
+        "AxioExaminer"
+      ],
+      "category": "widefield",
+      "year_introduced": 2010,
+      "software": {
+        "acquisition": [
+          "ZEN"
+        ],
+        "analysis": [
+          "ZEN"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "DIC",
+        "Brightfield",
+        "Electrophysiology"
+      ],
+      "microscope_type": "fixed_stage_upright",
+      "discontinued": false,
+      "notes": "Fixed-stage upright microscope for electrophysiology. Base for upright confocal/multiphoton."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Axiovert 200M",
+      "aliases": [
+        "Axiovert 200M",
+        "Axiovert200M",
+        "Zeiss Axiovert 200M",
+        "Axiovert 200"
+      ],
+      "category": "widefield",
+      "year_introduced": 2002,
+      "software": {
+        "acquisition": [
+          "AxioVision",
+          "ZEN"
+        ],
+        "analysis": [
+          "AxioVision"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC"
+      ],
+      "microscope_type": "inverted",
+      "discontinued": true,
+      "successor": "Axio Observer",
+      "notes": "Legacy inverted stand. Base for LSM 510/710. Very common in older publications."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Axio Scan.Z1",
+      "aliases": [
+        "Axio Scan Z1",
+        "Axio Scan.Z1",
+        "AxioScan",
+        "Zeiss AxioScan",
+        "Axio Scan Z1"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2014,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN Blue",
+          "HALO",
+          "QuPath"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Slide Scanning"
+      ],
+      "discontinued": true,
+      "successor": "Axioscan 7",
+      "notes": "First generation Zeiss slide scanner."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Axioscan 7",
+      "aliases": [
+        "Axioscan 7",
+        "Axioscan7",
+        "Zeiss Axioscan 7",
+        "ZEISS Axioscan 7"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2021,
+      "software": {
+        "acquisition": [
+          "ZEN",
+          "ZEN Blue"
+        ],
+        "analysis": [
+          "ZEN Blue",
+          "HALO",
+          "QuPath",
+          "arivis"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Darkfield",
+        "Polarization",
+        "Slide Scanning",
+        "Tissue Scanning"
+      ],
+      "illumination": {
+        "fluorescence": "Colibri 7 LED or HXP 120V",
+        "transmitted": "LED"
+      },
+      "discontinued": false,
+      "predecessor": "Axio Scan.Z1",
+      "notes": "High-speed slide scanner. Up to 100 slides unattended. Multi-mode imaging."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Crossbeam 550",
+      "aliases": [
+        "Crossbeam 550",
+        "Zeiss Crossbeam 550",
+        "FIB-SEM Crossbeam"
+      ],
+      "category": "electron",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "SmartSEM",
+          "ATLAS 5"
+        ],
+        "analysis": [
+          "ATLAS 5",
+          "arivis"
+        ]
+      },
+      "techniques": [
+        "FIB-SEM",
+        "SEM",
+        "FIB Milling",
+        "Serial Block-Face",
+        "Correlative Light-Electron Microscopy"
+      ],
+      "discontinued": false,
+      "notes": "FIB-SEM for 3D imaging and sample preparation. Samplefab variant (2024)."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "GeminiSEM",
+      "aliases": [
+        "GeminiSEM",
+        "GeminiSEM 560",
+        "GeminiSEM 460",
+        "GeminiSEM 360",
+        "Zeiss GeminiSEM"
+      ],
+      "category": "electron",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "SmartSEM"
+        ],
+        "analysis": [
+          "ATLAS 5"
+        ]
+      },
+      "techniques": [
+        "SEM",
+        "FE-SEM",
+        "EDS",
+        "EBSD",
+        "In-lens detection"
+      ],
+      "discontinued": false,
+      "notes": "Field-emission SEM family. Gemini 2 column technology."
+    },
+    {
+      "brand": "Zeiss",
+      "model": "Xradia Versa",
+      "aliases": [
+        "Xradia",
+        "Xradia Versa",
+        "Xradia 520 Versa",
+        "Xradia 620 Versa",
+        "Zeiss Xradia"
+      ],
+      "category": "other",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "Scout-and-Scan"
+        ],
+        "analysis": [
+          "ORS Dragonfly",
+          "arivis"
+        ]
+      },
+      "techniques": [
+        "X-ray Microscopy",
+        "Micro-CT",
+        "Nano-CT"
+      ],
+      "discontinued": false,
+      "notes": "3D X-ray microscope. ART AI reconstruction technologies (2024)."
+    },
+    {
+      "brand": "Leica",
+      "model": "STELLARIS 8",
+      "aliases": [
+        "Stellaris 8",
+        "STELLARIS 8",
+        "Leica Stellaris 8",
+        "Leica STELLARIS 8",
+        "Stellaris8",
+        "SP8 successor"
+      ],
+      "category": "confocal",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "analysis": [
+          "LAS X",
+          "Aivia",
+          "Imaris"
+        ],
+        "modules": [
+          "LIGHTNING",
+          "FALCON",
+          "TauSense",
+          "TauContrast",
+          "TauGating",
+          "TauSeparation",
+          "FRAP",
+          "FRET",
+          "MicroLab",
+          "ImageCompass",
+          "3D Visualization",
+          "Dye Finder",
+          "Navigator"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FLIM",
+        "FRAP",
+        "FRET",
+        "FCS",
+        "Spectral Imaging",
+        "TauSense",
+        "TauContrast",
+        "TauGating",
+        "TauSeparation",
+        "LIGHTNING super-resolution"
+      ],
+      "laser_lines_nm": [
+        405
+      ],
+      "laser_details": {
+        "diode_405": "Fixed 405 nm diode laser",
+        "WLL": "White Light Laser (WLL): tunable 440-790 nm, pulsed, total >6W visible, up to 8 simultaneous lines at 8nm intervals",
+        "AOBS": "Acousto-Optical Beam Splitter \u2014 no dichroic mirrors needed"
+      },
+      "detectors": [
+        "Power HyD S",
+        "Power HyD X",
+        "Power HyD R"
+      ],
+      "detector_details": {
+        "Power HyD S": "Silicon-based hybrid, blue-sensitive, analog/counting modes, up to 56% PDE",
+        "Power HyD X": "Single-molecule sensitive, digital mode, for FLIM/FALCON",
+        "Power HyD R": "Near-IR optimized hybrid GaAsP, detection to 850nm",
+        "configuration": "Typical: S/X/S/X/S (5 detectors), spectral range 410-850nm",
+        "notes": "Filterless spectral detection via AOBS. No dichroic filters needed."
+      },
+      "objectives_compatible": [
+        "HC PL APO",
+        "HC PL FLUOTAR",
+        "HC FLUOTAR L"
+      ],
+      "microscope_stands": [
+        "DMi8",
+        "DM6"
+      ],
+      "can_combine_with": [
+        "FALCON (FLIM)",
+        "DIVE (multiphoton)",
+        "STED",
+        "DLS (Digital Light Sheet)",
+        "CRS (CARS)",
+        "Cryo"
+      ],
+      "discontinued": false,
+      "predecessor": "SP8",
+      "notes": "Flagship confocal platform. Extended WLL (440-790nm vs SP8's 470-670nm). Power HyD family detectors. TauSense lifetime-based contrast. AOBS for filterless spectral detection."
+    },
+    {
+      "brand": "Leica",
+      "model": "STELLARIS 5",
+      "aliases": [
+        "Stellaris 5",
+        "STELLARIS 5",
+        "Leica Stellaris 5",
+        "Leica STELLARIS 5",
+        "Stellaris5"
+      ],
+      "category": "confocal",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "analysis": [
+          "LAS X"
+        ],
+        "modules": [
+          "LIGHTNING",
+          "TauSense"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "TauSense",
+        "FRAP",
+        "Spectral Imaging",
+        "LIGHTNING super-resolution"
+      ],
+      "laser_lines_nm": [
+        405
+      ],
+      "laser_details": {
+        "WLL": "White Light Laser, tunable 440-790 nm",
+        "diode_405": "405 nm diode"
+      },
+      "detectors": [
+        "Power HyD S",
+        "Power HyD X"
+      ],
+      "microscope_stands": [
+        "DMi8",
+        "DM6"
+      ],
+      "can_combine_with": [
+        "FALCON",
+        "STED",
+        "DIVE",
+        "DLS"
+      ],
+      "discontinued": false,
+      "notes": "Core STELLARIS platform. Same WLL and Power HyD as Stellaris 8 but with fewer detector options."
+    },
+    {
+      "brand": "Leica",
+      "model": "STELLARIS 8 FALCON",
+      "aliases": [
+        "Stellaris 8 FALCON",
+        "STELLARIS FALCON",
+        "Leica FALCON",
+        "Stellaris FALCON",
+        "FALCON"
+      ],
+      "category": "confocal",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "modules": [
+          "FALCON",
+          "TauSense",
+          "LIGHTNING"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FLIM",
+        "Fluorescence Lifetime Imaging",
+        "FRET",
+        "Biosensing",
+        "TauSense",
+        "TauContrast",
+        "TauGating",
+        "TauSeparation",
+        "Phasor Analysis"
+      ],
+      "laser_lines_nm": [
+        405
+      ],
+      "laser_details": {
+        "WLL": "Pulsed WLL 440-790 nm (essential for FLIM)"
+      },
+      "detectors": [
+        "Power HyD X (FLIM-capable)",
+        "Power HyD S"
+      ],
+      "discontinued": false,
+      "notes": "STELLARIS 8 with integrated FLIM (FAst Lifetime CONtrast). Video-rate lifetime imaging. Pulsed WLL enables fluorescence lifetime measurements."
+    },
+    {
+      "brand": "Leica",
+      "model": "STELLARIS 8 DIVE",
+      "aliases": [
+        "Stellaris 8 DIVE",
+        "STELLARIS DIVE",
+        "Leica DIVE",
+        "Stellaris DIVE",
+        "Deep In Vivo Explorer"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "modules": [
+          "DIVE",
+          "4Tune",
+          "FALCON"
+        ]
+      },
+      "techniques": [
+        "Multiphoton",
+        "Two-Photon",
+        "Three-Photon",
+        "Confocal",
+        "Second Harmonic Generation",
+        "Third Harmonic Generation",
+        "Deep Tissue Imaging",
+        "Intravital Imaging",
+        "FLIM"
+      ],
+      "laser_lines_nm": [
+        405
+      ],
+      "laser_details": {
+        "WLL": "440-790 nm (for 1P confocal mode)",
+        "multiphoton": "Tunable multiphoton laser (e.g., Coherent Chameleon 720-1020nm)",
+        "optional_OPO": "Optical Parametric Oscillator for extended wavelengths"
+      },
+      "detectors": [
+        "Power HyD S (descanned)",
+        "Power HyD X (descanned)",
+        "4Tune NDD (2-channel spectral non-descanned)",
+        "NDD HyD",
+        "T-PMT (transmitted)"
+      ],
+      "detector_details": {
+        "4Tune": "2-channel freely tunable-filter NDD with hybrid detectors for 2P",
+        "descanned": "4 descanned confocal detectors: 3 HyD S + 1 HyD X (typ.)",
+        "NDD_reflected": "2 reflected NDD channels",
+        "NDD_transmitted": "2 transmitted/SHG NDD channels"
+      },
+      "objectives_compatible": [
+        "HC FLUOTAR L 16x/0.6 IMM CORR VISIR (WD 2.5mm, for clearing RI 1.33-1.52)",
+        "HC PL APO 20x/0.75 IMM CORR CS2",
+        "HC PL APO 40x/1.10 W CORR CS2",
+        "HC PL APO 63x/1.20 W CORR CS2"
+      ],
+      "microscope_stands": [
+        "DM6 CFS (upright, fixed-stage)",
+        "DMi8 (inverted)"
+      ],
+      "discontinued": false,
+      "notes": "Integrated multiphoton + confocal system. 4Tune spectral non-descanned detectors. DM6 CFS upright stand provides >1mm working distance for in vivo imaging."
+    },
+    {
+      "brand": "Leica",
+      "model": "STELLARIS 8 STED",
+      "aliases": [
+        "Stellaris 8 STED",
+        "STELLARIS STED",
+        "Leica STED",
+        "Stellaris STED",
+        "TauSTED"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "modules": [
+          "STED",
+          "TauSTED",
+          "TauSTED Xtend",
+          "LIGHTNING STED Expert",
+          "FALCON",
+          "TauSense"
+        ]
+      },
+      "techniques": [
+        "STED",
+        "TauSTED",
+        "Confocal",
+        "FLIM",
+        "Gated STED",
+        "3D STED",
+        "STED Super-Resolution"
+      ],
+      "laser_lines_nm": [
+        405
+      ],
+      "laser_details": {
+        "WLL": "440-790 nm (excitation)",
+        "STED_depletion_589": "589 nm pulsed (depletes green dyes)",
+        "STED_depletion_660": "660 nm pulsed (depletes orange/yellow dyes)",
+        "STED_depletion_775": "775 nm pulsed (depletes red/far-red dyes)"
+      },
+      "detectors": [
+        "Power HyD S",
+        "Power HyD X"
+      ],
+      "resolution": {
+        "STED_lateral": "<50 nm (down to ~20-30 nm optimal)",
+        "STED_axial": "~130 nm",
+        "notes": "TauSTED combines time-gating with STED for improved contrast"
+      },
+      "max_sample_thickness": "~30 \u00b5m (STED), ~100 \u00b5m (confocal)",
+      "microscope_stands": [
+        "DMi8"
+      ],
+      "discontinued": false,
+      "notes": "Triple STED depletion lasers (589/660/775nm) cover broad fluorophore range. TauSTED uses fluorescence lifetime to enhance resolution. Down to ~20nm lateral."
+    },
+    {
+      "brand": "Leica",
+      "model": "SP8",
+      "aliases": [
+        "SP8",
+        "Leica SP8",
+        "Leica TCS SP8",
+        "TCS SP8",
+        "SP8X",
+        "SP8 STED",
+        "SP8 STED 3X",
+        "SP8 FALCON",
+        "SP8 DIVE",
+        "SP8 Lightning",
+        "SP8 WLL"
+      ],
+      "category": "confocal",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "LAS X",
+          "LAS AF"
+        ],
+        "modules": [
+          "LIGHTNING",
+          "FALCON",
+          "STED",
+          "FRAP",
+          "FRET"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "STED",
+        "FLIM",
+        "FRAP",
+        "FRET",
+        "FCS",
+        "Spectral Imaging",
+        "Multiphoton",
+        "DLS"
+      ],
+      "laser_lines_nm": [
+        405,
+        458,
+        476,
+        488,
+        496,
+        514,
+        543,
+        561,
+        594,
+        633
+      ],
+      "laser_details": {
+        "WLL": "White Light Laser: 470-670 nm (narrower range than Stellaris)",
+        "diode_405": "405 nm",
+        "argon": "458/476/488/496/514 nm",
+        "STED_592": "592 nm depletion",
+        "STED_660": "660 nm depletion",
+        "STED_775": "775 nm depletion",
+        "AOBS": "Acousto-Optical Beam Splitter"
+      },
+      "detectors": [
+        "HyD (hybrid GaAsP)",
+        "PMT",
+        "HyD SMD (single molecule)"
+      ],
+      "detector_details": {
+        "HyD": "Up to 5 hybrid GaAsP detectors, time-gating capable",
+        "tandem_scanner": "Resonant (8/12 kHz) + Galvo scanner, up to 428 fps"
+      },
+      "microscope_stands": [
+        "DMi8",
+        "DMi6",
+        "DM6"
+      ],
+      "discontinued": true,
+      "successor": "STELLARIS 5/8",
+      "predecessor": "SP5",
+      "notes": "Widely installed. First Leica with WLL and HyD. STED 3X variant had 3 depletion lines. Many still in active use."
+    },
+    {
+      "brand": "Leica",
+      "model": "SP5",
+      "aliases": [
+        "SP5",
+        "Leica SP5",
+        "Leica TCS SP5",
+        "TCS SP5",
+        "SP5 II",
+        "SP5 STED",
+        "SP5 MP"
+      ],
+      "category": "confocal",
+      "year_introduced": 2006,
+      "software": {
+        "acquisition": [
+          "LAS AF"
+        ],
+        "analysis": [
+          "LAS AF"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging",
+        "Multiphoton",
+        "STED"
+      ],
+      "laser_lines_nm": [
+        405,
+        458,
+        476,
+        488,
+        496,
+        514,
+        543,
+        561,
+        594,
+        633
+      ],
+      "laser_details": {
+        "optional_WLL": "WLL 470-670nm on SP5 X variant",
+        "optional_multiphoton": "MaiTai/Chameleon for multiphoton variant"
+      },
+      "detectors": [
+        "HyD (on later models)",
+        "PMT",
+        "NDD"
+      ],
+      "microscope_stands": [
+        "DMI6000",
+        "DM6000"
+      ],
+      "discontinued": true,
+      "successor": "SP8",
+      "predecessor": "SP2",
+      "notes": "Major workhorse system. SP5 II (2010) added AOBS improvements. SP5 X added WLL. SP5 STED was first commercial CW-STED."
+    },
+    {
+      "brand": "Leica",
+      "model": "SP2",
+      "aliases": [
+        "SP2",
+        "Leica SP2",
+        "Leica TCS SP2",
+        "TCS SP2"
+      ],
+      "category": "confocal",
+      "year_introduced": 2001,
+      "software": {
+        "acquisition": [
+          "Leica Confocal Software"
+        ],
+        "analysis": [
+          "Leica LCS"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        458,
+        476,
+        488,
+        496,
+        514,
+        543,
+        594,
+        633
+      ],
+      "detectors": [
+        "PMT"
+      ],
+      "discontinued": true,
+      "successor": "SP5",
+      "notes": "Legacy system. Prism-based spectral detection. Still cited in older publications."
+    },
+    {
+      "brand": "Leica",
+      "model": "STED 3X",
+      "aliases": [
+        "STED 3X",
+        "Leica STED 3X",
+        "TCS STED 3X"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2014,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "modules": [
+          "STED"
+        ]
+      },
+      "techniques": [
+        "STED",
+        "3D STED",
+        "Confocal"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        514,
+        561,
+        594,
+        633
+      ],
+      "laser_details": {
+        "STED_592": "592 nm CW depletion",
+        "STED_660": "660 nm pulsed depletion",
+        "STED_775": "775 nm pulsed depletion"
+      },
+      "detectors": [
+        "HyD"
+      ],
+      "discontinued": true,
+      "successor": "STELLARIS 8 STED",
+      "notes": "Triple depletion laser STED. Replaced by TauSTED on STELLARIS platform."
+    },
+    {
+      "brand": "Leica",
+      "model": "DMi8",
+      "aliases": [
+        "DMi8",
+        "Leica DMi8",
+        "DMi8 S",
+        "DMi8 CS"
+      ],
+      "category": "widefield",
+      "year_introduced": 2014,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "analysis": [
+          "LAS X"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "TIRF"
+      ],
+      "microscope_type": "inverted",
+      "discontinued": false,
+      "notes": "Motorized inverted stand. Base for STELLARIS, SP8, THUNDER, STED systems. Premium version (CS) for confocal."
+    },
+    {
+      "brand": "Leica",
+      "model": "DM6",
+      "aliases": [
+        "DM6",
+        "Leica DM6",
+        "DM6 B",
+        "DM6 FS",
+        "DM6 CFS",
+        "DM6 M"
+      ],
+      "category": "widefield",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "analysis": [
+          "LAS X"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "Darkfield",
+        "Polarization"
+      ],
+      "microscope_type": "upright",
+      "discontinued": false,
+      "notes": "Upright research microscope. FS/CFS variants for electrophysiology (fixed stage). Base for upright confocal/multiphoton."
+    },
+    {
+      "brand": "Leica",
+      "model": "THUNDER",
+      "aliases": [
+        "THUNDER",
+        "Leica THUNDER",
+        "THUNDER Imager"
+      ],
+      "category": "widefield",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "modules": [
+          "Instant Computational Clearing (ICC)"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Computational Clearing",
+        "3D Deconvolution",
+        "Live Cell Imaging"
+      ],
+      "detectors": [
+        "sCMOS (various)"
+      ],
+      "microscope_stands": [
+        "DMi8"
+      ],
+      "discontinued": false,
+      "notes": "Widefield with Instant Computational Clearing (ICC) for haze-free images. Multiple variants: Live Cell, 3D Cell Culture, Tissue, Model Organism."
+    },
+    {
+      "brand": "Leica",
+      "model": "Mica",
+      "aliases": [
+        "Mica",
+        "Leica Mica",
+        "MICA"
+      ],
+      "category": "widefield",
+      "year_introduced": 2022,
+      "software": {
+        "acquisition": [
+          "LAS X"
+        ],
+        "analysis": [
+          "LAS X",
+          "Aivia"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Confocal",
+        "THUNDER ICC",
+        "Multi-well Plate Imaging",
+        "Automated Imaging"
+      ],
+      "features": [
+        "Microhub concept",
+        "Automated objectives",
+        "Incubation",
+        "Widefield + confocal in one box"
+      ],
+      "discontinued": false,
+      "notes": "Automated imaging platform combining widefield and confocal. AI-assisted. Multi-user walk-away system."
+    },
+    {
+      "brand": "Leica",
+      "model": "Aperio",
+      "aliases": [
+        "Aperio",
+        "Leica Aperio",
+        "Aperio GT 450",
+        "Aperio AT2",
+        "Aperio CS2",
+        "Aperio VERSA",
+        "Aperio LV1"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2005,
+      "software": {
+        "acquisition": [
+          "Aperio ImageScope"
+        ],
+        "analysis": [
+          "Aperio ImageScope",
+          "Aperio eSlide Manager",
+          "HALO",
+          "QuPath"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Slide Scanning",
+        "Digital Pathology"
+      ],
+      "models": {
+        "GT 450": "High-throughput brightfield (450 slides/hr)",
+        "AT2": "Brightfield slide scanner",
+        "CS2": "Research slide scanner",
+        "VERSA": "Brightfield + fluorescence + FISH",
+        "LV1": "IVD real-time scanner"
+      },
+      "discontinued": false,
+      "notes": "Industry-standard pathology slide scanners. Multiple models for research and clinical use."
+    },
+    {
+      "brand": "Nikon",
+      "model": "AX R",
+      "aliases": [
+        "AXR",
+        "AX R",
+        "Nikon AXR",
+        "Nikon AX R",
+        "AX R with NSPARC",
+        "AXR NSPARC",
+        "AX/AX R"
+      ],
+      "category": "confocal",
+      "year_introduced": 2021,
+      "software": {
+        "acquisition": [
+          "NIS-Elements",
+          "NIS-Elements AR",
+          "NIS-Elements C"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ],
+        "ai_features": [
+          "AI denoising",
+          "AI acquisition assistance"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Resonant Scanning",
+        "Galvano Scanning",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging",
+        "Photostimulation",
+        "TIRF (via Ti2)",
+        "Multiphoton (AX R MP)"
+      ],
+      "laser_lines_nm": [
+        405,
+        408,
+        445,
+        488,
+        514,
+        515,
+        561,
+        594,
+        640,
+        750
+      ],
+      "laser_details": {
+        "standard_4_line": "408, 488, 561, 640 nm",
+        "extended_8_line": "408, 445, 488, 515, 561, 594, 640, 750 nm",
+        "notes": "Exact laser config varies. Up to 8 laser lines."
+      },
+      "detectors": [
+        "DUX-VB",
+        "DUX-ST",
+        "GaAsP-PMT",
+        "Multi-alkali PMT",
+        "NSPARC"
+      ],
+      "detector_details": {
+        "DUX-VB": "Variable bandwidth spectral detector, freely tunable emission bands, up to 66 emission channels for hyperspectral",
+        "DUX-ST": "Standard detector with up to 12/18 discrete bandpasses",
+        "NSPARC": "25-element APD array detector for image scanning microscopy (ISM). Single photon sensitivity. Improves SNR and resolution beyond diffraction limit. Added 2023.",
+        "GaAsP_PMT": "High sensitivity GaAsP photomultiplier"
+      },
+      "resolution": {
+        "confocal_galvano": "Up to 8192x8192 pixels",
+        "confocal_resonant": "Up to 2048x2048 pixels, up to 800 fps (small FOV)",
+        "NSPARC_lateral": "~120 nm (beyond diffraction limit via ISM)",
+        "FOV": "25mm field of view (largest in class)"
+      },
+      "objectives_compatible": [
+        "CFI Plan Apochromat Lambda S",
+        "CFI Plan Apochromat Lambda D",
+        "CFI75 Apochromat LWD",
+        "CFI SR Plan Apo IR"
+      ],
+      "microscope_stands": [
+        "ECLIPSE Ti2-E",
+        "ECLIPSE FN1",
+        "ECLIPSE Ni-E"
+      ],
+      "features": [
+        "Perfect Focus System (PFS)",
+        "AI denoising",
+        "AI acquisition"
+      ],
+      "discontinued": false,
+      "predecessor": "A1R HD25",
+      "notes": "10th generation Nikon confocal. 25mm FOV (industry-leading). DUX-VB variable bandwidth detector. NSPARC option for super-resolution confocal via ISM. AI-assisted acquisition."
+    },
+    {
+      "brand": "Nikon",
+      "model": "AX",
+      "aliases": [
+        "AX",
+        "Nikon AX",
+        "Nikon AX confocal"
+      ],
+      "category": "confocal",
+      "year_introduced": 2021,
+      "software": {
+        "acquisition": [
+          "NIS-Elements",
+          "NIS-Elements C"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ],
+        "ai_features": [
+          "AI denoising"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Galvano Scanning",
+        "FRAP",
+        "Spectral Imaging",
+        "Lambda Scanning"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "DUX-VB",
+        "DUX-ST",
+        "GaAsP-PMT",
+        "NSPARC"
+      ],
+      "detector_details": {
+        "lambda_scan": "400-750nm in steps of 5/10/20/40nm",
+        "NSPARC": "Optional 25-element array detector (added Feb 2024)"
+      },
+      "microscope_stands": [
+        "ECLIPSE Ti2-E"
+      ],
+      "discontinued": false,
+      "notes": "Galvano-only variant of AX R (no resonant scanner). Same large FOV and detector options."
+    },
+    {
+      "brand": "Nikon",
+      "model": "AX R MP",
+      "aliases": [
+        "AX R MP",
+        "AXR MP",
+        "Nikon AX R MP",
+        "Nikon multiphoton"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2022,
+      "software": {
+        "acquisition": [
+          "NIS-Elements",
+          "NIS-Elements AR"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Multiphoton",
+        "Two-Photon",
+        "Confocal",
+        "Deep Tissue Imaging",
+        "Second Harmonic Generation",
+        "Third Harmonic Generation"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "laser_details": {
+        "visible": "Standard visible laser unit for confocal mode",
+        "multiphoton": "Compatible with tunable Ti:Sapphire lasers (Coherent, Spectra-Physics)",
+        "NSPARC": "Also compatible with NSPARC for confocal super-resolution mode"
+      },
+      "detectors": [
+        "NDD (non-descanned)",
+        "GaAsP-PMT",
+        "DUX-VB",
+        "NSPARC"
+      ],
+      "resolution": {
+        "resonant": "2K resonant scanner, FN22",
+        "galvano": "8192x8192 pixels"
+      },
+      "microscope_stands": [
+        "ECLIPSE FN1 (upright)",
+        "AX-FN (upright)",
+        "ECLIPSE Ti2-E (inverted)"
+      ],
+      "discontinued": false,
+      "notes": "Multiphoton variant with 2K resonant scanner and confocal capability. Up to 40cm under objective. NSPARC compatible."
+    },
+    {
+      "brand": "Nikon",
+      "model": "A1R HD25",
+      "aliases": [
+        "A1R HD25",
+        "Nikon A1R HD25",
+        "A1R",
+        "Nikon A1R",
+        "A1 R",
+        "A1R HD",
+        "A1R+",
+        "A1R si"
+      ],
+      "category": "confocal",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "NIS-Elements",
+          "NIS-Elements C"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Resonant Scanning",
+        "Galvano Scanning",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        640
+      ],
+      "detectors": [
+        "GaAsP-PMT (4 channels)",
+        "Spectral detector (32 ch)"
+      ],
+      "microscope_stands": [
+        "ECLIPSE Ti2",
+        "ECLIPSE Ti"
+      ],
+      "discontinued": true,
+      "successor": "AX R",
+      "predecessor": "A1R",
+      "notes": "25mm FOV variant of A1R. Resonant + galvano dual scanner. Widely installed."
+    },
+    {
+      "brand": "Nikon",
+      "model": "A1",
+      "aliases": [
+        "A1",
+        "Nikon A1",
+        "A1 confocal",
+        "A1 si"
+      ],
+      "category": "confocal",
+      "year_introduced": 2010,
+      "software": {
+        "acquisition": [
+          "NIS-Elements C"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FRAP",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "GaAsP-PMT",
+        "MA-PMT"
+      ],
+      "microscope_stands": [
+        "ECLIPSE Ti",
+        "ECLIPSE Ti2"
+      ],
+      "discontinued": true,
+      "successor": "AX",
+      "notes": "Galvano-only confocal. si variant added spectral detector. Large install base."
+    },
+    {
+      "brand": "Nikon",
+      "model": "C2+",
+      "aliases": [
+        "C2+",
+        "C2 Plus",
+        "Nikon C2+",
+        "Nikon C2",
+        "C2"
+      ],
+      "category": "confocal",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "NIS-Elements C"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "FRAP"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "MA-PMT (3 channels + 1 transmitted)"
+      ],
+      "microscope_stands": [
+        "ECLIPSE Ti2",
+        "ECLIPSE Ti",
+        "ECLIPSE Ni",
+        "ECLIPSE Ci"
+      ],
+      "discontinued": false,
+      "notes": "Entry-level confocal. Compact scan head. Budget-friendly."
+    },
+    {
+      "brand": "Nikon",
+      "model": "N-SIM S",
+      "aliases": [
+        "N-SIM S",
+        "NSIM S",
+        "Nikon N-SIM S",
+        "N-SIM",
+        "NSIM",
+        "N-SIM E"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "NIS-Elements AR"
+        ],
+        "analysis": [
+          "NIS-Elements AR"
+        ]
+      },
+      "techniques": [
+        "SIM",
+        "Structured Illumination Microscopy",
+        "3D-SIM",
+        "2D-SIM",
+        "TIRF-SIM",
+        "Widefield"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "sCMOS (Hamamatsu ORCA)"
+      ],
+      "resolution": {
+        "SIM_lateral": "~115 nm",
+        "SIM_axial": "~250 nm"
+      },
+      "microscope_stands": [
+        "ECLIPSE Ti2"
+      ],
+      "discontinued": false,
+      "predecessor": "N-SIM",
+      "notes": "Structured illumination with fast acquisition. S variant adds speed improvements."
+    },
+    {
+      "brand": "Nikon",
+      "model": "N-STORM",
+      "aliases": [
+        "N-STORM",
+        "NSTORM",
+        "Nikon N-STORM",
+        "N-STORM 5.0",
+        "N-STORM 4.0"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "NIS-Elements AR"
+        ],
+        "analysis": [
+          "NIS-Elements AR"
+        ]
+      },
+      "techniques": [
+        "STORM",
+        "dSTORM",
+        "PALM",
+        "Single Molecule Localization",
+        "TIRF",
+        "3D STORM"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        647
+      ],
+      "laser_details": {
+        "notes": "High-power lasers required for photoswitching"
+      },
+      "detectors": [
+        "EMCCD (Andor iXon)",
+        "sCMOS"
+      ],
+      "resolution": {
+        "STORM_lateral": "~20 nm",
+        "STORM_axial": "~50 nm (3D)"
+      },
+      "microscope_stands": [
+        "ECLIPSE Ti2",
+        "ECLIPSE Ti"
+      ],
+      "discontinued": false,
+      "notes": "Single-molecule localization microscopy. Highest resolution of light microscopy systems (~20nm)."
+    },
+    {
+      "brand": "Nikon",
+      "model": "ECLIPSE Ti2",
+      "aliases": [
+        "Ti2",
+        "Ti2-E",
+        "Ti2-A",
+        "Ti2-U",
+        "Nikon Ti2",
+        "Eclipse Ti2",
+        "ECLIPSE Ti2-E",
+        "ECLIPSE Ti2"
+      ],
+      "category": "widefield",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "NIS-Elements"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "TIRF",
+        "Spinning Disk Confocal"
+      ],
+      "features": [
+        "Perfect Focus System (PFS)",
+        "25mm FOV",
+        "Intelligent automation",
+        "Status monitor",
+        "Up to 5 episcopic ports"
+      ],
+      "microscope_type": "inverted",
+      "discontinued": false,
+      "predecessor": "ECLIPSE Ti",
+      "notes": "Flagship inverted research microscope. 25mm FOV. Base for AX/AXR confocal, N-SIM, N-STORM, spinning disk. E=motorized, A=semi-motorized, U=manual."
+    },
+    {
+      "brand": "Nikon",
+      "model": "ECLIPSE Ti",
+      "aliases": [
+        "Ti",
+        "Ti-E",
+        "Ti-U",
+        "Ti-S",
+        "Nikon Ti",
+        "Eclipse Ti",
+        "ECLIPSE Ti-E"
+      ],
+      "category": "widefield",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "NIS-Elements"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "TIRF"
+      ],
+      "features": [
+        "Perfect Focus System (PFS)"
+      ],
+      "microscope_type": "inverted",
+      "discontinued": true,
+      "successor": "ECLIPSE Ti2",
+      "notes": "Previous-gen inverted stand. Very widely installed. Base for A1/A1R and older systems."
+    },
+    {
+      "brand": "Nikon",
+      "model": "ECLIPSE Ni",
+      "aliases": [
+        "Ni",
+        "Ni-E",
+        "Ni-U",
+        "Nikon Ni",
+        "Eclipse Ni",
+        "ECLIPSE Ni-E"
+      ],
+      "category": "widefield",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "NIS-Elements"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "Darkfield",
+        "Polarization"
+      ],
+      "microscope_type": "upright",
+      "discontinued": false,
+      "notes": "Motorized upright research microscope. For histology, pathology, materials science."
+    },
+    {
+      "brand": "Nikon",
+      "model": "ECLIPSE FN1",
+      "aliases": [
+        "FN1",
+        "Nikon FN1",
+        "Eclipse FN1",
+        "ECLIPSE FN1"
+      ],
+      "category": "widefield",
+      "year_introduced": 2010,
+      "software": {
+        "acquisition": [
+          "NIS-Elements"
+        ],
+        "analysis": [
+          "NIS-Elements"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "DIC",
+        "Brightfield",
+        "Electrophysiology",
+        "Multiphoton"
+      ],
+      "microscope_type": "fixed_stage_upright",
+      "discontinued": false,
+      "notes": "Fixed-stage upright for electrophysiology and in vivo imaging. Base for AX R MP multiphoton."
+    },
+    {
+      "brand": "Evident",
+      "model": "FV4000",
+      "aliases": [
+        "FV4000",
+        "FLUOVIEW FV4000",
+        "Evident FV4000",
+        "Olympus FV4000",
+        "FluoView FV4000"
+      ],
+      "category": "confocal",
+      "year_introduced": 2023,
+      "software": {
+        "acquisition": [
+          "FluoView (FV40)",
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens",
+          "FluoView"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Spectral Imaging",
+        "FRAP",
+        "FRET",
+        "Multiplex (up to 6 channels parallel)"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        640,
+        685,
+        730,
+        785
+      ],
+      "laser_details": {
+        "notes": "Up to 10 simultaneous laser lines. Industry-leading spectral range 400-900nm detection."
+      },
+      "detectors": [
+        "SilVIR",
+        "TruSpectral"
+      ],
+      "detector_details": {
+        "SilVIR": "Patented silicon-based detector technology. High sensitivity, quantitative, low noise.",
+        "TruSpectral": "Spectral detection 400-900 nm (broadest in class)",
+        "channels": "Up to 6 channels in parallel"
+      },
+      "objectives_compatible": [
+        "X Line",
+        "UPLXAPO",
+        "UPLSAPO",
+        "A Line"
+      ],
+      "microscope_stands": [
+        "IX83"
+      ],
+      "discontinued": false,
+      "predecessor": "FV3000",
+      "notes": "Evident's flagship confocal. SilVIR detectors. 400-900nm spectral range (broadest). Up to 10 laser lines. Modular design."
+    },
+    {
+      "brand": "Evident",
+      "model": "FV3000",
+      "aliases": [
+        "FV3000",
+        "FLUOVIEW FV3000",
+        "Olympus FV3000",
+        "Evident FV3000",
+        "FV3000RS",
+        "FV3000 RS"
+      ],
+      "category": "confocal",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "FluoView (FV31S)"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Resonant Scanning",
+        "Galvano Scanning",
+        "FRAP",
+        "FRET",
+        "Spectral Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        640
+      ],
+      "detectors": [
+        "GaAsP-PMT",
+        "SilVIR (on later models)",
+        "TruSpectral"
+      ],
+      "detector_details": {
+        "GaAsP": "High-sensitivity GaAsP PMT detectors",
+        "TruSpectral": "Spectral detector",
+        "RS_variant": "FV3000RS adds resonant scanner for high-speed imaging"
+      },
+      "microscope_stands": [
+        "IX83",
+        "BX63"
+      ],
+      "discontinued": false,
+      "successor": "FV4000",
+      "predecessor": "FV1200",
+      "notes": "Widely installed confocal. RS variant has resonant scanner. TruSpectral detector."
+    },
+    {
+      "brand": "Olympus",
+      "model": "FV1200",
+      "aliases": [
+        "FV1200",
+        "FLUOVIEW FV1200",
+        "Olympus FV1200",
+        "FluoView FV1200"
+      ],
+      "category": "confocal",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "FluoView (FV10-ASW)"
+        ],
+        "analysis": [
+          "FluoView"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Multiphoton",
+        "SIM Scanner",
+        "FRAP",
+        "FRET"
+      ],
+      "laser_lines_nm": [
+        405,
+        440,
+        458,
+        488,
+        515,
+        543,
+        559,
+        635
+      ],
+      "detectors": [
+        "GaAsP-PMT",
+        "MA-PMT"
+      ],
+      "microscope_stands": [
+        "IX83",
+        "BX63"
+      ],
+      "discontinued": true,
+      "successor": "FV3000",
+      "predecessor": "FV1000",
+      "notes": "SIM scanner for simultaneous stimulation and imaging."
+    },
+    {
+      "brand": "Olympus",
+      "model": "FV1000",
+      "aliases": [
+        "FV1000",
+        "FLUOVIEW FV1000",
+        "Olympus FV1000",
+        "FluoView FV1000",
+        "FV1000 MPE"
+      ],
+      "category": "confocal",
+      "year_introduced": 2004,
+      "software": {
+        "acquisition": [
+          "FluoView (FV10-ASW)"
+        ],
+        "analysis": [
+          "FluoView"
+        ]
+      },
+      "techniques": [
+        "Confocal",
+        "Spectral Imaging",
+        "FRAP",
+        "Multiphoton"
+      ],
+      "laser_lines_nm": [
+        405,
+        440,
+        458,
+        488,
+        515,
+        543,
+        559,
+        635
+      ],
+      "detectors": [
+        "MA-PMT",
+        "Spectral detector"
+      ],
+      "microscope_stands": [
+        "IX81",
+        "BX61"
+      ],
+      "discontinued": true,
+      "successor": "FV1200",
+      "notes": "Widely used legacy confocal. Very common in publications 2004-2015."
+    },
+    {
+      "brand": "Evident",
+      "model": "IXplore IX85 SpinSR",
+      "aliases": [
+        "IX85 SpinSR",
+        "IXplore SpinSR",
+        "Evident SpinSR",
+        "Olympus SpinSR",
+        "SpinSR",
+        "IXplore IX85 SpinSR"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2024,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ],
+        "modules": [
+          "TruSight SR"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Super-Resolution (SoRa)",
+        "Widefield",
+        "Live Cell Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "sCMOS (Hamamatsu ORCA)"
+      ],
+      "detector_details": {
+        "spinning_disk": "Yokogawa CSU-W1 with SoRa disk",
+        "cameras": "Dual camera capable"
+      },
+      "resolution": {
+        "SpinSR_lateral": "~120 nm XY (with TruSight SR)",
+        "speed": "Up to 200 fps full frame"
+      },
+      "objectives_compatible": [
+        "UPLSAPO",
+        "UPLXAPO",
+        "X Line",
+        "A Line",
+        "LUPLAPO25XS (silicone gel pad)"
+      ],
+      "microscope_stands": [
+        "IX85"
+      ],
+      "discontinued": false,
+      "notes": "Super-resolution spinning disk on new IX85 platform. Yokogawa CSU-W1 with SoRa. TruSight SR algorithm enhances to 120nm. 2024 launch."
+    },
+    {
+      "brand": "Evident",
+      "model": "IXplore IX85 SpinXL",
+      "aliases": [
+        "IX85 SpinXL",
+        "IXplore SpinXL",
+        "SpinXL"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2024,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield",
+        "Live Cell Imaging"
+      ],
+      "detector_details": {
+        "spinning_disk": "CrestOptics X-Light spinning disk",
+        "FOV": "26.5mm field number (largest spinning disk)",
+        "cameras": "Dual camera capable",
+        "speed": "Up to 498 fps full frame"
+      },
+      "microscope_stands": [
+        "IX85"
+      ],
+      "discontinued": false,
+      "notes": "Large-FOV spinning disk (26.5mm FN). CrestOptics X-Light technology. 2024 launch."
+    },
+    {
+      "brand": "Evident",
+      "model": "IXplore SpinSR (IX83)",
+      "aliases": [
+        "IXplore SpinSR",
+        "IX83 SpinSR",
+        "Olympus SpinSR10"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Super-Resolution (SoRa)",
+        "TIRF"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "detector_details": {
+        "spinning_disk": "Yokogawa CSU-W1 with SoRa disk",
+        "magnification_changer": "SD-MGCA motorized magnification changer"
+      },
+      "microscope_stands": [
+        "IX83"
+      ],
+      "discontinued": true,
+      "successor": "IXplore IX85 SpinSR",
+      "notes": "Previous-gen SpinSR on IX83 platform. SoRa super-resolution spinning disk."
+    },
+    {
+      "brand": "Evident",
+      "model": "IX85",
+      "aliases": [
+        "IX85",
+        "Evident IX85",
+        "IXplore IX85",
+        "Olympus IX85"
+      ],
+      "category": "widefield",
+      "year_introduced": 2024,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield"
+      ],
+      "microscope_type": "inverted",
+      "features": [
+        "TruFocus (Z-drift compensation)",
+        "Motorized",
+        "Automation"
+      ],
+      "discontinued": false,
+      "predecessor": "IX83",
+      "notes": "New automated inverted platform (2024). Base for SpinSR, SpinXL, IXplore systems."
+    },
+    {
+      "brand": "Olympus",
+      "model": "IX83",
+      "aliases": [
+        "IX83",
+        "Olympus IX83",
+        "Evident IX83",
+        "IX83P2ZF"
+      ],
+      "category": "widefield",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "cellSens",
+          "FluoView"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield"
+      ],
+      "microscope_type": "inverted",
+      "features": [
+        "TruFocus"
+      ],
+      "discontinued": false,
+      "successor": "IX85",
+      "notes": "Workhorse inverted microscope. Base for FV3000/FV4000, SpinSR, IXplore systems."
+    },
+    {
+      "brand": "Olympus",
+      "model": "IX73",
+      "aliases": [
+        "IX73",
+        "Olympus IX73",
+        "Evident IX73"
+      ],
+      "category": "widefield",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield"
+      ],
+      "microscope_type": "inverted",
+      "discontinued": false,
+      "notes": "Semi-motorized inverted microscope."
+    },
+    {
+      "brand": "Olympus",
+      "model": "BX63",
+      "aliases": [
+        "BX63",
+        "Olympus BX63",
+        "Evident BX63"
+      ],
+      "category": "widefield",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield",
+        "Darkfield",
+        "Polarization"
+      ],
+      "microscope_type": "upright",
+      "discontinued": false,
+      "notes": "Motorized upright. For histology, pathology, and upright confocal base."
+    },
+    {
+      "brand": "Olympus",
+      "model": "BX53",
+      "aliases": [
+        "BX53",
+        "Olympus BX53",
+        "Evident BX53"
+      ],
+      "category": "widefield",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "cellSens"
+        ],
+        "analysis": [
+          "cellSens"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "DIC",
+        "Brightfield"
+      ],
+      "microscope_type": "upright",
+      "discontinued": false,
+      "notes": "Clinical/research upright microscope. Manual with coded components."
+    },
+    {
+      "brand": "Evident",
+      "model": "VS200",
+      "aliases": [
+        "VS200",
+        "Olympus VS200",
+        "Evident VS200",
+        "SLIDEVIEW VS200"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "OlyVIA",
+          "cellSens"
+        ],
+        "analysis": [
+          "OlyVIA",
+          "HALO",
+          "QuPath"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Slide Scanning",
+        "Darkfield"
+      ],
+      "discontinued": false,
+      "predecessor": "VS120",
+      "notes": "Research slide scanner. Up to 210 slides. Brightfield and fluorescence."
+    },
+    {
+      "brand": "Olympus",
+      "model": "VS120",
+      "aliases": [
+        "VS120",
+        "Olympus VS120",
+        "SLIDEVIEW VS120"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "OlyVIA"
+        ],
+        "analysis": [
+          "OlyVIA"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Slide Scanning"
+      ],
+      "discontinued": true,
+      "successor": "VS200",
+      "notes": "Legacy slide scanner. Still referenced in many papers."
+    },
+    {
+      "brand": "Yokogawa",
+      "model": "CSU-W1",
+      "aliases": [
+        "CSU-W1",
+        "CSUW1",
+        "Yokogawa CSU-W1",
+        "Yokogawa W1",
+        "CSU-W1 SoRa",
+        "W1 SoRa"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "Varies by integrator: NIS-Elements, cellSens, SlideBook, MetaMorph, \u00b5Manager, Fusion"
+        ],
+        "analysis": [
+          "Varies"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "SoRa Super-Resolution",
+        "Widefield",
+        "Live Cell Imaging"
+      ],
+      "laser_lines_nm": [],
+      "laser_details": {
+        "notes": "Laser configuration depends on integrator system"
+      },
+      "detectors": [
+        "External cameras (sCMOS/EMCCD)"
+      ],
+      "detector_details": {
+        "pinhole_disks": [
+          "50 \u00b5m pinhole disk",
+          "25 \u00b5m pinhole disk",
+          "SoRa microlens-enhanced disk"
+        ],
+        "SoRa": "Super-resolution by optical reassignment. ~120nm resolution with deconvolution. Uses microlens disk with magnification changer.",
+        "dual_camera": "Dual-camera port standard"
+      },
+      "resolution": {
+        "confocal_50um": "Standard confocal resolution",
+        "confocal_25um": "Improved sectioning",
+        "SoRa": "~120 nm lateral with deconvolution"
+      },
+      "integrated_by": [
+        "Nikon",
+        "Olympus/Evident",
+        "Zeiss",
+        "Leica",
+        "3i",
+        "Andor"
+      ],
+      "discontinued": false,
+      "predecessor": "CSU-X1",
+      "notes": "Dual spinning disk unit (OEM). Integrated by many microscope manufacturers. SoRa variant adds super-resolution. Widefield mode available."
+    },
+    {
+      "brand": "Yokogawa",
+      "model": "CSU-X1",
+      "aliases": [
+        "CSU-X1",
+        "CSUX1",
+        "Yokogawa CSU-X1",
+        "Yokogawa X1"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "Varies by integrator"
+        ],
+        "analysis": [
+          "Varies"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Live Cell Imaging"
+      ],
+      "detectors": [
+        "External cameras"
+      ],
+      "detector_details": {
+        "pinhole_disk": "50 \u00b5m pinhole disk",
+        "speed": "Up to 10,000 rpm (1500-2000 fps theoretical)"
+      },
+      "integrated_by": [
+        "Nikon",
+        "Olympus",
+        "Zeiss",
+        "Leica",
+        "3i",
+        "Andor",
+        "PerkinElmer"
+      ],
+      "discontinued": true,
+      "successor": "CSU-W1",
+      "predecessor": "CSU-22",
+      "notes": "Previous-gen spinning disk. Very widely installed. Microlens-enhanced Nipkow disk."
+    },
+    {
+      "brand": "Yokogawa",
+      "model": "CSU-W1 SoRa",
+      "aliases": [
+        "CSU-W1 SoRa",
+        "SoRa",
+        "Yokogawa SoRa",
+        "W1 SoRa"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "Varies"
+        ],
+        "analysis": [
+          "Varies"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Super-Resolution",
+        "Optical Reassignment",
+        "Live Cell Imaging"
+      ],
+      "resolution": {
+        "SoRa_lateral": "~120 nm with deconvolution"
+      },
+      "discontinued": false,
+      "notes": "Super-resolution via optical photon reassignment (SoRa). Uses dedicated microlens disk and magnification changer."
+    },
+    {
+      "brand": "Yokogawa",
+      "model": "CQ1",
+      "aliases": [
+        "CQ1",
+        "CellVoyager CQ1",
+        "Yokogawa CQ1"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "CellPathfinder"
+        ],
+        "analysis": [
+          "CellPathfinder"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield",
+        "High-Content Screening",
+        "3D Cell Culture Imaging"
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "discontinued": false,
+      "notes": "Compact benchtop confocal imaging cytometer. CSU unit inside."
+    },
+    {
+      "brand": "Yokogawa",
+      "model": "CV8000",
+      "aliases": [
+        "CV8000",
+        "CellVoyager CV8000",
+        "Yokogawa CV8000",
+        "CV7000"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "CellPathfinder"
+        ],
+        "analysis": [
+          "CellPathfinder"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "High-Content Screening",
+        "High-Throughput Imaging",
+        "3D Cell Culture"
+      ],
+      "detectors": [
+        "sCMOS (dual cameras)"
+      ],
+      "detector_details": {
+        "spinning_disk": "Dual CSU-W1 spinning disk units"
+      },
+      "discontinued": false,
+      "notes": "High-throughput screening platform. Dual spinning disk. Automated plate handling."
+    },
+    {
+      "brand": "Andor",
+      "model": "Dragonfly 600",
+      "aliases": [
+        "Dragonfly 600",
+        "Dragonfly600",
+        "Andor Dragonfly 600",
+        "Dragonfly",
+        "Andor Dragonfly"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "Fusion"
+        ],
+        "analysis": [
+          "Fusion",
+          "Imaris"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "TIRF",
+        "Widefield Epifluorescence",
+        "Super-Resolution",
+        "Live Cell Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        637,
+        685,
+        730,
+        785
+      ],
+      "laser_details": {
+        "notes": "Up to 10 laser lines via High Power Laser Engine (HLE)",
+        "Borealis": "Borealis uniform illumination technology"
+      },
+      "detectors": [
+        "sCMOS (Andor Zyla, Sona)",
+        "EMCCD (Andor iXon)"
+      ],
+      "detector_details": {
+        "pinhole_disks": [
+          "40 \u00b5m",
+          "25 \u00b5m"
+        ],
+        "dual_camera": "Dual camera port for simultaneous two-color",
+        "TIRF": "Separate TIRF lightpath",
+        "spinning_disk": "Andor dual spinning disk with Borealis illumination"
+      },
+      "microscope_stands": [
+        "Nikon Ti2",
+        "Nikon Ti",
+        "Leica DMi8",
+        "Olympus IX83",
+        "Zeiss Axio Observer"
+      ],
+      "discontinued": false,
+      "notes": "Top-end Dragonfly. Up to 10 lasers. Borealis illumination. Multi-modal: confocal + TIRF + widefield + super-resolution. Compatible with multiple microscope brands."
+    },
+    {
+      "brand": "Andor",
+      "model": "Dragonfly 400",
+      "aliases": [
+        "Dragonfly 400",
+        "Dragonfly400",
+        "Andor Dragonfly 400"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "Fusion"
+        ],
+        "analysis": [
+          "Fusion",
+          "Imaris"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "TIRF",
+        "Widefield"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        637
+      ],
+      "detectors": [
+        "sCMOS",
+        "EMCCD"
+      ],
+      "microscope_stands": [
+        "Nikon Ti2",
+        "Leica DMi8",
+        "Olympus IX83"
+      ],
+      "discontinued": false,
+      "notes": "Mid-range Dragonfly. 4-6 laser lines standard."
+    },
+    {
+      "brand": "Andor",
+      "model": "Dragonfly 200",
+      "aliases": [
+        "Dragonfly 200",
+        "Dragonfly200",
+        "Andor Dragonfly 200"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "Fusion"
+        ],
+        "analysis": [
+          "Fusion",
+          "Imaris"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        637
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "discontinued": false,
+      "notes": "Entry-level Dragonfly."
+    },
+    {
+      "brand": "Andor",
+      "model": "Dragonfly 505",
+      "aliases": [
+        "Dragonfly 505",
+        "Dragonfly505"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "Fusion"
+        ],
+        "analysis": [
+          "Fusion",
+          "Imaris"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "TIRF",
+        "Widefield"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        514,
+        561,
+        640
+      ],
+      "laser_details": {
+        "dichroics": {
+          "BGR": "405/488/561/640 nm",
+          "CY": "405/445/514/640 nm"
+        }
+      },
+      "detectors": [
+        "sCMOS",
+        "EMCCD"
+      ],
+      "discontinued": true,
+      "successor": "Dragonfly 600",
+      "notes": "Previous generation. Dual motorized dichroic sets (BGR and CY)."
+    },
+    {
+      "brand": "Andor",
+      "model": "BC43",
+      "aliases": [
+        "BC43",
+        "Andor BC43",
+        "BC43 CF",
+        "BC43 SR",
+        "BC43 WF"
+      ],
+      "category": "spinning_disk",
+      "year_introduced": 2022,
+      "software": {
+        "acquisition": [
+          "Fusion"
+        ],
+        "analysis": [
+          "Fusion",
+          "Imaris (ClearView deconvolution)"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield Epifluorescence",
+        "Brightfield",
+        "Differential Phase Contrast"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        638
+      ],
+      "detectors": [
+        "sCMOS (2048x2000, 4.1 MP, 6.5\u00b5m pixel, 82% QE)"
+      ],
+      "detector_details": {
+        "transmitted_light": "Broad spectrum visible light LED",
+        "FOV_diagonal": "18.4 mm"
+      },
+      "features": [
+        "Incubation (temperature + CO2)",
+        "Multi-position",
+        "Multi-well",
+        "Montage/stitching",
+        "Borealis illumination"
+      ],
+      "variants": {
+        "BC43 CF": "Confocal only",
+        "BC43 SR": "Confocal + super-resolution",
+        "BC43 WF": "Widefield only"
+      },
+      "microscope_type": "benchtop (box microscope)",
+      "discontinued": false,
+      "notes": "Compact benchtop spinning disk based on Dragonfly technology. Push-button imaging. Fusion software + Imaris ClearView deconvolution. .ims file format."
+    },
+    {
+      "brand": "3i",
+      "model": "Marianas",
+      "aliases": [
+        "Marianas",
+        "3i Marianas",
+        "Intelligent Imaging Marianas"
+      ],
+      "category": "widefield",
+      "year_introduced": 2010,
+      "software": {
+        "acquisition": [
+          "SlideBook"
+        ],
+        "analysis": [
+          "SlideBook"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Spinning Disk Confocal",
+        "TIRF",
+        "Photomanipulation",
+        "FRAP",
+        "Live Cell Imaging"
+      ],
+      "detectors": [
+        "sCMOS",
+        "EMCCD"
+      ],
+      "detector_details": {
+        "spinning_disk": "Yokogawa CSU-W1 or CSU-X1 (optional)",
+        "TIRF": "Vector TIRF module"
+      },
+      "microscope_stands": [
+        "Nikon Ti2",
+        "Nikon Ti",
+        "Zeiss Axio Observer"
+      ],
+      "discontinued": false,
+      "notes": "Modular imaging platform. SlideBook software for all 3i systems. Often paired with CSU spinning disk."
+    },
+    {
+      "brand": "3i",
+      "model": "Lattice LightSheet",
+      "aliases": [
+        "3i Lattice LightSheet",
+        "3i LLS",
+        "Intelligent Imaging LLS"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "SlideBook"
+        ],
+        "analysis": [
+          "SlideBook"
+        ]
+      },
+      "techniques": [
+        "Lattice Light Sheet",
+        "TIRF",
+        "Light Sheet Microscopy"
+      ],
+      "detectors": [
+        "sCMOS (Hamamatsu ORCA)"
+      ],
+      "discontinued": false,
+      "notes": "Licensed from Janelia/HHMI. Lattice light sheet with 3i integration."
+    },
+    {
+      "brand": "3i",
+      "model": "VIVO",
+      "aliases": [
+        "VIVO",
+        "3i VIVO",
+        "VIVO multiphoton"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "SlideBook"
+        ],
+        "analysis": [
+          "SlideBook"
+        ]
+      },
+      "techniques": [
+        "Multiphoton",
+        "Two-Photon",
+        "In Vivo Imaging"
+      ],
+      "discontinued": false,
+      "notes": "Multiphoton imaging platform with SlideBook."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Titan Krios",
+      "aliases": [
+        "Titan Krios",
+        "Krios",
+        "FEI Titan Krios",
+        "Thermo Fisher Krios",
+        "Krios G4",
+        "Titan Krios G3i",
+        "Titan Krios G4"
+      ],
+      "category": "electron",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "EPU",
+          "SerialEM",
+          "Leginon"
+        ],
+        "analysis": [
+          "cryoSPARC",
+          "RELION",
+          "Warp",
+          "CisTEM",
+          "EMAN2"
+        ]
+      },
+      "techniques": [
+        "Cryo-EM",
+        "Single Particle Analysis",
+        "Cryo-Electron Tomography",
+        "MicroED"
+      ],
+      "detectors": [
+        "Gatan K3",
+        "Gatan K2 Summit",
+        "Falcon 4",
+        "Falcon 4i",
+        "Selectris Energy Filter"
+      ],
+      "detector_details": {
+        "Gatan_K3": "Direct electron detector, 5760x4092 pixels, counting mode, super-resolution",
+        "Falcon_4": "Thermo Fisher direct electron detector, 4096x4096",
+        "Selectris": "Post-column energy filter for Krios G4"
+      },
+      "discontinued": false,
+      "notes": "Gold-standard cryo-EM for structural biology. Automated data collection. Near-atomic resolution. G4 adds Selectris energy filter."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Glacios",
+      "aliases": [
+        "Glacios",
+        "FEI Glacios",
+        "Thermo Fisher Glacios",
+        "Glacios 2"
+      ],
+      "category": "electron",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "EPU",
+          "SerialEM"
+        ],
+        "analysis": [
+          "cryoSPARC",
+          "RELION"
+        ]
+      },
+      "techniques": [
+        "Cryo-EM",
+        "Single Particle Analysis",
+        "Cryo-Electron Tomography",
+        "Screening"
+      ],
+      "detectors": [
+        "Falcon 4",
+        "Ceta-D"
+      ],
+      "discontinued": false,
+      "notes": "200kV cryo-EM. Screening and mid-resolution data collection. Compact footprint."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Talos Arctica",
+      "aliases": [
+        "Talos Arctica",
+        "Arctica",
+        "FEI Talos Arctica",
+        "Talos"
+      ],
+      "category": "electron",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "EPU",
+          "SerialEM"
+        ],
+        "analysis": [
+          "cryoSPARC",
+          "RELION"
+        ]
+      },
+      "techniques": [
+        "Cryo-EM",
+        "Single Particle Analysis",
+        "Screening"
+      ],
+      "detectors": [
+        "Gatan K2",
+        "Gatan K3",
+        "Falcon 3",
+        "Falcon 4",
+        "Ceta"
+      ],
+      "discontinued": true,
+      "successor": "Glacios 2",
+      "notes": "200kV cryo-EM workhorse. Very widely installed for cryo-EM."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Tecnai",
+      "aliases": [
+        "Tecnai",
+        "FEI Tecnai",
+        "Tecnai F20",
+        "Tecnai G2",
+        "Tecnai Spirit",
+        "Tecnai T12",
+        "Tecnai F30"
+      ],
+      "category": "electron",
+      "year_introduced": 1998,
+      "software": {
+        "acquisition": [
+          "TIA",
+          "SerialEM"
+        ],
+        "analysis": [
+          "Various"
+        ]
+      },
+      "techniques": [
+        "TEM",
+        "Cryo-EM",
+        "Electron Diffraction",
+        "STEM",
+        "EDS"
+      ],
+      "detectors": [
+        "CCD (Gatan Ultrascan)",
+        "Gatan K2",
+        "AMT cameras"
+      ],
+      "discontinued": true,
+      "successor": "Talos/Glacios",
+      "notes": "Legacy TEM series. Spirit (120kV), F20 (200kV), F30 (300kV). Very common in publications."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Aquilos",
+      "aliases": [
+        "Aquilos",
+        "Aquilos 2",
+        "FEI Aquilos",
+        "Thermo Fisher Aquilos"
+      ],
+      "category": "electron",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "Auto Slice and View",
+          "MAPS"
+        ],
+        "analysis": [
+          "Various"
+        ]
+      },
+      "techniques": [
+        "Cryo-FIB/SEM",
+        "FIB Milling",
+        "Lamella Preparation",
+        "Correlative Cryo-EM"
+      ],
+      "discontinued": false,
+      "notes": "Cryo-FIB/SEM for preparing thin lamellae for cryo-ET. Essential for in situ structural biology."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Scios",
+      "aliases": [
+        "Scios",
+        "Scios 2",
+        "FEI Scios",
+        "Thermo Fisher Scios"
+      ],
+      "category": "electron",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "Auto Slice and View",
+          "MAPS"
+        ],
+        "analysis": [
+          "MAPS",
+          "Avizo"
+        ]
+      },
+      "techniques": [
+        "FIB-SEM",
+        "SEM",
+        "FIB Milling",
+        "EDS",
+        "EBSD",
+        "Serial Block-Face (with 3View)"
+      ],
+      "discontinued": false,
+      "notes": "DualBeam FIB-SEM for materials and life sciences. 3D volume imaging."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Helios",
+      "aliases": [
+        "Helios",
+        "Helios 5",
+        "Helios G4",
+        "FEI Helios",
+        "Helios NanoLab"
+      ],
+      "category": "electron",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "MAPS",
+          "Auto Slice and View"
+        ],
+        "analysis": [
+          "MAPS",
+          "Avizo"
+        ]
+      },
+      "techniques": [
+        "FIB-SEM",
+        "SEM",
+        "FIB Milling",
+        "TEM Lamella Preparation",
+        "EDS",
+        "EBSD"
+      ],
+      "discontinued": false,
+      "notes": "High-end DualBeam FIB-SEM. Multiple variants (UX, CX, Hydra for multi-ion)."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Verios",
+      "aliases": [
+        "Verios",
+        "Verios 5",
+        "FEI Verios",
+        "Verios XHR"
+      ],
+      "category": "electron",
+      "year_introduced": 2014,
+      "software": {
+        "acquisition": [
+          "xT"
+        ],
+        "analysis": [
+          "MAPS"
+        ]
+      },
+      "techniques": [
+        "SEM",
+        "FE-SEM",
+        "Ultra-High Resolution SEM",
+        "EDS",
+        "STEM-in-SEM"
+      ],
+      "discontinued": false,
+      "notes": "Extreme high-resolution FE-SEM."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "Apreo",
+      "aliases": [
+        "Apreo",
+        "Apreo 2",
+        "FEI Apreo",
+        "Apreo SEM"
+      ],
+      "category": "electron",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "xT"
+        ],
+        "analysis": [
+          "MAPS"
+        ]
+      },
+      "techniques": [
+        "SEM",
+        "FE-SEM",
+        "EDS",
+        "EBSD",
+        "WDS"
+      ],
+      "discontinued": false,
+      "notes": "Versatile FE-SEM. S variant for surface, C variant for compositional analysis."
+    },
+    {
+      "brand": "JEOL",
+      "model": "CRYO ARM 300",
+      "aliases": [
+        "CRYO ARM 300",
+        "CRYO ARM",
+        "JEOL CRYO ARM",
+        "JEM-Z300FSC",
+        "CRYO ARM 300 II"
+      ],
+      "category": "electron",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "JEOL JADAS",
+          "SerialEM"
+        ],
+        "analysis": [
+          "cryoSPARC",
+          "RELION"
+        ]
+      },
+      "techniques": [
+        "Cryo-EM",
+        "Single Particle Analysis",
+        "Cryo-Electron Tomography"
+      ],
+      "detectors": [
+        "Gatan K3",
+        "JEOL DE-series direct electron detector"
+      ],
+      "detector_details": {
+        "notes": "In-column Omega energy filter. Cold FEG for superior coherence."
+      },
+      "discontinued": false,
+      "notes": "JEOL's high-end cryo-EM. Cold FEG source. In-column Omega energy filter. Competitor to Titan Krios."
+    },
+    {
+      "brand": "JEOL",
+      "model": "JEM-F200",
+      "aliases": [
+        "JEM-F200",
+        "F200",
+        "JEOL F200",
+        "JEOL JEM-F200",
+        "JEM-2100F successor"
+      ],
+      "category": "electron",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "JEOL TEM Center",
+          "SerialEM"
+        ],
+        "analysis": [
+          "Various"
+        ]
+      },
+      "techniques": [
+        "TEM",
+        "STEM",
+        "EDS",
+        "EELS",
+        "Cryo-EM"
+      ],
+      "detectors": [
+        "Gatan cameras",
+        "JEOL cameras"
+      ],
+      "discontinued": false,
+      "notes": "Multi-purpose 200kV analytical TEM. Cold FEG option. Cryo-EM capable."
+    },
+    {
+      "brand": "JEOL",
+      "model": "JEM-2100",
+      "aliases": [
+        "JEM-2100",
+        "JEM2100",
+        "JEOL 2100",
+        "JEOL JEM-2100",
+        "JEM-2100 Plus",
+        "JEM-2100F"
+      ],
+      "category": "electron",
+      "year_introduced": 2003,
+      "software": {
+        "acquisition": [
+          "JEOL TEM Center"
+        ],
+        "analysis": [
+          "Various"
+        ]
+      },
+      "techniques": [
+        "TEM",
+        "STEM",
+        "EDS",
+        "Electron Diffraction"
+      ],
+      "detectors": [
+        "CCD cameras",
+        "Gatan cameras"
+      ],
+      "discontinued": false,
+      "notes": "Widely installed 200kV TEM. LaB6 and FEG variants. Workhorse for materials and life science."
+    },
+    {
+      "brand": "JEOL",
+      "model": "JEM-1400",
+      "aliases": [
+        "JEM-1400",
+        "JEM1400",
+        "JEOL 1400",
+        "JEOL JEM-1400",
+        "JEM-1400 Flash",
+        "JEM-1400 Plus"
+      ],
+      "category": "electron",
+      "year_introduced": 2007,
+      "software": {
+        "acquisition": [
+          "JEOL TEM Center"
+        ],
+        "analysis": [
+          "Various"
+        ]
+      },
+      "techniques": [
+        "TEM",
+        "Biological TEM",
+        "Histology EM"
+      ],
+      "detectors": [
+        "CCD cameras",
+        "Gatan cameras"
+      ],
+      "discontinued": false,
+      "notes": "120kV TEM for biological samples. Flash variant (2018) adds automated specimen tracking."
+    },
+    {
+      "brand": "Hitachi",
+      "model": "HT7800",
+      "aliases": [
+        "HT7800",
+        "Hitachi HT7800",
+        "HT7700"
+      ],
+      "category": "electron",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "Hitachi TEM software"
+        ],
+        "analysis": [
+          "Various"
+        ]
+      },
+      "techniques": [
+        "TEM",
+        "Biological TEM"
+      ],
+      "detectors": [
+        "EMSIS XAROSA (CMOS)",
+        "AMT cameras"
+      ],
+      "discontinued": false,
+      "notes": "120kV biological TEM. Easy-to-use interface."
+    },
+    {
+      "brand": "Gatan",
+      "model": "K3",
+      "aliases": [
+        "K3",
+        "Gatan K3",
+        "K3 direct electron detector",
+        "K3 Summit"
+      ],
+      "category": "detector",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "DigitalMicrograph",
+          "SerialEM (integration)"
+        ],
+        "analysis": [
+          "DigitalMicrograph"
+        ]
+      },
+      "techniques": [
+        "Cryo-EM",
+        "Direct Electron Detection",
+        "Counting Mode",
+        "Super-Resolution Mode"
+      ],
+      "detector_details": {
+        "pixels": "5760 x 4092",
+        "frame_rate": "Up to 75 fps (super-res)",
+        "counting_DQE": ">0.95 at zero spatial frequency",
+        "sensor": "Direct electron CMOS"
+      },
+      "discontinued": false,
+      "predecessor": "K2 Summit",
+      "notes": "Standard camera for Titan Krios. Direct electron detection. Counting mode for optimal DQE."
+    },
+    {
+      "brand": "Gatan",
+      "model": "OneView",
+      "aliases": [
+        "OneView",
+        "Gatan OneView",
+        "OneView IS"
+      ],
+      "category": "detector",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "DigitalMicrograph"
+        ],
+        "analysis": [
+          "DigitalMicrograph"
+        ]
+      },
+      "techniques": [
+        "TEM Imaging",
+        "In-situ TEM",
+        "4D STEM"
+      ],
+      "detector_details": {
+        "pixels": "4096 x 4096",
+        "frame_rate": "Up to 300 fps (binned)",
+        "sensor": "CMOS",
+        "notes": "16 megapixel CMOS. Good for in-situ and 4D STEM."
+      },
+      "discontinued": false,
+      "notes": "CMOS TEM camera for general-purpose and in-situ imaging."
+    },
+    {
+      "brand": "Revvity",
+      "model": "Opera Phenix Plus",
+      "aliases": [
+        "Opera Phenix",
+        "Opera Phenix Plus",
+        "PerkinElmer Opera Phenix",
+        "Revvity Opera Phenix",
+        "Opera Phenix Plus HCS"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "Harmony"
+        ],
+        "analysis": [
+          "Harmony",
+          "Columbus"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield",
+        "High-Content Screening",
+        "3D Cell Culture",
+        "Brightfield",
+        "Digital Phase Contrast"
+      ],
+      "laser_lines_nm": [
+        375,
+        405,
+        445,
+        488,
+        514,
+        561,
+        594,
+        640,
+        730,
+        785
+      ],
+      "detectors": [
+        "sCMOS (16-bit)"
+      ],
+      "detector_details": {
+        "spinning_disk": "Yokogawa-based microlens spinning disk",
+        "water_immersion": "Automated water immersion (20x, 40x, 63x)"
+      },
+      "objectives_compatible": [
+        "5x air",
+        "10x air",
+        "20x water",
+        "40x water",
+        "63x water (optional)"
+      ],
+      "discontinued": false,
+      "predecessor": "Opera (PerkinElmer)",
+      "notes": "Premium HCS platform. Confocal spinning disk. Water immersion objectives for high-resolution screening. Harmony + Columbus analysis."
+    },
+    {
+      "brand": "Revvity",
+      "model": "Operetta CLS",
+      "aliases": [
+        "Operetta CLS",
+        "Operetta",
+        "PerkinElmer Operetta",
+        "Revvity Operetta CLS"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "Harmony"
+        ],
+        "analysis": [
+          "Harmony",
+          "Columbus"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield",
+        "High-Content Screening",
+        "Brightfield",
+        "Digital Phase Contrast"
+      ],
+      "laser_lines_nm": [
+        375,
+        405,
+        445,
+        488,
+        561,
+        640
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "objectives_compatible": [
+        "2x-63x air/water"
+      ],
+      "discontinued": false,
+      "notes": "Mid-range HCS. Same software ecosystem as Opera Phenix."
+    },
+    {
+      "brand": "Molecular Devices",
+      "model": "ImageXpress Micro Confocal",
+      "aliases": [
+        "ImageXpress",
+        "ImageXpress Micro",
+        "ImageXpress Micro Confocal",
+        "IXM-C",
+        "ImageXpress Confocal"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "MetaXpress"
+        ],
+        "analysis": [
+          "MetaXpress",
+          "Custom Module Editor"
+        ]
+      },
+      "techniques": [
+        "Spinning Disk Confocal",
+        "Widefield",
+        "High-Content Screening",
+        "Transmitted Light"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        523,
+        561,
+        594,
+        638,
+        730,
+        785
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "objectives_compatible": [
+        "1x-100x air/water/oil"
+      ],
+      "discontinued": false,
+      "notes": "Versatile HCS platform. Confocal + widefield. Up to 9 wavelengths."
+    },
+    {
+      "brand": "Molecular Devices",
+      "model": "ImageXpress Pico",
+      "aliases": [
+        "ImageXpress Pico",
+        "IXM Pico",
+        "Pico"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "CellReporterXpress"
+        ],
+        "analysis": [
+          "CellReporterXpress"
+        ]
+      },
+      "techniques": [
+        "Widefield",
+        "Brightfield",
+        "High-Content Screening"
+      ],
+      "detectors": [
+        "CMOS"
+      ],
+      "discontinued": false,
+      "notes": "Entry-level automated cell imager. Compact benchtop."
+    },
+    {
+      "brand": "Thermo Fisher",
+      "model": "CellInsight CX7",
+      "aliases": [
+        "CellInsight CX7",
+        "CX7",
+        "CellInsight",
+        "ArrayScan",
+        "Thermo CellInsight"
+      ],
+      "category": "high_content_screening",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "HCS Studio"
+        ],
+        "analysis": [
+          "HCS Studio"
+        ]
+      },
+      "techniques": [
+        "Widefield",
+        "Confocal",
+        "High-Content Screening"
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "discontinued": false,
+      "notes": "HCS platform. LED illumination. Confocal option."
+    },
+    {
+      "brand": "LaVision BioTec",
+      "model": "UltraMicroscope",
+      "aliases": [
+        "UltraMicroscope",
+        "UltraMicroscope II",
+        "UltraMicroscope Blaze",
+        "LaVision UltraMicroscope",
+        "Miltenyi UltraMicroscope"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2010,
+      "software": {
+        "acquisition": [
+          "ImspectorPro"
+        ],
+        "analysis": [
+          "Imaris",
+          "arivis"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "Tissue Clearing Imaging",
+        "Large Volume Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        515,
+        561,
+        594,
+        640,
+        685
+      ],
+      "detectors": [
+        "sCMOS (Andor or Hamamatsu)"
+      ],
+      "discontinued": false,
+      "notes": "Optimized for cleared tissue / whole-organ imaging. Large sample chamber. Now part of Miltenyi Biotec."
+    },
+    {
+      "brand": "Luxendo",
+      "model": "MuVi SPIM",
+      "aliases": [
+        "MuVi SPIM",
+        "Luxendo MuVi",
+        "MuVi SPIM CS",
+        "MuVi SPIM LS"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "Luxendo software"
+        ],
+        "analysis": [
+          "Imaris",
+          "BigStitcher"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "Multi-View SPIM",
+        "Developmental Biology"
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "discontinued": false,
+      "notes": "Multi-view SPIM for developmental biology. Now part of Bruker."
+    },
+    {
+      "brand": "LifeCanvas",
+      "model": "SmartSPIM",
+      "aliases": [
+        "SmartSPIM",
+        "LifeCanvas SmartSPIM"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "SmartSPIM software"
+        ],
+        "analysis": [
+          "Imaris",
+          "BrainGlobe"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "Whole-Brain Imaging",
+        "Tissue Clearing Imaging"
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "discontinued": false,
+      "notes": "Optimized for whole-brain / cleared tissue imaging. Automated tile-based acquisition."
+    },
+    {
+      "brand": "ASI",
+      "model": "diSPIM",
+      "aliases": [
+        "diSPIM",
+        "ASI diSPIM",
+        "dual inverted SPIM"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "\u00b5Manager"
+        ],
+        "analysis": [
+          "FIJI",
+          "Imaris"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "Dual-View SPIM",
+        "Isotropic Resolution"
+      ],
+      "detectors": [
+        "sCMOS (Hamamatsu ORCA)"
+      ],
+      "microscope_stands": [
+        "Nikon Ti",
+        "Nikon Ti2"
+      ],
+      "discontinued": false,
+      "notes": "Open-architecture dual-view light sheet. Mounts on inverted microscope. Isotropic resolution via dual views."
+    },
+    {
+      "brand": "ASI",
+      "model": "iSPIM",
+      "aliases": [
+        "iSPIM",
+        "ASI iSPIM",
+        "inverted SPIM"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2011,
+      "software": {
+        "acquisition": [
+          "\u00b5Manager"
+        ],
+        "analysis": [
+          "FIJI"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "Single-View SPIM"
+      ],
+      "detectors": [
+        "sCMOS"
+      ],
+      "discontinued": false,
+      "predecessor": "diSPIM is dual version",
+      "notes": "Single-view light sheet on inverted stand."
+    },
+    {
+      "brand": "Community",
+      "model": "OpenSPIM",
+      "aliases": [
+        "OpenSPIM",
+        "Open SPIM"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2013,
+      "software": {
+        "acquisition": [
+          "\u00b5Manager"
+        ],
+        "analysis": [
+          "FIJI",
+          "BigStitcher"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "SPIM"
+      ],
+      "detectors": [
+        "sCMOS or CCD"
+      ],
+      "discontinued": false,
+      "notes": "Open-source/open-hardware light sheet microscope. Wiki-based build instructions."
+    },
+    {
+      "brand": "Community",
+      "model": "mesoSPIM",
+      "aliases": [
+        "mesoSPIM",
+        "MesoSPIM",
+        "meso-SPIM"
+      ],
+      "category": "light_sheet",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "mesoSPIM-control (Python)"
+        ],
+        "analysis": [
+          "FIJI",
+          "napari"
+        ]
+      },
+      "techniques": [
+        "Light Sheet Fluorescence Microscopy",
+        "Mesoscale Imaging",
+        "Tissue Clearing Imaging",
+        "Whole-Brain Imaging"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        488,
+        515,
+        561,
+        594,
+        638
+      ],
+      "detectors": [
+        "sCMOS (Hamamatsu ORCA-Flash4)"
+      ],
+      "discontinued": false,
+      "notes": "Open-source mesoscale light sheet for cleared tissue. Near-isotropic resolution. Multiple labs building worldwide."
+    },
+    {
+      "brand": "Community",
+      "model": "OpenFlexure",
+      "aliases": [
+        "OpenFlexure",
+        "OpenFlexure Microscope"
+      ],
+      "category": "other",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "OpenFlexure Server"
+        ],
+        "analysis": [
+          "FIJI"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Darkfield"
+      ],
+      "detectors": [
+        "Raspberry Pi Camera"
+      ],
+      "discontinued": false,
+      "notes": "3D-printed open-source microscope. Low-cost. Raspberry Pi-based."
+    },
+    {
+      "brand": "Bruker",
+      "model": "Ultima Investigator",
+      "aliases": [
+        "Ultima Investigator",
+        "Bruker Ultima",
+        "Ultima 2Pplus",
+        "Bruker 2P",
+        "Prairie Ultima"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "Prairie View"
+        ],
+        "analysis": [
+          "Prairie View"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "Three-Photon",
+        "Second Harmonic Generation",
+        "In Vivo Imaging",
+        "Calcium Imaging",
+        "Optogenetics",
+        "Photostimulation"
+      ],
+      "laser_details": {
+        "multiphoton": "Compatible with: Coherent Chameleon/Discovery, Spectra-Physics MaiTai/InSight",
+        "notes": "Requires external Ti:Sapphire or OPO laser"
+      },
+      "detectors": [
+        "GaAsP NDD",
+        "Multi-alkali NDD"
+      ],
+      "microscope_stands": [
+        "Custom upright (Bruker)",
+        "Olympus BX61"
+      ],
+      "discontinued": false,
+      "predecessor": "Prairie Ultima (before Bruker acquisition)",
+      "notes": "Leading multiphoton for neuroscience. Multiple scan heads available. Resonant and galvo scanners."
+    },
+    {
+      "brand": "Bruker",
+      "model": "Vutara VXL",
+      "aliases": [
+        "Vutara VXL",
+        "Vutara 352",
+        "Bruker Vutara",
+        "Vutara SR"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "Vutara SRX"
+        ],
+        "analysis": [
+          "Vutara SRX"
+        ]
+      },
+      "techniques": [
+        "SMLM",
+        "dSTORM",
+        "PALM",
+        "Single Molecule Localization",
+        "3D Localization"
+      ],
+      "laser_lines_nm": [
+        405,
+        488,
+        561,
+        640,
+        730
+      ],
+      "detectors": [
+        "EMCCD",
+        "sCMOS"
+      ],
+      "resolution": {
+        "lateral": "~20 nm",
+        "axial": "~50 nm"
+      },
+      "discontinued": false,
+      "notes": "Biplane 3D localization microscopy. High-throughput SMLM."
+    },
+    {
+      "brand": "Thorlabs",
+      "model": "Bergamo",
+      "aliases": [
+        "Bergamo",
+        "Bergamo II",
+        "Thorlabs Bergamo"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2015,
+      "software": {
+        "acquisition": [
+          "ThorImageLS"
+        ],
+        "analysis": [
+          "ThorImageLS"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "In Vivo Imaging",
+        "Calcium Imaging",
+        "Mesoscale Imaging"
+      ],
+      "detectors": [
+        "GaAsP NDD",
+        "MA-PMT"
+      ],
+      "features": [
+        "Resonant-Galvo-Galvo scanner",
+        "Modular design",
+        "Random-access scanning option"
+      ],
+      "discontinued": false,
+      "notes": "Modular multiphoton for neuroscience. Open architecture. Multiple scan head configurations."
+    },
+    {
+      "brand": "Scientifica",
+      "model": "HyperScope",
+      "aliases": [
+        "HyperScope",
+        "Scientifica HyperScope"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "SciScan"
+        ],
+        "analysis": [
+          "SciScan"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "In Vivo Imaging",
+        "Calcium Imaging",
+        "Adaptive Optics"
+      ],
+      "detectors": [
+        "GaAsP NDD"
+      ],
+      "features": [
+        "Adaptive optics for deep imaging",
+        "Resonant scanner"
+      ],
+      "discontinued": false,
+      "notes": "Multiphoton with adaptive optics for deep in-vivo imaging."
+    },
+    {
+      "brand": "Scientifica",
+      "model": "VivoScope",
+      "aliases": [
+        "VivoScope",
+        "Scientifica VivoScope"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2016,
+      "software": {
+        "acquisition": [
+          "SciScan"
+        ],
+        "analysis": [
+          "SciScan"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "In Vivo Imaging"
+      ],
+      "detectors": [
+        "GaAsP NDD"
+      ],
+      "discontinued": true,
+      "successor": "HyperScope",
+      "notes": "Previous-gen multiphoton from Scientifica."
+    },
+    {
+      "brand": "Sutter",
+      "model": "MOM",
+      "aliases": [
+        "MOM",
+        "Sutter MOM",
+        "Movable Objective Microscope"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "ScanImage",
+          "\u00b5Manager"
+        ],
+        "analysis": [
+          "ScanImage",
+          "FIJI"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "In Vivo Imaging",
+        "Electrophysiology"
+      ],
+      "detectors": [
+        "GaAsP NDD",
+        "MA-PMT"
+      ],
+      "features": [
+        "Movable objective design",
+        "Electrophysiology compatible"
+      ],
+      "discontinued": false,
+      "notes": "Movable Objective Microscope. Popular for electrophysiology + imaging. Open platform."
+    },
+    {
+      "brand": "Femtonics",
+      "model": "FEMTO3D Atlas",
+      "aliases": [
+        "FEMTO3D",
+        "FEMTO3D Atlas",
+        "Femtonics FEMTO3D"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2018,
+      "software": {
+        "acquisition": [
+          "MES (Matlab Electrophysiology Suite)"
+        ],
+        "analysis": [
+          "MES"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "3D Random-Access Scanning",
+        "Acousto-Optic",
+        "In Vivo Calcium Imaging"
+      ],
+      "detectors": [
+        "GaAsP NDD"
+      ],
+      "features": [
+        "3D acousto-optic scanning",
+        "Random-access point scanning",
+        "Simultaneous imaging + photostimulation"
+      ],
+      "discontinued": false,
+      "notes": "3D random-access multiphoton via acousto-optic deflectors. Fast volumetric calcium imaging."
+    },
+    {
+      "brand": "LaVision BioTec",
+      "model": "TriM Scope II",
+      "aliases": [
+        "TriM Scope",
+        "TriM Scope II",
+        "LaVision TriMScope",
+        "Miltenyi TriM Scope"
+      ],
+      "category": "multiphoton",
+      "year_introduced": 2012,
+      "software": {
+        "acquisition": [
+          "ImspectorPro"
+        ],
+        "analysis": [
+          "ImspectorPro"
+        ]
+      },
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "SHG",
+        "THG",
+        "FLIM",
+        "Intravital Imaging",
+        "Deep Tissue"
+      ],
+      "detectors": [
+        "GaAsP NDD",
+        "MA-PMT"
+      ],
+      "discontinued": false,
+      "notes": "Multiphoton for intravital and deep tissue. Now part of Miltenyi Biotec."
+    },
+    {
+      "brand": "Abberior",
+      "model": "STEDYCON",
+      "aliases": [
+        "STEDYCON",
+        "Abberior STEDYCON"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2017,
+      "software": {
+        "acquisition": [
+          "Imspector"
+        ],
+        "analysis": [
+          "Imspector"
+        ]
+      },
+      "techniques": [
+        "STED",
+        "Confocal",
+        "FLIM"
+      ],
+      "laser_lines_nm": [
+        405,
+        485,
+        561,
+        640
+      ],
+      "laser_details": {
+        "STED_depletion": "775 nm pulsed"
+      },
+      "detectors": [
+        "APD (avalanche photodiode)"
+      ],
+      "resolution": {
+        "STED_lateral": "~30-50 nm"
+      },
+      "features": [
+        "Compact module attaches to existing microscope",
+        "Plug-and-play STED"
+      ],
+      "microscope_stands": [
+        "Compatible with most major brand stands"
+      ],
+      "discontinued": false,
+      "notes": "Compact STED module. Attaches to existing microscope. Quick super-resolution upgrade."
+    },
+    {
+      "brand": "Abberior",
+      "model": "Facility Line",
+      "aliases": [
+        "Facility Line",
+        "Abberior Facility Line",
+        "Abberior STED"
+      ],
+      "category": "super_resolution",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "Imspector"
+        ],
+        "analysis": [
+          "Imspector"
+        ]
+      },
+      "techniques": [
+        "STED",
+        "Confocal",
+        "FLIM",
+        "MINFLUX-like",
+        "RESCue STED",
+        "DyMIN",
+        "MINSTED"
+      ],
+      "laser_lines_nm": [
+        405,
+        445,
+        485,
+        510,
+        560,
+        580,
+        640
+      ],
+      "laser_details": {
+        "STED_595": "595 nm pulsed depletion",
+        "STED_775": "775 nm pulsed depletion"
+      },
+      "detectors": [
+        "APD",
+        "Hybrid detector"
+      ],
+      "resolution": {
+        "STED_lateral": "~20-30 nm"
+      },
+      "discontinued": false,
+      "notes": "Research-grade STED system. DyMIN and RESCue for reduced photobleaching. MINSTED for molecular resolution."
+    },
+    {
+      "brand": "Keyence",
+      "model": "BZ-X810",
+      "aliases": [
+        "BZ-X810",
+        "BZ-X800",
+        "BZ-X710",
+        "BZ-X700",
+        "Keyence BZ-X",
+        "Keyence BZ-X810",
+        "BZ-X All-in-One"
+      ],
+      "category": "widefield",
+      "year_introduced": 2020,
+      "software": {
+        "acquisition": [
+          "BZ-X Viewer",
+          "BZ-X Analyzer"
+        ],
+        "analysis": [
+          "BZ-X Analyzer",
+          "BZ-H Hybrid Cell Count"
+        ]
+      },
+      "techniques": [
+        "Widefield Fluorescence",
+        "Phase Contrast",
+        "Brightfield",
+        "Darkfield",
+        "Optical Sectioning",
+        "Z-stacking",
+        "Stitching"
+      ],
+      "illumination": {
+        "fluorescence": "LED",
+        "filters": "Up to 6 filter cubes"
+      },
+      "detectors": [
+        "CMOS (monochrome or color)"
+      ],
+      "features": [
+        "Fully enclosed",
+        "Motorized stage",
+        "Multi-well plate",
+        "Optical sectioning (computational)"
+      ],
+      "discontinued": false,
+      "notes": "All-in-one fluorescence microscope. Very popular in core facilities for routine work. Structured illumination for optical sectioning."
+    },
+    {
+      "brand": "Keyence",
+      "model": "VHX-7000",
+      "aliases": [
+        "VHX-7000",
+        "VHX7000",
+        "Keyence VHX",
+        "Keyence digital microscope"
+      ],
+      "category": "other",
+      "year_introduced": 2019,
+      "software": {
+        "acquisition": [
+          "VHX software"
+        ],
+        "analysis": [
+          "VHX software"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Darkfield",
+        "Polarization",
+        "3D Measurement",
+        "Extended Depth of Field"
+      ],
+      "detectors": [
+        "CMOS (4K)"
+      ],
+      "discontinued": false,
+      "notes": "Digital microscope for materials/industrial use. Full-focus 3D imaging."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "NanoZoomer S360",
+      "aliases": [
+        "NanoZoomer",
+        "NanoZoomer S360",
+        "NanoZoomer 2.0-HT",
+        "NanoZoomer S60",
+        "NanoZoomer S210",
+        "NanoZoomer XR",
+        "Hamamatsu NanoZoomer"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2009,
+      "software": {
+        "acquisition": [
+          "NDP.scan"
+        ],
+        "analysis": [
+          "NDP.view",
+          "NDP.serve",
+          "HALO",
+          "QuPath",
+          "Visiopharm"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence (select models)",
+        "Slide Scanning",
+        "Digital Pathology"
+      ],
+      "models": {
+        "S360": "High-throughput (360 slides), brightfield",
+        "S210": "Mid-throughput (210 slides)",
+        "S60": "Compact (60 slides)",
+        "2.0-HT": "Legacy high-throughput",
+        "XR": "Extended range with fluorescence"
+      },
+      "discontinued": false,
+      "notes": "Industry-leading slide scanners for pathology. Multiple models for different throughput needs."
+    },
+    {
+      "brand": "3DHISTECH",
+      "model": "Pannoramic",
+      "aliases": [
+        "Pannoramic",
+        "3DHISTECH Pannoramic",
+        "Pannoramic SCAN",
+        "Pannoramic MIDI",
+        "Pannoramic 250 Flash",
+        "Pannoramic DESK"
+      ],
+      "category": "slide_scanner",
+      "year_introduced": 2008,
+      "software": {
+        "acquisition": [
+          "Pannoramic Scanner"
+        ],
+        "analysis": [
+          "CaseViewer",
+          "SlideViewer",
+          "QuantCenter",
+          "HALO"
+        ]
+      },
+      "techniques": [
+        "Brightfield",
+        "Fluorescence",
+        "Slide Scanning"
+      ],
+      "models": {
+        "SCAN_II": "250 slides, brightfield + fluorescence",
+        "MIDI_II": "150 slides, brightfield + fluorescence",
+        "250_Flash": "250 slides, high-speed",
+        "DESK": "Desktop scanner"
+      },
+      "discontinued": false,
+      "notes": "Popular European slide scanner brand. Multiple throughput options."
+    }
+  ]
+}

@@ -1,0 +1,463 @@
+{
+  "metadata": {
+    "total_cameras": 23,
+    "build_date": "2026-02-22"
+  },
+  "cameras": [
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Quest 2",
+      "aliases": [
+        "ORCA-Quest 2",
+        "ORCA Quest 2",
+        "Quest 2",
+        "C15550-22UP"
+      ],
+      "type": "qCMOS",
+      "pixels": "4096x2304",
+      "pixel_size_um": 4.6,
+      "read_noise_e": 0.27,
+      "qe_peak": 0.9,
+      "frame_rate_fps": 120,
+      "bit_depth": 16,
+      "interface": "CoaXPress",
+      "cooling": "Air/Water",
+      "dynamic_range": "140000:1",
+      "features": [
+        "Photon number resolving",
+        "Ultra-low noise",
+        "Global reset trigger"
+      ],
+      "notes": "Successor to Quest. 5x faster. Photon-counting qCMOS."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Quest",
+      "aliases": [
+        "ORCA-Quest",
+        "ORCA Quest",
+        "Quest",
+        "C15550-20UP"
+      ],
+      "type": "qCMOS",
+      "pixels": "4096x2304",
+      "pixel_size_um": 4.6,
+      "read_noise_e": 0.3,
+      "qe_peak": 0.9,
+      "frame_rate_fps": 24.3,
+      "bit_depth": 16,
+      "interface": "USB 3.0 / CoaXPress",
+      "cooling": "Air/Water",
+      "features": [
+        "Photon number resolving",
+        "0.27e- noise in ultra quiet"
+      ],
+      "notes": "First qCMOS camera. Photon-counting capable."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Fire",
+      "aliases": [
+        "ORCA-Fire",
+        "ORCA Fire",
+        "Fire",
+        "C16440-20UP"
+      ],
+      "type": "qCMOS (back-thinned)",
+      "pixels": "4432x2368",
+      "pixel_size_um": 4.6,
+      "read_noise_e": 0.5,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 178,
+      "bit_depth": 16,
+      "interface": "CoaXPress",
+      "features": [
+        "High speed",
+        "Back-thinned",
+        "Lightsheet readout mode (4 modes)"
+      ],
+      "notes": "High-speed qCMOS. 10.5 MP. Excellent for light sheet."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Fusion BT",
+      "aliases": [
+        "ORCA-Fusion BT",
+        "Fusion BT",
+        "C15440-20UP"
+      ],
+      "type": "sCMOS (back-thinned)",
+      "pixels": "2304x2304",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 0.7,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 89.1,
+      "bit_depth": 16,
+      "interface": "USB 3.0 / CoaXPress",
+      "features": [
+        "CCD-like uniformity",
+        "Back-thinned for 95% QE"
+      ],
+      "notes": "Pinnacle sCMOS. Near-perfect QE."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Fusion",
+      "aliases": [
+        "ORCA-Fusion",
+        "Fusion",
+        "C14440-20UP"
+      ],
+      "type": "sCMOS",
+      "pixels": "2304x2304",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 0.7,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 89.1,
+      "bit_depth": 16,
+      "interface": "USB 3.0 / CoaXPress",
+      "features": [
+        "Ultra-low noise",
+        "CCD-like uniformity",
+        "Lightsheet readout mode"
+      ],
+      "notes": "3rd gen sCMOS. Widely used."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Lightning",
+      "aliases": [
+        "ORCA-Lightning",
+        "Lightning",
+        "C14120-20P"
+      ],
+      "type": "sCMOS",
+      "pixels": "4608x2592",
+      "pixel_size_um": 5.0,
+      "read_noise_e": 2.0,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 121,
+      "bit_depth": 16,
+      "interface": "CoaXPress",
+      "features": [
+        "Large FOV",
+        "High speed",
+        "12 MP"
+      ],
+      "notes": "Large-format high-speed sCMOS. 2x pixel area vs Flash4."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Flash4.0 V3",
+      "aliases": [
+        "ORCA-Flash4",
+        "Flash4",
+        "ORCA-Flash 4.0",
+        "Flash 4.0 V3",
+        "C13440-20CU",
+        "Flash4.0 V3"
+      ],
+      "type": "sCMOS",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.4,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 100,
+      "bit_depth": 16,
+      "interface": "USB 3.0 / Camera Link",
+      "features": [
+        "Lightsheet readout mode",
+        "NIR-enhanced (82% QE)"
+      ],
+      "notes": "2nd gen sCMOS workhorse. Enormous install base. Very common in publications."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-Flash4.0 LT+",
+      "aliases": [
+        "ORCA-Flash4 LT+",
+        "Flash4 LT+",
+        "C11440-42U"
+      ],
+      "type": "sCMOS",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.5,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 30,
+      "bit_depth": 16,
+      "interface": "USB 3.0",
+      "notes": "Budget sCMOS. USB-only. Good entry point."
+    },
+    {
+      "brand": "Hamamatsu",
+      "model": "ORCA-spark",
+      "aliases": [
+        "ORCA-spark",
+        "spark",
+        "C11440-36U"
+      ],
+      "type": "CMOS",
+      "pixels": "1920x1200",
+      "pixel_size_um": 5.86,
+      "read_noise_e": 6.6,
+      "qe_peak": 0.7,
+      "frame_rate_fps": 65,
+      "bit_depth": 16,
+      "interface": "USB 3.0",
+      "notes": "Entry-level scientific CMOS."
+    },
+    {
+      "brand": "Andor",
+      "model": "Sona 4.2B-11",
+      "aliases": [
+        "Sona",
+        "Andor Sona",
+        "Sona 4.2B"
+      ],
+      "type": "sCMOS (back-illuminated)",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.0,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 74,
+      "bit_depth": 16,
+      "features": [
+        "Back-illuminated",
+        "95% QE"
+      ],
+      "notes": "Andor's premium sCMOS. 95% QE."
+    },
+    {
+      "brand": "Andor",
+      "model": "Zyla 4.2 Plus",
+      "aliases": [
+        "Zyla",
+        "Zyla 4.2",
+        "Andor Zyla",
+        "Zyla Plus"
+      ],
+      "type": "sCMOS",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 0.9,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 100,
+      "bit_depth": 16,
+      "notes": "Widely-used sCMOS. Low noise."
+    },
+    {
+      "brand": "Andor",
+      "model": "Zyla 5.5",
+      "aliases": [
+        "Zyla 5.5",
+        "Andor Zyla 5.5"
+      ],
+      "type": "sCMOS",
+      "pixels": "2560x2160",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.1,
+      "qe_peak": 0.6,
+      "frame_rate_fps": 100,
+      "bit_depth": 16,
+      "notes": "5.5 MP sCMOS. Larger FOV."
+    },
+    {
+      "brand": "Andor",
+      "model": "iXon Ultra 888",
+      "aliases": [
+        "iXon",
+        "iXon Ultra",
+        "iXon 888",
+        "Andor iXon",
+        "iXon Ultra 888",
+        "iXon Life",
+        "iXon Ultra 897"
+      ],
+      "type": "EMCCD",
+      "pixels": "1024x1024 (888) / 512x512 (897)",
+      "pixel_size_um": "13 / 16",
+      "read_noise_e": "<1 (with EM gain)",
+      "qe_peak": 0.95,
+      "frame_rate_fps": "26 (full) / 56 (897)",
+      "features": [
+        "Electron-multiplication",
+        "Single-photon sensitive",
+        "Back-illuminated"
+      ],
+      "notes": "Gold-standard EMCCD. Used for SMLM, TIRF, single-molecule. 888 (1024\u00b2), 897 (512\u00b2)."
+    },
+    {
+      "brand": "Andor",
+      "model": "Marana",
+      "aliases": [
+        "Marana",
+        "Andor Marana",
+        "Marana 4.2B"
+      ],
+      "type": "sCMOS (back-illuminated)",
+      "pixels": "2048x2048",
+      "pixel_size_um": 11,
+      "read_noise_e": 1.2,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 48,
+      "features": [
+        "Large pixel",
+        "95% QE",
+        "For astronomy/physics"
+      ],
+      "notes": "Large-pixel sCMOS for low-light, large FOV applications."
+    },
+    {
+      "brand": "Andor",
+      "model": "Neo 5.5",
+      "aliases": [
+        "Neo",
+        "Neo 5.5",
+        "Andor Neo"
+      ],
+      "type": "sCMOS",
+      "pixels": "2560x2160",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.0,
+      "qe_peak": 0.6,
+      "frame_rate_fps": 100,
+      "notes": "Legacy sCMOS. Predecessor to Zyla."
+    },
+    {
+      "brand": "Photometrics",
+      "model": "Kinetix",
+      "aliases": [
+        "Kinetix",
+        "Photometrics Kinetix",
+        "Kinetix22"
+      ],
+      "type": "sCMOS (back-illuminated)",
+      "pixels": "5120x5120",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 0.7,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 82,
+      "features": [
+        "29 MP",
+        "Massive FOV",
+        "Back-illuminated"
+      ],
+      "notes": "Largest sCMOS sensor. 29 MP. For large-area imaging."
+    },
+    {
+      "brand": "Photometrics",
+      "model": "Prime BSI Express",
+      "aliases": [
+        "Prime BSI",
+        "Prime BSI Express",
+        "Photometrics Prime BSI"
+      ],
+      "type": "sCMOS (back-illuminated)",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 0.7,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 95,
+      "notes": "Premium sCMOS. 95% QE. Very popular for microscopy."
+    },
+    {
+      "brand": "Photometrics",
+      "model": "Prime 95B",
+      "aliases": [
+        "Prime 95B",
+        "95B",
+        "Photometrics 95B"
+      ],
+      "type": "sCMOS (back-illuminated)",
+      "pixels": "1200x1200",
+      "pixel_size_um": 11,
+      "read_noise_e": 1.0,
+      "qe_peak": 0.95,
+      "frame_rate_fps": 82,
+      "features": [
+        "Large pixel (11\u00b5m)",
+        "95% QE",
+        "Near single-photon sensitivity"
+      ],
+      "notes": "Large-pixel sCMOS alternative to EMCCD. Popular for TIRF, single-molecule."
+    },
+    {
+      "brand": "Photometrics",
+      "model": "Evolve 512",
+      "aliases": [
+        "Evolve",
+        "Evolve 512",
+        "Photometrics Evolve"
+      ],
+      "type": "EMCCD",
+      "pixels": "512x512",
+      "pixel_size_um": 16,
+      "qe_peak": 0.92,
+      "features": [
+        "Electron-multiplication"
+      ],
+      "notes": "Legacy EMCCD."
+    },
+    {
+      "brand": "Photometrics",
+      "model": "CoolSNAP HQ2",
+      "aliases": [
+        "CoolSNAP",
+        "CoolSNAP HQ2",
+        "CoolSNAP HQ"
+      ],
+      "type": "CCD",
+      "pixels": "1392x1040",
+      "pixel_size_um": 6.45,
+      "qe_peak": 0.62,
+      "notes": "Legacy CCD. Very common in older publications."
+    },
+    {
+      "brand": "PCO",
+      "model": "pco.edge 4.2",
+      "aliases": [
+        "pco.edge",
+        "pco.edge 4.2",
+        "PCO edge",
+        "PCO.edge 4.2 bi",
+        "PCO.edge 4.2 CLHS"
+      ],
+      "type": "sCMOS",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.0,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 100,
+      "features": [
+        "Global shutter option (bi variant)",
+        "Rolling/global exposure"
+      ],
+      "notes": "Widely used sCMOS. Standard camera for Zeiss Elyra 7 and light sheet systems."
+    },
+    {
+      "brand": "PCO",
+      "model": "pco.panda 4.2",
+      "aliases": [
+        "pco.panda",
+        "PCO panda"
+      ],
+      "type": "sCMOS",
+      "pixels": "2048x2048",
+      "pixel_size_um": 6.5,
+      "read_noise_e": 1.1,
+      "qe_peak": 0.82,
+      "frame_rate_fps": 40,
+      "notes": "Budget sCMOS from PCO."
+    },
+    {
+      "brand": "Teledyne",
+      "model": "Kinetix (Teledyne Photometrics)",
+      "aliases": [
+        "Teledyne Kinetix"
+      ],
+      "type": "sCMOS",
+      "notes": "See Photometrics Kinetix. Teledyne is parent company."
+    }
+  ]
+}

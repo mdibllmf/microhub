@@ -1,0 +1,232 @@
+{
+  "metadata": {
+    "total_brands": 4,
+    "total_series": 25,
+    "build_date": "2026-02-22"
+  },
+  "objectives": {
+    "Zeiss": [
+      {
+        "series": "Plan-Apochromat",
+        "aliases": [
+          "Plan-Apo",
+          "Plan Apo"
+        ],
+        "tier": "premium",
+        "correction": "Apochromatic + flat field",
+        "magnifications": [
+          "10x",
+          "20x",
+          "25x",
+          "40x",
+          "63x",
+          "100x"
+        ],
+        "notes": "Highest correction. Standard for confocal."
+      },
+      {
+        "series": "C-Apochromat",
+        "aliases": [
+          "C-Apo"
+        ],
+        "tier": "premium",
+        "correction": "Apochromatic (water corr)",
+        "notes": "Water immersion corrected. For live cell."
+      },
+      {
+        "series": "Alpha Plan-Apochromat",
+        "aliases": [
+          "Alpha Plan-Apo"
+        ],
+        "tier": "premium",
+        "correction": "Apochromatic + high NA",
+        "notes": "Ultra-high NA for TIRF (1.46 NA)."
+      },
+      {
+        "series": "EC Plan-Neofluar",
+        "aliases": [
+          "EC Plan-Neo",
+          "Plan-Neofluar"
+        ],
+        "tier": "standard",
+        "correction": "Semi-apochromatic + flat field",
+        "notes": "Good performance/cost ratio."
+      },
+      {
+        "series": "LD Plan-Neofluar",
+        "aliases": [
+          "LD Plan-Neo"
+        ],
+        "tier": "standard",
+        "correction": "Long distance",
+        "notes": "Long working distance."
+      },
+      {
+        "series": "Fluar",
+        "tier": "fluorescence",
+        "correction": "High transmission",
+        "notes": "Optimized for fluorescence (not flat field)."
+      },
+      {
+        "series": "LD C-Apochromat",
+        "tier": "premium",
+        "correction": "Long-distance + chromatic",
+        "notes": "Long WD apochromat."
+      },
+      {
+        "series": "LD LCI Plan-Apochromat",
+        "tier": "premium",
+        "notes": "Multi-immersion (water/glycerol/oil). Coverglass correction."
+      }
+    ],
+    "Nikon": [
+      {
+        "series": "CFI Plan Apochromat Lambda S",
+        "aliases": [
+          "Lambda S",
+          "Plan Apo Lambda S"
+        ],
+        "tier": "premium",
+        "notes": "Latest generation. Nano-crystal coating. UV-NIR correction."
+      },
+      {
+        "series": "CFI Plan Apochromat Lambda D",
+        "aliases": [
+          "Lambda D"
+        ],
+        "tier": "premium",
+        "notes": "Silicone oil immersion for deep imaging."
+      },
+      {
+        "series": "CFI75 Apochromat LWD",
+        "aliases": [
+          "CFI75 LWD"
+        ],
+        "tier": "premium",
+        "notes": "For multiphoton. Long WD."
+      },
+      {
+        "series": "CFI Plan Apochromat Lambda",
+        "aliases": [
+          "Lambda",
+          "Plan Apo Lambda"
+        ],
+        "tier": "premium",
+        "notes": "Previous gen premium."
+      },
+      {
+        "series": "CFI SR Plan Apo IR",
+        "aliases": [
+          "SR Plan Apo IR"
+        ],
+        "tier": "super_resolution",
+        "notes": "For N-SIM. High NA."
+      },
+      {
+        "series": "CFI Plan Fluor",
+        "aliases": [
+          "Plan Fluor"
+        ],
+        "tier": "standard",
+        "notes": "Semi-apochromatic. Good all-round."
+      },
+      {
+        "series": "CFI S Plan Fluor",
+        "aliases": [
+          "S Plan Fluor"
+        ],
+        "tier": "standard",
+        "notes": "Budget-friendly."
+      }
+    ],
+    "Leica": [
+      {
+        "series": "HC PL APO",
+        "aliases": [
+          "HC PL APO",
+          "PL APO CS2",
+          "PL APO CS"
+        ],
+        "tier": "premium",
+        "notes": "Highest correction. CS2 for STELLARIS."
+      },
+      {
+        "series": "HC PL FLUOTAR",
+        "aliases": [
+          "PL FLUOTAR",
+          "FLUOTAR"
+        ],
+        "tier": "standard",
+        "notes": "Semi-apochromatic."
+      },
+      {
+        "series": "HC FLUOTAR L",
+        "aliases": [
+          "FLUOTAR L"
+        ],
+        "tier": "standard",
+        "notes": "Long WD. For multiphoton/clearing (RI 1.33-1.52)."
+      },
+      {
+        "series": "HCX PL APO",
+        "aliases": [
+          "HCX PL APO"
+        ],
+        "tier": "premium",
+        "notes": "Previous generation. For SP5."
+      }
+    ],
+    "Olympus/Evident": [
+      {
+        "series": "X Line (UPLXAPO)",
+        "aliases": [
+          "X Line",
+          "UPLXAPO"
+        ],
+        "tier": "premium",
+        "notes": "Extended apochromat 400-1000nm. Highest correction."
+      },
+      {
+        "series": "A Line",
+        "aliases": [
+          "A Line"
+        ],
+        "tier": "standard",
+        "notes": "Application-driven objectives."
+      },
+      {
+        "series": "UPLSAPO",
+        "aliases": [
+          "UPLSAPO"
+        ],
+        "tier": "premium",
+        "notes": "Super apochromat. Universal Plan."
+      },
+      {
+        "series": "UPLFLN",
+        "aliases": [
+          "UPLFLN"
+        ],
+        "tier": "standard",
+        "notes": "Semi-apochromatic. Good value."
+      },
+      {
+        "series": "LUCPLFLN",
+        "aliases": [
+          "LUCPLFLN"
+        ],
+        "tier": "standard",
+        "notes": "Long WD semi-apochromatic."
+      },
+      {
+        "series": "LUPLAPO25XS",
+        "aliases": [
+          "LUPLAPO25XS",
+          "silicone gel pad objective"
+        ],
+        "tier": "premium",
+        "notes": "First silicone gel pad objective. For deep 3D imaging."
+      }
+    ]
+  }
+}
