@@ -291,7 +291,26 @@ References
     )
 
     # ================================================================
-    # Test 15: from_sections_list skips references
+    # Test 15: segment_paper() — handles list-type figures field
+    # ================================================================
+    paper_list_figures = {
+        "title": "Paper with list figures",
+        "abstract": "We imaged cells.",
+        "methods": "We used a Zeiss LSM 880 confocal microscope. " * 15,
+        "figures": ["Figure 1: GFP expression.", "Figure 2: Actin staining."],
+        "full_text": "Introduction\nSome text.\nMethods\nZeiss LSM 880.",
+    }
+    seg_module.segment_paper(paper_list_figures)
+    check(
+        "segment_paper() — handles list-type figures field",
+        paper_list_figures.get("_segmentation_source") == "existing"
+        and isinstance(paper_list_figures.get("_segmented_figures"), str),
+        f"Source: {paper_list_figures.get('_segmentation_source')}, "
+        f"Figures type: {type(paper_list_figures.get('_segmented_figures')).__name__}",
+    )
+
+    # ================================================================
+    # Test 16: from_sections_list skips references
     # ================================================================
     test_sections = [
         {"heading": "Methods", "text": "We used a microscope.", "type": "methods"},
