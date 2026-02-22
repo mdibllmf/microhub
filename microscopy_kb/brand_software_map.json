@@ -1,0 +1,239 @@
+{
+  "Zeiss": {
+    "acquisition": [
+      "ZEN",
+      "ZEN Blue",
+      "ZEN Black"
+    ],
+    "legacy_acquisition": [
+      "AxioVision",
+      "LSM Image Browser"
+    ],
+    "analysis": [
+      "ZEN",
+      "arivis"
+    ],
+    "notes": "ZEN Blue = newer, ZEN Black = legacy LSM systems"
+  },
+  "Leica": {
+    "acquisition": [
+      "Leica Application Suite X",
+      "LAS X"
+    ],
+    "legacy_acquisition": [
+      "Leica Application Suite",
+      "LAS AF"
+    ],
+    "analysis": [
+      "Leica Application Suite X",
+      "Aivia"
+    ],
+    "notes": "LAS X replaced LAS AF circa 2015"
+  },
+  "Nikon": {
+    "acquisition": [
+      "NIS-Elements",
+      "NIS-Elements C",
+      "NIS-Elements AR"
+    ],
+    "legacy_acquisition": [
+      "NIS-Elements"
+    ],
+    "analysis": [
+      "NIS-Elements",
+      "NIS-Elements AR"
+    ],
+    "notes": "C = confocal module, AR = advanced research"
+  },
+  "Olympus": {
+    "acquisition": [
+      "FluoView",
+      "cellSens"
+    ],
+    "legacy_acquisition": [
+      "FluoView"
+    ],
+    "analysis": [
+      "cellSens"
+    ],
+    "notes": "FluoView for confocal, cellSens for widefield; Evident branding since 2022"
+  },
+  "Evident (Olympus)": {
+    "acquisition": [
+      "FluoView",
+      "cellSens"
+    ],
+    "legacy_acquisition": [
+      "FluoView"
+    ],
+    "analysis": [
+      "cellSens"
+    ],
+    "notes": "Olympus life science division rebranded as Evident"
+  },
+  "Andor": {
+    "acquisition": [
+      "iQ",
+      "Fusion"
+    ],
+    "legacy_acquisition": [
+      "iQ"
+    ],
+    "analysis": [
+      "Imaris"
+    ],
+    "notes": "Andor cameras often controlled by host software (NIS, MetaMorph, etc)"
+  },
+  "Yokogawa": {
+    "acquisition": [
+      "SlideBook",
+      "MetaMorph",
+      "MicroManager",
+      "NIS-Elements",
+      "Leica Application Suite X",
+      "ZEN"
+    ],
+    "legacy_acquisition": [],
+    "analysis": [],
+    "notes": "Spinning disk unit controlled by host microscope software"
+  },
+  "3i (Intelligent Imaging)": {
+    "acquisition": [
+      "SlideBook"
+    ],
+    "legacy_acquisition": [
+      "SlideBook"
+    ],
+    "analysis": [
+      "SlideBook"
+    ],
+    "notes": "3i systems always use SlideBook"
+  },
+  "PerkinElmer": {
+    "acquisition": [
+      "Harmony",
+      "Volocity Acquisition"
+    ],
+    "legacy_acquisition": [
+      "Volocity"
+    ],
+    "analysis": [
+      "Columbus",
+      "Harmony"
+    ],
+    "notes": "Harmony for Opera/Operetta; Volocity for older UltraVIEW"
+  },
+  "Molecular Devices": {
+    "acquisition": [
+      "MetaXpress"
+    ],
+    "legacy_acquisition": [
+      "MetaMorph"
+    ],
+    "analysis": [
+      "MetaXpress"
+    ],
+    "notes": "MetaMorph was also widely used as generic acquisition software"
+  },
+  "Bruker": {
+    "acquisition": [
+      "Prairie View"
+    ],
+    "legacy_acquisition": [
+      "Prairie View"
+    ],
+    "analysis": [],
+    "notes": "Prairie Technologies acquired by Bruker; multiphoton systems"
+  },
+  "Thorlabs": {
+    "acquisition": [
+      "ThorImage"
+    ],
+    "legacy_acquisition": [],
+    "analysis": [],
+    "notes": "Bergamo multiphoton uses ThorImage"
+  },
+  "Abberior": {
+    "acquisition": [
+      "Imspector"
+    ],
+    "legacy_acquisition": [],
+    "analysis": [
+      "Imspector"
+    ],
+    "notes": "Imspector for all Abberior STED systems"
+  },
+  "LaVision BioTec": {
+    "acquisition": [
+      "ImspectorPro"
+    ],
+    "legacy_acquisition": [],
+    "analysis": [
+      "Imaris"
+    ],
+    "notes": "Now owned by Miltenyi Biotec"
+  },
+  "FEI": {
+    "acquisition": [
+      "EPU",
+      "SerialEM",
+      "MAPS"
+    ],
+    "legacy_acquisition": [
+      "TIA"
+    ],
+    "analysis": [
+      "cryoSPARC",
+      "RELION"
+    ],
+    "notes": "Now Thermo Fisher Scientific; EPU for cryo-EM automation"
+  },
+  "JEOL": {
+    "acquisition": [
+      "JEOL JADAS",
+      "SerialEM"
+    ],
+    "legacy_acquisition": [
+      "JEOL TEM Center"
+    ],
+    "analysis": [
+      "cryoSPARC",
+      "RELION"
+    ],
+    "notes": "CRYO ARM systems use JADAS for automated acquisition"
+  },
+  "Hamamatsu": {
+    "acquisition": [
+      "HCImage",
+      "NDP.view"
+    ],
+    "legacy_acquisition": [
+      "HCImage"
+    ],
+    "analysis": [
+      "NDP.view",
+      "NDP.serve"
+    ],
+    "notes": "Camera maker; NanoZoomer slide scanners use NDP software"
+  },
+  "PicoQuant": {
+    "acquisition": [
+      "SymPhoTime"
+    ],
+    "legacy_acquisition": [],
+    "analysis": [
+      "SymPhoTime"
+    ],
+    "notes": "FLIM/FCS hardware and software"
+  },
+  "Becker & Hickl": {
+    "acquisition": [
+      "SPCImage"
+    ],
+    "legacy_acquisition": [],
+    "analysis": [
+      "SPCImage"
+    ],
+    "notes": "TCSPC-based FLIM hardware"
+  }
+}

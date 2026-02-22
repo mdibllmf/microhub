@@ -1,0 +1,107 @@
+[
+  {
+    "brand": "Coherent",
+    "model": "Chameleon",
+    "aliases": [
+      "Chameleon",
+      "Chameleon Ultra",
+      "Chameleon Vision",
+      "Chameleon Discovery",
+      "Coherent Chameleon"
+    ],
+    "type": "tunable_fs",
+    "wavelength_range": "680-1080nm (Ultra), 680-1300nm (Discovery)",
+    "typical_use": [
+      "Two-Photon Excitation Microscopy",
+      "Multiphoton Microscopy",
+      "Three-Photon Microscopy",
+      "Second Harmonic Generation"
+    ],
+    "notes": "Most common multiphoton laser; Discovery NX has dual output"
+  },
+  {
+    "brand": "Spectra-Physics",
+    "model": "MaiTai",
+    "aliases": [
+      "MaiTai",
+      "Mai Tai",
+      "MaiTai DeepSee",
+      "MaiTai HP",
+      "Spectra-Physics MaiTai"
+    ],
+    "type": "tunable_fs",
+    "wavelength_range": "690-1040nm",
+    "typical_use": [
+      "Two-Photon Excitation Microscopy",
+      "Multiphoton Microscopy"
+    ],
+    "notes": "DeepSee variant has built-in GDD compensation"
+  },
+  {
+    "brand": "Spectra-Physics",
+    "model": "InSight",
+    "aliases": [
+      "InSight",
+      "InSight X3",
+      "InSight X3+",
+      "Spectra-Physics InSight"
+    ],
+    "type": "tunable_fs",
+    "wavelength_range": "680-1300nm + fixed 1045nm",
+    "typical_use": [
+      "Two-Photon Excitation Microscopy",
+      "Multiphoton Microscopy",
+      "Three-Photon Microscopy"
+    ],
+    "notes": "Dual-output OPO-based system"
+  },
+  {
+    "brand": "Toptica",
+    "model": "iChrome",
+    "aliases": [
+      "iChrome",
+      "iChrome MLE",
+      "Toptica iChrome"
+    ],
+    "type": "multi_line",
+    "wavelength_range": "405-640nm (selectable lines)",
+    "typical_use": [
+      "Confocal Laser Scanning Microscopy",
+      "Fluorescence Microscopy"
+    ],
+    "notes": "Multi-laser engine for confocal/widefield"
+  },
+  {
+    "brand": "Cobolt",
+    "model": "Skyra",
+    "aliases": [
+      "Skyra",
+      "Cobolt Skyra"
+    ],
+    "type": "multi_line",
+    "wavelength_range": "405, 488, 561, 640nm",
+    "typical_use": [
+      "Confocal Laser Scanning Microscopy",
+      "Super-Resolution Microscopy"
+    ],
+    "notes": "Compact multi-line laser; now H\u00dcBNER Photonics"
+  },
+  {
+    "brand": "NKT Photonics",
+    "model": "SuperK",
+    "aliases": [
+      "SuperK",
+      "SuperK Extreme",
+      "SuperK FIANIUM",
+      "NKT SuperK",
+      "white light laser"
+    ],
+    "type": "supercontinuum",
+    "wavelength_range": "400-2400nm",
+    "typical_use": [
+      "Confocal Laser Scanning Microscopy",
+      "Fluorescence Microscopy"
+    ],
+    "notes": "White light laser / supercontinuum; used in Leica WLL systems"
+  }
+]

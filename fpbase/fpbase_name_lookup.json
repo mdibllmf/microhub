@@ -1,0 +1,522 @@
+{
+  "10b": {
+    "canonical_name": "10B",
+    "type": "protein"
+  },
+  "11": {
+    "canonical_name": "11",
+    "type": "protein"
+  },
+  "22g": {
+    "canonical_name": "22G",
+    "type": "protein"
+  },
+  "(3-f)tyr-egfp": {
+    "canonical_name": "(3-F)Tyr-EGFP",
+    "type": "protein"
+  },
+  "5b": {
+    "canonical_name": "5B",
+    "type": "protein"
+  },
+  "9b": {
+    "canonical_name": "5B",
+    "type": "protein"
+  },
+  "6c": {
+    "canonical_name": "6C",
+    "type": "protein"
+  },
+  "a1a": {
+    "canonical_name": "A1a",
+    "type": "protein"
+  },
+  "a44-kr": {
+    "canonical_name": "A44-KR",
+    "type": "protein"
+  },
+  "a44-killerred": {
+    "canonical_name": "A44-KR",
+    "type": "protein"
+  },
+  "aacucp": {
+    "canonical_name": "aacuCP",
+    "type": "protein"
+  },
+  "aacugfp1": {
+    "canonical_name": "aacuGFP1",
+    "type": "protein"
+  },
+  "aacugfp2": {
+    "canonical_name": "aacuGFP2",
+    "type": "protein"
+  },
+  "aausfp1": {
+    "canonical_name": "AausFP1",
+    "type": "protein"
+  },
+  "aausfp2": {
+    "canonical_name": "AausFP2",
+    "type": "protein"
+  },
+  "aausfp3": {
+    "canonical_name": "AausFP3",
+    "type": "protein"
+  },
+  "aausfp4": {
+    "canonical_name": "AausFP4",
+    "type": "protein"
+  },
+  "aausgfp": {
+    "canonical_name": "AausGFP",
+    "type": "protein"
+  },
+  "acanfp": {
+    "canonical_name": "acanFP",
+    "type": "protein"
+  },
+  "acegfp": {
+    "canonical_name": "aceGFP",
+    "type": "protein"
+  },
+  "acegfp-g222e-y220l": {
+    "canonical_name": "aceGFP-G222E-Y220L",
+    "type": "protein"
+  },
+  "acegfp-h": {
+    "canonical_name": "aceGFP-h",
+    "type": "protein"
+  },
+  "acgfp1": {
+    "canonical_name": "AcGFP1",
+    "type": "protein"
+  },
+  "achilles": {
+    "canonical_name": "Achilles",
+    "type": "protein"
+  },
+  "adred": {
+    "canonical_name": "AdRed",
+    "type": "protein"
+  },
+  "adred-c148s": {
+    "canonical_name": "AdRed-C148S",
+    "type": "protein"
+  },
+  "aeblue": {
+    "canonical_name": "aeBlue",
+    "type": "protein"
+  },
+  "aecp597": {
+    "canonical_name": "aeBlue",
+    "type": "protein"
+  },
+  "aeurgfp": {
+    "canonical_name": "aeurGFP",
+    "type": "protein"
+  },
+  "afcfp": {
+    "canonical_name": "afCFP",
+    "type": "protein"
+  },
+  "tolles": {
+    "canonical_name": "afCFP",
+    "type": "protein"
+  },
+  "afragfp": {
+    "canonical_name": "afraGFP",
+    "type": "protein"
+  },
+  "ahyacp": {
+    "canonical_name": "ahyaCP",
+    "type": "protein"
+  },
+  "alajgfp1": {
+    "canonical_name": "alajGFP1",
+    "type": "protein"
+  },
+  "alajgfp2": {
+    "canonical_name": "alajGFP2",
+    "type": "protein"
+  },
+  "alajgfp3": {
+    "canonical_name": "alajGFP3",
+    "type": "protein"
+  },
+  "&alpha;gfp": {
+    "canonical_name": "&alpha;GFP",
+    "type": "protein"
+  },
+  "cycle 3": {
+    "canonical_name": "&alpha;GFP",
+    "type": "protein"
+  },
+  "alphagfp": {
+    "canonical_name": "&alpha;GFP",
+    "type": "protein"
+  },
+  "gfpuv": {
+    "canonical_name": "&alpha;GFP",
+    "type": "protein"
+  },
+  "amcyan1": {
+    "canonical_name": "amCyan1",
+    "type": "protein"
+  },
+  "amcyan": {
+    "canonical_name": "amCyan1",
+    "type": "protein"
+  },
+  "amfp486": {
+    "canonical_name": "amFP486",
+    "type": "protein"
+  },
+  "amajgfp": {
+    "canonical_name": "amFP486",
+    "type": "protein"
+  },
+  "amajcfp": {
+    "canonical_name": "amFP486",
+    "type": "protein"
+  },
+  "amajlime": {
+    "canonical_name": "amFP486",
+    "type": "protein"
+  },
+  "amfp495": {
+    "canonical_name": "amFP495",
+    "type": "protein"
+  },
+  "amfp506": {
+    "canonical_name": "amFP506",
+    "type": "protein"
+  },
+  "amfp486-e150q": {
+    "canonical_name": "amFP506",
+    "type": "protein"
+  },
+  "amfp515": {
+    "canonical_name": "amFP515",
+    "type": "protein"
+  },
+  "amfp486-h199t": {
+    "canonical_name": "amFP515",
+    "type": "protein"
+  },
+  "amilcp": {
+    "canonical_name": "amilCP",
+    "type": "protein"
+  },
+  "amilcp580": {
+    "canonical_name": "amilCP580",
+    "type": "protein"
+  },
+  "amilcp586": {
+    "canonical_name": "amilCP586",
+    "type": "protein"
+  },
+  "amilcp604": {
+    "canonical_name": "amilCP604",
+    "type": "protein"
+  },
+  "amilcp-orange": {
+    "canonical_name": "amilCP-Orange",
+    "type": "protein"
+  },
+  "amilcp-pink": {
+    "canonical_name": "amilCP-Pink",
+    "type": "protein"
+  },
+  "amilfp484": {
+    "canonical_name": "amilFP484",
+    "type": "protein"
+  },
+  "amilfp490": {
+    "canonical_name": "amilFP490",
+    "type": "protein"
+  },
+  "amilcfp": {
+    "canonical_name": "amilFP490",
+    "type": "protein"
+  },
+  "amilfp497": {
+    "canonical_name": "amilFP497",
+    "type": "protein"
+  },
+  "amilfp504": {
+    "canonical_name": "amilFP504",
+    "type": "protein"
+  },
+  "amilfp512": {
+    "canonical_name": "amilFP512",
+    "type": "protein"
+  },
+  "amilfp513": {
+    "canonical_name": "amilFP513",
+    "type": "protein"
+  },
+  "amilgfp": {
+    "canonical_name": "amilGFP",
+    "type": "protein"
+  },
+  "amilfp593": {
+    "canonical_name": "amilFP593",
+    "type": "protein"
+  },
+  "amilrfp": {
+    "canonical_name": "amilFP593",
+    "type": "protein"
+  },
+  "amilfp597": {
+    "canonical_name": "amilFP597",
+    "type": "protein"
+  },
+  "anm1gfp1": {
+    "canonical_name": "anm1GFP1",
+    "type": "protein"
+  },
+  "anm1gfp2": {
+    "canonical_name": "anm1GFP2",
+    "type": "protein"
+  },
+  "anm2cp": {
+    "canonical_name": "anm2CP",
+    "type": "protein"
+  },
+  "anobcfp1": {
+    "canonical_name": "anobCFP1",
+    "type": "protein"
+  },
+  "anobcfp2": {
+    "canonical_name": "anobCFP2",
+    "type": "protein"
+  },
+  "anobgfp": {
+    "canonical_name": "anobGFP",
+    "type": "protein"
+  },
+  "apolcp584": {
+    "canonical_name": "apolCP584",
+    "type": "protein"
+  },
+  "apulcp584": {
+    "canonical_name": "apulCP584",
+    "type": "protein"
+  },
+  "apulfp483": {
+    "canonical_name": "apulFP483",
+    "type": "protein"
+  },
+  "aq14": {
+    "canonical_name": "AQ14",
+    "type": "protein"
+  },
+  "aq143": {
+    "canonical_name": "AQ143",
+    "type": "protein"
+  },
+  "aquamarine": {
+    "canonical_name": "Aquamarine",
+    "type": "protein"
+  },
+  "ascp562": {
+    "canonical_name": "asCP562",
+    "type": "protein"
+  },
+  "asulcp562": {
+    "canonical_name": "asCP562",
+    "type": "protein"
+  },
+  "asfp499": {
+    "canonical_name": "asFP499",
+    "type": "protein"
+  },
+  "asulgfp": {
+    "canonical_name": "asFP499",
+    "type": "protein"
+  },
+  "asred2": {
+    "canonical_name": "AsRed2",
+    "type": "protein"
+  },
+  "asulcp": {
+    "canonical_name": "asulCP",
+    "type": "protein"
+  },
+  "ascp": {
+    "canonical_name": "asulCP",
+    "type": "protein"
+  },
+  "ascp595": {
+    "canonical_name": "asulCP",
+    "type": "protein"
+  },
+  "asfp595": {
+    "canonical_name": "asulCP",
+    "type": "protein"
+  },
+  "aspink": {
+    "canonical_name": "asulCP",
+    "type": "protein"
+  },
+  "fp595": {
+    "canonical_name": "asulCP",
+    "type": "protein"
+  },
+  "atenfp": {
+    "canonical_name": "atenFP",
+    "type": "protein"
+  },
+  "avalcp580": {
+    "canonical_name": "avalCP580",
+    "type": "protein"
+  },
+  "avgfp": {
+    "canonical_name": "avGFP",
+    "type": "protein"
+  },
+  "wtgfp": {
+    "canonical_name": "avGFP",
+    "type": "protein"
+  },
+  "gfp": {
+    "canonical_name": "avGFP",
+    "type": "protein"
+  },
+  "gfp10": {
+    "canonical_name": "avGFP",
+    "type": "protein"
+  },
+  "green fluorescent protein": {
+    "canonical_name": "avGFP",
+    "type": "protein"
+  },
+  "avgfp454": {
+    "canonical_name": "avGFP454",
+    "type": "protein"
+  },
+  "avgfp480": {
+    "canonical_name": "avGFP480",
+    "type": "protein"
+  },
+  "avgfp509": {
+    "canonical_name": "avGFP509",
+    "type": "protein"
+  },
+  "avgfp510": {
+    "canonical_name": "avGFP510",
+    "type": "protein"
+  },
+  "avgfp514": {
+    "canonical_name": "avGFP514",
+    "type": "protein"
+  },
+  "avgfp523": {
+    "canonical_name": "avGFP523",
+    "type": "protein"
+  },
+  "avicfp1": {
+    "canonical_name": "AvicFP1",
+    "type": "protein"
+  },
+  "avicfp2": {
+    "canonical_name": "AvicFP2",
+    "type": "protein"
+  },
+  "avicfp3": {
+    "canonical_name": "AvicFP3",
+    "type": "protein"
+  },
+  "avicfp4": {
+    "canonical_name": "AvicFP4",
+    "type": "protein"
+  },
+  "azaleab5": {
+    "canonical_name": "AzaleaB5",
+    "type": "protein"
+  },
+  "azamigreen": {
+    "canonical_name": "AzamiGreen",
+    "type": "protein"
+  },
+  "ag": {
+    "canonical_name": "AzamiGreen",
+    "type": "protein"
+  },
+  "azamired1.0": {
+    "canonical_name": "AzamiRed1.0",
+    "type": "protein"
+  },
+  "azurite": {
+    "canonical_name": "Azurite",
+    "type": "protein"
+  },
+  "bfp.b3": {
+    "canonical_name": "Azurite",
+    "type": "protein"
+  },
+  "bdfp1.6": {
+    "canonical_name": "BDFP1.6",
+    "type": "protein"
+  },
+  "bdfp1.8": {
+    "canonical_name": "BDFP1.8",
+    "type": "protein"
+  },
+  "bdfp2.0": {
+    "canonical_name": "BDFP2.0",
+    "type": "protein"
+  },
+  "bflogfpa1": {
+    "canonical_name": "bfloGFPa1",
+    "type": "protein"
+  },
+  "bflogfpc1": {
+    "canonical_name": "bfloGFPc1",
+    "type": "protein"
+  },
+  "bfp": {
+    "canonical_name": "BFP",
+    "type": "protein"
+  },
+  "p4-3": {
+    "canonical_name": "BFP",
+    "type": "protein"
+  },
+  "bfp5": {
+    "canonical_name": "BFP5",
+    "type": "protein"
+  },
+  "bfp.a5": {
+    "canonical_name": "BFP.A5",
+    "type": "protein"
+  },
+  "bfpsol": {
+    "canonical_name": "BFPsol",
+    "type": "protein"
+  },
+  "blue102": {
+    "canonical_name": "Blue102",
+    "type": "protein"
+  },
+  "bluebonnet2": {
+    "canonical_name": "Bluebonnet2",
+    "type": "protein"
+  },
+  "bovine serum albumin": {
+    "canonical_name": "Bovine serum albumin",
+    "type": "protein"
+  },
+  "bsa": {
+    "canonical_name": "Bovine serum albumin",
+    "type": "protein"
+  },
+  "bp02": {
+    "canonical_name": "BP02",
+    "type": "protein"
+  },
+  "br1": {
+    "canonical_name": "BR1",
+    "type": "protein"
+  }
+}

@@ -1,0 +1,400 @@
+{
+  "Zeiss LSM 980": [
+    "LSM980",
+    "LSM 980",
+    "Zeiss 980"
+  ],
+  "Zeiss LSM 900": [
+    "LSM900",
+    "LSM 900",
+    "Zeiss 900"
+  ],
+  "Zeiss LSM 880": [
+    "LSM880",
+    "LSM 880",
+    "Zeiss 880"
+  ],
+  "Zeiss LSM 800": [
+    "LSM800",
+    "LSM 800",
+    "Zeiss 800"
+  ],
+  "Zeiss LSM 780": [
+    "LSM780",
+    "LSM 780",
+    "Zeiss 780"
+  ],
+  "Zeiss LSM 710": [
+    "LSM710",
+    "LSM 710",
+    "Zeiss 710"
+  ],
+  "Zeiss LSM 700": [
+    "LSM700",
+    "LSM 700",
+    "Zeiss 700"
+  ],
+  "Zeiss LSM 510": [
+    "LSM510",
+    "LSM 510",
+    "LSM 510 META",
+    "Zeiss 510"
+  ],
+  "Zeiss Elyra 7": [
+    "Elyra 7",
+    "Elyra7",
+    "Zeiss Elyra 7"
+  ],
+  "Zeiss Elyra": [
+    "Elyra PS.1",
+    "Elyra S.1",
+    "Zeiss Elyra"
+  ],
+  "Zeiss Lightsheet 7": [
+    "Lightsheet 7",
+    "Lightsheet7",
+    "Zeiss Lightsheet 7",
+    "LS7"
+  ],
+  "Zeiss Lightsheet Z.1": [
+    "Lightsheet Z.1",
+    "Z.1",
+    "Zeiss Z.1",
+    "LSFM Z.1"
+  ],
+  "Zeiss Celldiscoverer 7": [
+    "Celldiscoverer 7",
+    "CD7",
+    "Zeiss CD7"
+  ],
+  "Zeiss Axio Observer": [
+    "Axio Observer",
+    "Axio Observer 7",
+    "AxioObserver",
+    "Axio Observer.Z1",
+    "Observer Z1",
+    "Observer 7"
+  ],
+  "Zeiss Axio Imager": [
+    "Axio Imager",
+    "Axio Imager.Z2",
+    "Axio Imager.M2",
+    "AxioImager"
+  ],
+  "Zeiss Axiovert": [
+    "Axiovert 200",
+    "Axiovert 200M",
+    "Axiovert 135",
+    "Axiovert 100"
+  ],
+  "Zeiss Axioskop": [
+    "Axioskop",
+    "Axioskop 2",
+    "Axioskop 40"
+  ],
+  "Leica Stellaris": [
+    "STELLARIS",
+    "Stellaris 5",
+    "Stellaris 8",
+    "Leica Stellaris",
+    "STELLARIS 5",
+    "STELLARIS 8"
+  ],
+  "Leica SP8": [
+    "SP8",
+    "TCS SP8",
+    "Leica SP8",
+    "SP8 STED",
+    "SP8 FALCON",
+    "SP8 DIVE",
+    "SP8 LIGHTNING",
+    "TCS SP8 STED 3X",
+    "SP8 MP",
+    "SP8 DLS"
+  ],
+  "Leica SP5": [
+    "SP5",
+    "TCS SP5",
+    "Leica SP5",
+    "SP5 II",
+    "SP5 MP",
+    "SP5 STED"
+  ],
+  "Leica STED 3X": [
+    "STED 3X",
+    "TCS SP8 STED 3X",
+    "Leica STED",
+    "Leica STED 3X"
+  ],
+  "Leica THUNDER": [
+    "THUNDER",
+    "THUNDER Imager",
+    "Leica THUNDER"
+  ],
+  "Leica DMi8": [
+    "DMi8",
+    "DM i8",
+    "Leica DMi8"
+  ],
+  "Leica DM6": [
+    "DM6",
+    "DM6 B",
+    "DM6 FS",
+    "DM6 M",
+    "Leica DM6"
+  ],
+  "Nikon AX": [
+    "AX",
+    "AX R",
+    "AXR",
+    "Nikon AX",
+    "Nikon AXR",
+    "AX R with NSPARC"
+  ],
+  "Nikon A1": [
+    "A1",
+    "A1R",
+    "A1 HD25",
+    "A1R HD25",
+    "Nikon A1",
+    "Nikon A1R",
+    "A1R+",
+    "A1 MP+",
+    "C2+"
+  ],
+  "Nikon C2+": [
+    "C2",
+    "C2+",
+    "C2si",
+    "Nikon C2"
+  ],
+  "Nikon N-SIM": [
+    "N-SIM",
+    "N-SIM S",
+    "N-SIM E",
+    "NSIM",
+    "Nikon SIM",
+    "Nikon N-SIM"
+  ],
+  "Nikon N-STORM": [
+    "N-STORM",
+    "NSTORM",
+    "Nikon STORM",
+    "Nikon N-STORM"
+  ],
+  "Nikon Ti2": [
+    "Ti2",
+    "Ti2-E",
+    "Ti2-A",
+    "Ti2-U",
+    "Eclipse Ti2",
+    "Nikon Ti2"
+  ],
+  "Nikon Ti": [
+    "Ti",
+    "Ti-E",
+    "Ti-S",
+    "Ti-U",
+    "Eclipse Ti",
+    "Nikon Ti"
+  ],
+  "Olympus FV3000": [
+    "FV3000",
+    "FV3000RS",
+    "FLUOVIEW FV3000",
+    "Olympus FV3000",
+    "Evident FV3000"
+  ],
+  "Olympus FV1200": [
+    "FV1200",
+    "FV1200MPE",
+    "FLUOVIEW FV1200",
+    "Olympus FV1200"
+  ],
+  "Olympus FV1000": [
+    "FV1000",
+    "FV1000MPE",
+    "FLUOVIEW FV1000",
+    "Olympus FV1000"
+  ],
+  "Olympus IX83": [
+    "IX83",
+    "Olympus IX83",
+    "Evident IX83"
+  ],
+  "Olympus IX73": [
+    "IX73",
+    "Olympus IX73"
+  ],
+  "Olympus BX63": [
+    "BX63",
+    "Olympus BX63",
+    "BX63F"
+  ],
+  "Olympus SpinSR": [
+    "SpinSR",
+    "SpinSR10",
+    "IXplore SpinSR",
+    "Olympus SpinSR"
+  ],
+  "Olympus VS120": [
+    "VS120",
+    "Olympus VS120",
+    "VS120-L100"
+  ],
+  "Yokogawa CSU-W1": [
+    "CSU-W1",
+    "CSUW1",
+    "Yokogawa W1",
+    "CSU-W1 SoRa"
+  ],
+  "Yokogawa CSU-X1": [
+    "CSU-X1",
+    "CSUX1",
+    "Yokogawa X1"
+  ],
+  "Abberior STEDYCON": [
+    "STEDYCON",
+    "Abberior STEDYCON"
+  ],
+  "Abberior Facility Line": [
+    "Facility Line",
+    "Abberior Facility Line",
+    "Abberior STED"
+  ],
+  "Luxendo MuVi SPIM": [
+    "MuVi SPIM",
+    "MuVi-SPIM",
+    "Luxendo MuVi"
+  ],
+  "LaVision BioTec UltraMicroscope": [
+    "UltraMicroscope",
+    "UltraMicroscope II",
+    "UltraMicroscope Blaze",
+    "LaVision UltraMicroscope"
+  ],
+  "3i (Intelligent Imaging) Marianas": [
+    "Marianas",
+    "3i Marianas",
+    "Intelligent Imaging Marianas"
+  ],
+  "Community MesoSPIM": [
+    "mesoSPIM",
+    "MesoSPIM",
+    "meso-SPIM"
+  ],
+  "Community diSPIM": [
+    "diSPIM",
+    "ASI diSPIM"
+  ],
+  "Community OpenSPIM": [
+    "OpenSPIM",
+    "Open SPIM"
+  ],
+  "LifeCanvas SmartSPIM": [
+    "SmartSPIM",
+    "LifeCanvas SmartSPIM"
+  ],
+  "FEI Titan": [
+    "Titan",
+    "Titan Krios",
+    "Titan Halo",
+    "FEI Titan",
+    "Thermo Fisher Titan Krios"
+  ],
+  "FEI Glacios": [
+    "Glacios",
+    "Glacios 2",
+    "FEI Glacios",
+    "Thermo Fisher Glacios"
+  ],
+  "FEI Talos": [
+    "Talos",
+    "Talos Arctica",
+    "Talos L120C",
+    "FEI Talos",
+    "Thermo Fisher Talos"
+  ],
+  "FEI Tecnai": [
+    "Tecnai",
+    "Tecnai G2",
+    "Tecnai F20",
+    "Tecnai F30",
+    "Tecnai Spirit",
+    "FEI Tecnai"
+  ],
+  "FEI Helios": [
+    "Helios",
+    "Helios NanoLab",
+    "Helios G4",
+    "FEI Helios"
+  ],
+  "JEOL JEM-1400": [
+    "JEM-1400",
+    "JEM-1400Plus",
+    "JEM-1400Flash",
+    "JEOL 1400"
+  ],
+  "JEOL JEM-2100": [
+    "JEM-2100",
+    "JEM-2100F",
+    "JEM-2100Plus",
+    "JEOL 2100"
+  ],
+  "JEOL CRYO ARM": [
+    "CRYO ARM",
+    "CRYO ARM 200",
+    "CRYO ARM 300",
+    "JEOL CRYO ARM",
+    "JEM-Z200FSC",
+    "JEM-Z300FSC"
+  ],
+  "PerkinElmer Opera Phenix": [
+    "Opera Phenix",
+    "Opera Phenix Plus",
+    "PerkinElmer Opera",
+    "Operetta",
+    "Operetta CLS"
+  ],
+  "Molecular Devices ImageXpress": [
+    "ImageXpress",
+    "ImageXpress Micro",
+    "ImageXpress Confocal",
+    "ImageXpress Pico",
+    "IXM"
+  ],
+  "Bruker Ultima Investigator": [
+    "Ultima Investigator",
+    "Ultima 2Pplus",
+    "Bruker Ultima",
+    "Prairie Ultima"
+  ],
+  "Thorlabs Bergamo": [
+    "Bergamo",
+    "Bergamo II",
+    "Thorlabs Bergamo"
+  ],
+  "Olympus FV4000": [
+    "FV4000",
+    "FLUOVIEW FV4000",
+    "FV4000MPE",
+    "Evident FV4000",
+    "Olympus FV4000"
+  ],
+  "Hamamatsu NanoZoomer": [
+    "NanoZoomer",
+    "NanoZoomer S360",
+    "NanoZoomer S60",
+    "NanoZoomer S210",
+    "NanoZoomer XR",
+    "Hamamatsu NanoZoomer"
+  ],
+  "Leica Aperio": [
+    "Aperio",
+    "Aperio AT2",
+    "Aperio CS2",
+    "Aperio GT 450",
+    "Aperio VERSA",
+    "Leica Aperio"
+  ]
+}

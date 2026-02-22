@@ -1,0 +1,2690 @@
+{
+  "download_date": "2026-02-21T17:31:21.057486",
+  "source": "https://www.fpbase.org/graphql/",
+  "proteins": [
+    {
+      "name": "10B",
+      "slug": "10b",
+      "aliases": [],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLGYGVQCFARYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSYQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": {
+        "name": "10B",
+        "exMax": 513.0,
+        "emMax": 525.0,
+        "extCoeff": 30800.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "10B",
+          "exMax": 513.0,
+          "emMax": 525.0,
+          "extCoeff": 30800.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "11",
+      "slug": "11",
+      "aliases": [],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFGYGVQCFARYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSWQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "11",
+        "exMax": 502.0,
+        "emMax": 512.0,
+        "extCoeff": 33000.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "11",
+          "exMax": 502.0,
+          "emMax": 512.0,
+          "extCoeff": 33000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "22G",
+      "slug": "22g",
+      "aliases": [],
+      "seq": "MSVIKPDMKIKLRMEGAVNGHPFAIEGVGLGKPFEGKQSMDLKVKEGGPLPFAYDILTTVFCYGNRVFAKYPENIVDYFKQSFPEGYSWERSMNYEDGGICIATNDITLDGDCFIYEIRFDGVNFPANGPVMQKRTVKWEPSTEKLYVRDGVLKGDVNMALLLEGGGHYRCDFKTTYKAKKVVQLPDYHFVDHRIEIKSHDKDYNNVNLHEHAEAHSGLPRQAK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "(3-F)Tyr-EGFP",
+      "slug": "3-ftyr-egfp",
+      "aliases": [],
+      "seq": "SKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLGYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGI",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "(3-F)Tyr-EGFP",
+        "exMax": 484.0,
+        "emMax": 514.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "(3-F)Tyr-EGFP",
+          "exMax": 484.0,
+          "emMax": 514.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "5B",
+      "slug": "5b",
+      "aliases": [
+        "9B"
+      ],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSHQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": {
+        "name": "5B",
+        "exMax": 512.0,
+        "emMax": 524.0,
+        "extCoeff": 19400.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "5B",
+          "exMax": 512.0,
+          "emMax": 524.0,
+          "extCoeff": 19400.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "6C",
+      "slug": "6c",
+      "aliases": null,
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSYQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "A1a",
+      "slug": "a1a",
+      "aliases": [],
+      "seq": "MALSKHGLTKDMTMKYHMEGSVDGHKFVITGHGDGNPFEGKQTINLCVAEGGPLPFSEDILSAAFDYGNRVFTEYPQGMVDFFKNSCPAGYTWHRSLLFEDGAVCTTSADITVSVEENCFYHNSKFHGVNFPADGPVMKKMTTNWEPSCEKIIPVPRQGILKGDIAMYLLLKDGGRYRCQFDTIYKAKSDPKEMPEWHFIQHKLTREDRSDAKNQKWQLVEHAVASRSALPG",
+      "chromophore": "DYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "A44-KR",
+      "slug": "a44-kr",
+      "aliases": [
+        "A44-KillerRed"
+      ],
+      "seq": "MEGGPALFQSDMTFKIFIDGEVNGQKFTIVADGSSKFPHGDFNAHAVCETGKLPMSWKPICHLIQYGEPFFARYPDGISHFAQECFPEGLSIDRTVRFENDGTMTSHHTYELDDTCVVSRITVNCDGFQPDGPIMRDQLVDILPNETHMFPHGPNAVRQLAFIGFTTADGGLMMGHFDSKMTFNGSRAIEIPGPHFVTIITKQMRDTSDKRDHVCQREVAYAHSVPRITSAIGSDED",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "A44-KR",
+        "exMax": 397.0,
+        "emMax": 520.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "A44-KR",
+          "exMax": 397.0,
+          "emMax": 520.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "aacuCP",
+      "slug": "aacucp",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVKLTVTKGGPLPFAWDILSPQSQYGSIPFTKYPDDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYNVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLIGNNFMALKLEGGGHYLCEFKSTYKAKKPVRMPGYHYVDRKLDVTNHNRDYTSVEQCEISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": [
+        {
+          "name": "aacuCP",
+          "exMax": 580.0,
+          "emMax": null,
+          "extCoeff": 109000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "aacuGFP1",
+      "slug": "aacugfp1",
+      "aliases": [],
+      "seq": "MSLSKHGITQEMPTKYHMKGSVNGHEFEIEGVGTGHPYEGTHMAELVIIKPAGKPLPFSFDILSTVIQYGNRCFTKYPADLPDYFKQAYPGGMSYERSFVYQDGGIATASWNVGLEGNCFIHKSTYLGVNFPADGPVMTKKTIGWDKAFEKMTGFNEVLRGDVTEFLMLEGGGYHSCQFHSTYKPEKPVELPPNHVIEHHIVRTDLGKTAKGFMVKLVQHAAAHVNPLKVQ",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aacuGFP1",
+        "exMax": 478.0,
+        "emMax": 502.0,
+        "extCoeff": 36900.0,
+        "qy": 0.61,
+        "brightness": 22.51,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aacuGFP1",
+          "exMax": 478.0,
+          "emMax": 502.0,
+          "extCoeff": 36900.0,
+          "qy": 0.61,
+          "brightness": 22.51
+        }
+      ]
+    },
+    {
+      "name": "aacuGFP2",
+      "slug": "aacugfp2",
+      "aliases": [],
+      "seq": "MSYSKQGIVQEMKTKYRMEGSVNGHEFTIEGVGTGYPYEGKQMSELVIIKPKGKPLPFSFDILSSVFQYGNRCFTKYPADMPDYFKQAFPDGMSYERSFLFEDGAVATASWNIRLEGNCFIHNSIFHGVNFPADGPVMKKKTIGWDKSFEKMTVSKEVLRGDVTMFLMLEGGGYHRCQFHSTYKTEKPVELPPNHVVEHQIVRTDLGQSAKGFTVKLEAHAAAHVNPLKVQ",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aacuGFP2",
+        "exMax": 502.0,
+        "emMax": 513.0,
+        "extCoeff": 93900.0,
+        "qy": 0.71,
+        "brightness": 66.67,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aacuGFP2",
+          "exMax": 502.0,
+          "emMax": 513.0,
+          "extCoeff": 93900.0,
+          "qy": 0.71,
+          "brightness": 66.67
+        }
+      ]
+    },
+    {
+      "name": "AausFP1",
+      "slug": "aausfp1",
+      "aliases": [],
+      "seq": "MSYGALLFREKIPYVVEMEGDVEGMKFSVRGKGHGDANTGKIEASFICTTGELPVPWSSILTTVTYGAQCFAKYPNDIKDYPKSAMPEGYVQERTITFENDGVYKTRAEVTYEKGSVYNRVTLNGSGFKKGGNILGKKLEFNYNPHCIYVLPDVQNNGIKCYINIVHDVIGGGQIIAAHQQLNTPLGGGPVDIPHYHHIQAHTILSKDPKETRDHMNVVEVFRAIDCKTAYA",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AausFP1 (AausFP1)",
+        "exMax": 504.0,
+        "emMax": 510.0,
+        "extCoeff": 170000.0,
+        "qy": 0.97,
+        "brightness": 164.9,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AausFP1 (AausFP1)",
+          "exMax": 504.0,
+          "emMax": 510.0,
+          "extCoeff": 170000.0,
+          "qy": 0.97,
+          "brightness": 164.9
+        }
+      ]
+    },
+    {
+      "name": "AausFP2",
+      "slug": "aausfp2",
+      "aliases": [],
+      "seq": "MACGALLFKGKIPFVVELEGDVNGEVFSVRGNGWGDGSTGKLEIKFVCTTGEVPLAWESLICSMAYGALVFCKYPSNINDFFKSTMPRGYIQERKISYENDGTFDVRQEVTYENGALYNRVKFNGSGFRKDGNVLGKKLDLTSIGTCIYIMGNDEGTGLKGVFNKAFKVIGGNRQIASHVQTQTPIGDGLVSIPDYHVMHNHIACSKDPSETRDHIIVKESLRAVDCNTEYM",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AausFP2",
+        "exMax": 609.0,
+        "emMax": null,
+        "extCoeff": 52000.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AausFP2",
+          "exMax": 609.0,
+          "emMax": null,
+          "extCoeff": 52000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AausFP3",
+      "slug": "aausfp3",
+      "aliases": [],
+      "seq": "MACGALLFKGKIPFVVELEGDVNGEVFSVRGNGWGDGSTGKIEIKFVCTTGEIPVAWESLVCSLAYGALVFAKYPSNINDFFKSTMPKGYIQERNIQFENDGQYVTRAEVTYENGTLYNRVKLNGSGFRKDGNILGKKLDSTSLGTCIYIMGNDQGNGLKGVYNKAYKVIGGNRQLASHQQTHTPIGDGLVSIPDYHVMHNHIACSKDPSETRDHIIVKESLRAVDCNTEYM",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AausFP3",
+        "exMax": 587.0,
+        "emMax": null,
+        "extCoeff": 59000.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AausFP3",
+          "exMax": 587.0,
+          "emMax": null,
+          "extCoeff": 59000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AausFP4",
+      "slug": "aausfp4",
+      "aliases": [],
+      "seq": "MNCGALLFQQKVPFIVEMEGDVNGEIFSVRGNGFGNATTGKLDILFVCTTGEIPVAWESLISSLAYGAFVFAKYPSNIADFFKSTMPEGYIQERKVTFENDGTYETHATVTYENGAIFERVKLTGTGFREDGNILGKKLEITSLGTPLSIMADDEGKGLRSVFNQAIKVVGGNRQIAIHEQRNRPIGDGLISVPDYHTLHNHLKCSKVSTEKRDHMMVNETLKAIDCQTAYL",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "PS",
+      "defaultState": {
+        "name": "AausFP4 (On)",
+        "exMax": 477.0,
+        "emMax": 513.0,
+        "extCoeff": 69000.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AausFP4 (On)",
+          "exMax": 477.0,
+          "emMax": 513.0,
+          "extCoeff": 69000.0,
+          "qy": null,
+          "brightness": null
+        },
+        {
+          "name": "AausFP4 (Off)",
+          "exMax": null,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": 0.001,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AausGFP",
+      "slug": "aausgfp",
+      "aliases": [],
+      "seq": "MKIYCEGEKLFKGIVPIQIELNGDVNGHKFSVHGEGQGEAEMGRLTLRFVCTTGKMPVPWPTLVTTFSYGVQCFSRYPEHMKMHDFFKSAMPEGYTQERTIFFDKDGTYKTRAEVKFEGDTLVNRIELTGTGFKEDGNILGHKMEYNYNSHNVYIMSDKAKNGIKVNFKIRHNIEDGTVQLADHYQANYPLGKGPVLLPEDHYLSTQSALTKDPHETRDHMLLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AausGFP",
+        "exMax": 398.0,
+        "emMax": 503.0,
+        "extCoeff": 29000.0,
+        "qy": 0.73,
+        "brightness": 21.17,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AausGFP",
+          "exMax": 398.0,
+          "emMax": 503.0,
+          "extCoeff": 29000.0,
+          "qy": 0.73,
+          "brightness": 21.17
+        }
+      ]
+    },
+    {
+      "name": "acanFP",
+      "slug": "acanfp",
+      "aliases": [],
+      "seq": "AIKPDMKIKLCMEGAVNGHPFMIEGEGKGKPFDGKQNMELKVKEGGPLPFAYDILTTVFNYGNRVFAKYPRDIADYFKQSFPEGFSWERSMAYEDGGICIATNNITLMKGDCFXYXIRFDGVNFPANXPVMQKKXVKWEPSTEKLYVRDGVLKGDINMALLLEGGGHYRCDFKTT",
+      "chromophore": "NYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "aceGFP",
+      "slug": "acegfp",
+      "aliases": [],
+      "seq": "MSKGAELFTGIVPILIELNGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSYGVQCFSRYPDHMKQHDFFKSAMPEGYIQERTIFFEDDGNYKSRAEVKFEGDTLVNRIELTGTDFKEDGNILGNKMEYNYNAHNVYIMTDKAKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMIYFGFVTAAAITHGMDELYK",
+      "chromophore": "SYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aceGFP",
+        "exMax": 480.0,
+        "emMax": 505.0,
+        "extCoeff": 50000.0,
+        "qy": 0.55,
+        "brightness": 27.5,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aceGFP",
+          "exMax": 480.0,
+          "emMax": 505.0,
+          "extCoeff": 50000.0,
+          "qy": 0.55,
+          "brightness": 27.5
+        }
+      ]
+    },
+    {
+      "name": "aceGFP-G222E-Y220L",
+      "slug": "acegfp-g222e-y220l",
+      "aliases": [],
+      "seq": "MSKGAELFTGIVPILIELNGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSYGVQCFSRYPDHMKQHDFFKSAMPEGYIQERTIFFEDDGNYKSRAEVKFEGDTLVNRIELTGTDFKEDGNILGNKMEYNYNAHNVYIMTDKAKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMILFEFVTAAAITHGMDELYK",
+      "chromophore": "SYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aceGFP-G222E-Y220L",
+        "exMax": 396.0,
+        "emMax": 508.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aceGFP-G222E-Y220L",
+          "exMax": 396.0,
+          "emMax": 508.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "aceGFP-h",
+      "slug": "acegfp-h",
+      "aliases": [],
+      "seq": "SKGAELFTGIVPILIELNGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSYGVQCFSRYPDHMKQHDFFKSAMPEGYIQERTIFFEDDGNYKSRAEVKFEGDTLVNRIELTGTDFKEDGNILGNKMEYNYNAHNVYIMTDKAKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMIYFGFVTAAAITHGMDELYK",
+      "chromophore": "SYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aceGFP-h",
+        "exMax": 390.0,
+        "emMax": 505.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aceGFP-h",
+          "exMax": 390.0,
+          "emMax": 505.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AcGFP1",
+      "slug": "acgfp1",
+      "aliases": [],
+      "seq": "MVSKGAELFTGIVPILIELNGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSYGVQCFSRYPDHMKQHDFFKSAMPEGYIQERTIFFEDDGNYKSRAEVKFEGDTLVNRIELTGTDFKEDGNILGNKMEYNYNAHNVYIMTDKAKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMIYFGFVTAAAITHGMDELYK",
+      "chromophore": "SYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AcGFP1",
+        "exMax": 475.0,
+        "emMax": 505.0,
+        "extCoeff": 50000.0,
+        "qy": 0.55,
+        "brightness": 27.5,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AcGFP1",
+          "exMax": 475.0,
+          "emMax": 505.0,
+          "extCoeff": 50000.0,
+          "qy": 0.55,
+          "brightness": 27.5
+        }
+      ]
+    },
+    {
+      "name": "Achilles",
+      "slug": "achilles",
+      "aliases": [],
+      "seq": "MVSKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATIGKLTLKLICTTGKLPVPWPTLVTTLGYGLAVFARYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGSGFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKANFKIRHNIEDGGVQLADHYQQNTPIGDGPVLLPDNHYLSYQSFLSKDPNEKRDHMVLLEFVTAAGITLGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "Achilles",
+        "exMax": 513.0,
+        "emMax": 525.0,
+        "extCoeff": 110000.0,
+        "qy": 0.64,
+        "brightness": 70.4,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "Achilles",
+          "exMax": 513.0,
+          "emMax": 525.0,
+          "extCoeff": 110000.0,
+          "qy": 0.64,
+          "brightness": 70.4
+        }
+      ]
+    },
+    {
+      "name": "AdRed",
+      "slug": "adred",
+      "aliases": [],
+      "seq": "MALSKHGLTKDMTMKYRMEGCVDGHKFVITGHGNGSPFEGKQTINLCVVEGGPLPFSEDILSAVFDYGNRVFTDYPQGMVDFFKNSCPAGYTWQRSLLFEDGAVCTASADITVSVEENCFYHESKFHGVNFPADGPVMKKMTINWEPCCEKIIPVPRQGILKGDVAMYLLLKDGGRYRCQFDTVYKAKTDSKKMPEWHFIQHKLTREDRSDAKNQKWQLAEHSVASRSALP",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AdRed",
+        "exMax": 567.0,
+        "emMax": 612.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AdRed",
+          "exMax": 567.0,
+          "emMax": 612.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AdRed-C148S",
+      "slug": "adred-c148s",
+      "aliases": [],
+      "seq": "MALSKHGLTKDMTMKYRMEGCVDGHKFVITGHGNGSPFEGKQTINLCVVEGGPLPFSEDILSAVFDYGNRVFTDYPQGMVDFFKNSCPAGYTWQRSLLFEDGAVCTASADITVSVEENCFYHESKFHGVNFPADGPVMKKMTINWEPSCEKIIPVPRQGILKGDVAMYLLLKDGGRYRCQFDTVYKAKTDSKKMPEWHFIQHKLTREDRSDAKNQKWQLAEHSVASRSALP",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AdRed-C148S",
+        "exMax": 560.0,
+        "emMax": 599.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AdRed-C148S",
+          "exMax": 560.0,
+          "emMax": 599.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "aeBlue",
+      "slug": "aeblue",
+      "aliases": [
+        "aeCP597"
+      ],
+      "seq": "MASLVKKDMCIKMTMEGTVNGHHFKCVGEGEGKPFEGTQVEKIRITEGGPLPFAYDILAPCCMYGSKTFIKHVSGIPDYFKESFPEGFTWERTQIFEDGGYLTIHQDTSLQGNNFIFKVNVIGANFPANGPVMQKKTAGWEPCVEMLYPRDGVLCGQSLMALKCTDGNHLTSHLRTTYRSRKPSNAVNMPEFHFGDHRIEILKAEQGKFYEQYESAVARYCEAAPSKLGHH",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aeBlue",
+        "exMax": 597.0,
+        "emMax": null,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aeBlue",
+          "exMax": 597.0,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "aeurGFP",
+      "slug": "aeurgfp",
+      "aliases": [],
+      "seq": "MSYSKQGIVQEMKTKYHMEGSVNGHEFTIEGVATGYPYEGKQMSELVIIKPKGKPLPFSFDILSSVFQYGNRCFTKYPADIPDYFKQAFPDGMSYERSFLFEDGAVATASWNIRLEGNCFIHNSIFHGVNFPADGPVMKKQTIGWDKSFEKMTVSKEVLRGDVTMFLMLEGGGYHRCQFHSTYKTEKPVTLPPNHVVEHQIVRTDLGQSAKGFTVKLEALAAAHVNPLKVQ",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "aeurGFP",
+        "exMax": 504.0,
+        "emMax": 515.0,
+        "extCoeff": 145700.0,
+        "qy": 0.67,
+        "brightness": 97.62,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "aeurGFP",
+          "exMax": 504.0,
+          "emMax": 515.0,
+          "extCoeff": 145700.0,
+          "qy": 0.67,
+          "brightness": 97.62
+        }
+      ]
+    },
+    {
+      "name": "afCFP",
+      "slug": "afcfp",
+      "aliases": [
+        "TOLLES"
+      ],
+      "seq": "MVSVIKPEMKIKLCMRGTVNGHNFVIEGEGKGNPYEGTQILDLNVTEGAPLPFAYDILSTSFQYGNRAFTKYPADIQDYFKQAFPEGYHWERSMTYEDQGICTATSNISMRGDCFFYDIRFDGTNFPPNGPVMQKKTLKWEPDTEKMYVEDGVLKGDVNMRLLLEGGGHYRCDVKTTYKAKKEVSLPDAHKIDHRIEILEHDKDYNKVKLCENAVARASMLPSQAK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "afCFP",
+        "exMax": 406.0,
+        "emMax": 499.0,
+        "extCoeff": 30000.0,
+        "qy": 0.79,
+        "brightness": 23.7,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "afCFP",
+          "exMax": 406.0,
+          "emMax": 499.0,
+          "extCoeff": 30000.0,
+          "qy": 0.79,
+          "brightness": 23.7
+        }
+      ]
+    },
+    {
+      "name": "afraGFP",
+      "slug": "afragfp",
+      "aliases": [],
+      "seq": "MSVIVKEMMTKLHMEGTVNGHAFTIEGKGKGDPYNGVQSMNLDVKGGAPLPFSFDLLTPAFMYGNRVFTKYPEDIPDFFKQVFPEGYHWERSITFEDQAVCTATSHIRLDQKEMCFIYDVRFHGVNFPANGPIMQKKILGWEPSTEKMYARDGVLKGDVNMTLRVEGGGHYRADFRTTYKAKKPVNLPGYHFIDHRIEITKHSKDYTNVALYEAAVARHSPLPKVA",
+      "chromophore": "MYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "afraGFP",
+        "exMax": 494.0,
+        "emMax": 503.0,
+        "extCoeff": 100800.0,
+        "qy": 0.61,
+        "brightness": 61.49,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "afraGFP",
+          "exMax": 494.0,
+          "emMax": 503.0,
+          "extCoeff": 100800.0,
+          "qy": 0.61,
+          "brightness": 61.49
+        }
+      ]
+    },
+    {
+      "name": "ahyaCP",
+      "slug": "ahyacp",
+      "aliases": [],
+      "seq": "MSVIATQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVRLTVTKGGPLPFAWDILSPQSQYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGVLIGNNFMALKLEGGGHYLCEFKSTYKAKKPVKMPGYHFVDRKLDVTNHNKDYTSVEQREISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": [
+        {
+          "name": "ahyaCP",
+          "exMax": 580.0,
+          "emMax": null,
+          "extCoeff": 132000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "alajGFP1",
+      "slug": "alajgfp1",
+      "aliases": [],
+      "seq": "MSLSKQVIGKEMNMTYLMDGSVNGHNFTVEGEGDGKPYEGHQCLKLRITKGEPLPFAFDILTAAFCYGNRCFVNYPAEIADYFKQAFPEGLTWERSMTFEDGGFAAVSADISLNGNCFVHQSKFVGVNFPADGPVMQKKTVGWEPSTEKMIVRDGILEGDVTMYLKLEGGGNYRCEYRTIYKAKKDVKMPKSHFVEHTLVRNNIKKDAKGNTIELIEDASARY",
+      "chromophore": "CYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "alajGFP1",
+        "exMax": 509.0,
+        "emMax": 517.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "alajGFP1",
+          "exMax": 509.0,
+          "emMax": 517.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "alajGFP2",
+      "slug": "alajgfp2",
+      "aliases": [],
+      "seq": "MVLSKQMNMTYLMDGSVNGHNFTVEGEGDGKPYEGHQCLKLRITKGEPLPFAFDILTAAFCYGNRCFVNYPAEIADYFKQAFPEGLTWERSMTFEDGGFAAVSADLSLKNGNWFVHQSKFVGVNFPADGPVMQKKTVGWEPSTEKMIVRDGTLEGDVTMYLKLEGGGNYRCDYRTIYKAKKDVKMPKSHFVEHTLVRNNIKKDAKGNTIELIEDASARY",
+      "chromophore": "CYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "alajGFP2",
+        "exMax": 509.0,
+        "emMax": 517.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "alajGFP2",
+          "exMax": 509.0,
+          "emMax": 517.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "alajGFP3",
+      "slug": "alajgfp3",
+      "aliases": [],
+      "seq": "MALSKQEIKKEMTMDYVMDGCVNGHSFTVKGDGAGKPYEGHQRLSLHVTGGQPLPFAFDILSAAFAYGNRCFTKYPKEIPDMFKQAFPGGMSWERTMTFEDGGVASVSADISIEKDGCFKHRSKFVGVNFPVNGPVMQNKTRGWEPSIEKMTVRDGTLKGHVTMFLKLEGGGNYRCDFETTYKAKKAVKMLDSHFIEHRLVTTIRGNNVELQEDAEARNSGLGECK",
+      "chromophore": "AYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "alajGFP3",
+        "exMax": 494.0,
+        "emMax": 504.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "alajGFP3",
+          "exMax": 494.0,
+          "emMax": 504.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "&alpha;GFP",
+      "slug": "alphagfp",
+      "aliases": [
+        "cycle 3",
+        "alphaGFP",
+        "GFPuv"
+      ],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMKRHDFFKSAMPEGYVQERTISFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYITADKQKNGIKANFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "&alpha;GFP",
+        "exMax": 397.0,
+        "emMax": 506.0,
+        "extCoeff": 30000.0,
+        "qy": 0.79,
+        "brightness": 23.7,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "&alpha;GFP",
+          "exMax": 397.0,
+          "emMax": 506.0,
+          "extCoeff": 30000.0,
+          "qy": 0.79,
+          "brightness": 23.7
+        }
+      ]
+    },
+    {
+      "name": "amCyan1",
+      "slug": "amcyan1",
+      "aliases": [
+        "amCyan"
+      ],
+      "seq": "MALSNKFIGDDMKMTYHMDGCVNGHYFTVKGEGSGKPYEGTQTSTFKVTMANGGPLAFSFDILSTVFMYGNRCFTAYPTSMPDYFKQAFPDGMSYERTFTYEDGGVATASWEISLKGNCFEHKSTFHGVNFPADGPVMAKMTTGWDPSFEKMTVCDGILKGDVTAFLMLQGGGNYRCQFHTSYKTKKPVTMPPNHAVEHRIARTDLDKGGNSVQLTEHAVAHITSVVPF",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amCyan1",
+        "exMax": 453.0,
+        "emMax": 486.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amCyan1",
+          "exMax": 453.0,
+          "emMax": 486.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amFP486",
+      "slug": "amfp486",
+      "aliases": [
+        "amajGFP",
+        "amajCFP",
+        "amajLime"
+      ],
+      "seq": "MALSNKFIGDDMKMTYHMDGCVNGHYFTVKGEGNGKPYEGTQTSTFKVTMANGGPLAFSFDILSTVFKYGNRCFTAYPTSMPDYFKQAFPDGMSYERTFTYEDGGVATASWEISLKGNCFEHKSTFHGVNFPADGPVMAKKTTGWDPSFEKMTVCDGILKGDVTAFLMLQGGGNYRCQFHTSYKTKKPVTMPPNHVVEHRIARTDLDKGGNSVQLTEHAVAHITSVVPF",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amFP486",
+        "exMax": 458.0,
+        "emMax": 486.0,
+        "extCoeff": 40000.0,
+        "qy": 0.24,
+        "brightness": 9.6,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amFP486",
+          "exMax": 458.0,
+          "emMax": 486.0,
+          "extCoeff": 40000.0,
+          "qy": 0.24,
+          "brightness": 9.6
+        }
+      ]
+    },
+    {
+      "name": "amFP495",
+      "slug": "amfp495",
+      "aliases": [],
+      "seq": "MALSNKFIGDDMKMTYHMDGCVNGHYFTVKGEGNGKPYEGTQTSTFKVTMANGGPLAFSFDILSTVFKYGNRCFTAYPTSMPDYFKQAFPDGMSYERTFTYEDGGVATASWEISLKGNCFEHKSTFHGVNFPADGPVMAKKTTGWDPSFEKMTVCDGILKGDVTAFLMLQGGGNYRCQFHTSYKTKKPVTMPPNHVVEHRIARTDLDKGGNSVQLTQHAVAHITSVVPF",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amFP495",
+        "exMax": 467.0,
+        "emMax": 495.0,
+        "extCoeff": null,
+        "qy": 0.08,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amFP495",
+          "exMax": 467.0,
+          "emMax": 495.0,
+          "extCoeff": null,
+          "qy": 0.08,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amFP506",
+      "slug": "amfp506",
+      "aliases": [
+        "amFP486-E150Q"
+      ],
+      "seq": "MALSNKFIGDDMKMTYHMDGCVNGHYFTVKGEGNGKPYEGTQTSTFKVTMANGGPLAFSFDILSTVFKYGNRCFTAYPTSMPDYFKQAFPDGMSYERTFTYEDGGVATASWEISLKGNCFEHKSTFHGVNFPADGPVMAKKTTGWDPSFQKMTVCDGILKGDVTAFLMLQGGGNYRCQFHTSYKTKKPVTMPPNHVVEHRIARTDLDKGGNSVQLTEHAVAHITSVVPF",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amFP506",
+        "exMax": 483.0,
+        "emMax": 506.0,
+        "extCoeff": null,
+        "qy": 0.67,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amFP506",
+          "exMax": 483.0,
+          "emMax": 506.0,
+          "extCoeff": null,
+          "qy": 0.67,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amFP515",
+      "slug": "amfp515",
+      "aliases": [
+        "amFP486-H199T"
+      ],
+      "seq": "MALSNKFIGDDMKMTYHMDGCVNGHYFTVKGEGNGKPYEGTQTSTFKVTMANGGPLAFSFDILSTVFKYGNRCFTAYPTSMPDYFKQAFPDGMSYERTFTYEDGGVATASWEISLKGNCFEHKSTFHGVNFPADGPVMAKKTTGWDPSFEKMTVCDGILKGDVTAFLMLQGGGNYRCQFHTSYKTKKPVTMPPNHVVETRIARTDLDKGGNSVQLTEHAVAHITSVVPF",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amFP515",
+        "exMax": 500.0,
+        "emMax": 515.0,
+        "extCoeff": null,
+        "qy": 0.006,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amFP515",
+          "exMax": 500.0,
+          "emMax": 515.0,
+          "extCoeff": null,
+          "qy": 0.006,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilCP",
+      "slug": "amilcp",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVKLTVTKGGPLPFAWDILSPQCQYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLLGNNFMALKLEGGGHYLCEFKTTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQCEISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": {
+        "name": "amilCP",
+        "exMax": 588.0,
+        "emMax": null,
+        "extCoeff": 87600.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilCP",
+          "exMax": 588.0,
+          "emMax": null,
+          "extCoeff": 87600.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilCP580",
+      "slug": "amilcp580",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVKLTVTKGGPLPFAWDILSPQSQYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLIGNNFMALKLEGGGHYLCEFKSTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQREISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": [
+        {
+          "name": "amilCP580",
+          "exMax": 580.0,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilCP586",
+      "slug": "amilcp586",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYVSGTVNGHYFEVEGDGKGKPYEGEQTVRLAVTKGGPLPFAWDILSPQCQYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLIGNNFMALKLEGGGHYLCEFKSTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQREISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": [
+        {
+          "name": "amilCP586",
+          "exMax": 586.0,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilCP604",
+      "slug": "amilcp604",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKAYMSGTVNGHYFEVEGDGKGKPYEGEQTEKLTVTKGGPLPFAWDILSPQCQYGSIPFTKYPEDIPDYVKQSFPEGFTWERIMNFEDGAVCTVTNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPHSERLLARDGMLIGNNFMALKLEGGGHYLCEFKTTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQREISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": [
+        {
+          "name": "amilCP604",
+          "exMax": 604.0,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilCP-Orange",
+      "slug": "amilcp-orange",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVKLTVTKGGPLPFAWDILSPQVGYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLLGNNFMALKLEGGGHYLCEFKTTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQCEISIARKPVVA",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "amilCP-Pink",
+      "slug": "amilcp-pink",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVKLTVTKGGPLPFAWDILSPQACYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLLGNNFMALKLEGGGHYLCEFKTTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQCEISIARKPVVA",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "amilFP484",
+      "slug": "amilfp484",
+      "aliases": [],
+      "seq": "MSYSKQGIVQEMKTKYHMEGSVNGHEFTIEGVGTGNPYEGTQMSELVITKPAGKPLPFSFDILSTVFQYGNRCFTKYPEGMTDYFKQAFPDGMSYERSFLYEDGGVATASWNIRLERDCFIHKSIYHGVNFPADGPVMKKKTIGWDKAFEKMTVSKDVLRGDVTEFLMLEGGGYHSCQFHSTYKPEKPVTLPPNHVVEHHIVRTDLGQRAKGFTVKLEEHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP484",
+        "exMax": 420.0,
+        "emMax": 484.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP484",
+          "exMax": 420.0,
+          "emMax": 484.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilFP490",
+      "slug": "amilfp490",
+      "aliases": [
+        "amilCFP"
+      ],
+      "seq": "MSYSKQGIAQVMKTKYHMEGSVNGHEFTIEGVGTGNPYEGTQMSELVITKPAGKPLPFSFDILSTVFQYGNRCFTKYPEGMTDYFKQAFPDGMSFERSFLYEDGGVATASWNIRLERDCFIHKSIYHGVNFPADGPVMKKKTIGWDKAFEKMTVSKDVLRGDVTEFLMLEGGGYHSCQFHSTYKPEKPVTLPPNHVVEHHIVRTDLGQTAKGFTVKLEEHAAAHVNPLKVQ",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP490",
+        "exMax": 424.0,
+        "emMax": 490.0,
+        "extCoeff": 29500.0,
+        "qy": 0.9,
+        "brightness": 26.55,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP490",
+          "exMax": 424.0,
+          "emMax": 490.0,
+          "extCoeff": 29500.0,
+          "qy": 0.9,
+          "brightness": 26.55
+        }
+      ]
+    },
+    {
+      "name": "amilFP497",
+      "slug": "amilfp497",
+      "aliases": [],
+      "seq": "MSYSKQGIVQAMKTKYHMEGSVNGHEFTIEGVGTGNPYEGTQMSELVITKPAGKPLPFSFDILSTVFQYGNRCFTKYPEGMTDYFKQAFPDGMSYERSFLFEDGGVATASWNIRLEGDCFIHKSIYHGVNFPADGPVMKKKTIGWEKSFEKMTVSKDVLRGDVTMFLMLEGGGYHRCQFHSTYKPEKPGTLPPNHVVEHHIVRTDLGQSAKGFTVKLEEHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP497",
+        "exMax": 477.0,
+        "emMax": 497.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP497",
+          "exMax": 477.0,
+          "emMax": 497.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilFP504",
+      "slug": "amilfp504",
+      "aliases": [],
+      "seq": "MSYSKQGIVQEMKTKYHMEGSVNGHEFTIEGVGTGYPYEGKQISELVIIKPAGKPLPFSFDILSSVFQYGNRCFTKYPADMPDYFKQAFPDGMSYERSFLFEDGAVATASWNIRLEGNCFIHKSIFHGVNFPADGPVMKKKTIDWDKSFEKMTVSKEVLRGDVTMFLMLEGGGSHRCQFHSTYKTEKPVTLPPNHVVEHQIVRTDLGQTAKGFTVKLEEHAAAHVSL",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP504",
+        "exMax": 488.0,
+        "emMax": 504.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP504",
+          "exMax": 488.0,
+          "emMax": 504.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilFP512",
+      "slug": "amilfp512",
+      "aliases": [],
+      "seq": "MSYSKQGIVQEMKTKYHMEGSVNGHEFTIEGVGTGYPYEGKQMSELVIIKPAGKPLPFSFDILSSVFQYGNRCFTKYPADMPDYFKQAFPDGMSYERSFLFEDGAVATASWKIRLEGNCFIHNSIFHGVNFPADGPVMKKKTIGWDKSFEKMTVSKEVLRGDVTMFLMLEGGGSHRCQFHSTYKTEKPVTLPPNHVVEHQIVRTDLGQSAKGFTVKLEAHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP512",
+        "exMax": 500.0,
+        "emMax": 512.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP512",
+          "exMax": 500.0,
+          "emMax": 512.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilFP513",
+      "slug": "amilfp513",
+      "aliases": [
+        "amilGFP"
+      ],
+      "seq": "MSYSKQGIVQEMKTKYHMEGSVNGHEFTIEGVGTGYPYEGKQMSELVIIKPAGKPLPFSFDILSSVFQYGNRCFTKYPADMPDYFKQAFPDGMSYERSFLFEDGAVATASWNIRLEGNCFIHKSIFHGVNFPADGPVMKKKTIDWDKSFEKMTVSKEVLRGDVTMFLMLEGGGSHRCQFHSTYKTEKPVTLPPNHVVEHQIVRTDLGQSAKGFTVKLEAHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP513",
+        "exMax": 504.0,
+        "emMax": 513.0,
+        "extCoeff": 75200.0,
+        "qy": 0.67,
+        "brightness": 50.38,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP513",
+          "exMax": 504.0,
+          "emMax": 513.0,
+          "extCoeff": 75200.0,
+          "qy": 0.67,
+          "brightness": 50.38
+        }
+      ]
+    },
+    {
+      "name": "amilFP593",
+      "slug": "amilfp593",
+      "aliases": [
+        "amilRFP"
+      ],
+      "seq": "MALSKHGLTKDMTMKYHMEGSVDGHKFVITGHGNGNPFEGKQTMNLCVVEGGPLPFSEDILSAAFDYGNRVFTEYPQGMVDFFKNSCPAGYTWHRSLLFEDGAVCTTSADITVSVEENCFYHNSKFHGVNFPADGPVMKKMTTNWEPSCEKIIPVPRQGILKGDIAMYLLLKDGGRYRCQFDTIYKAKSDPKEMPEWHFIQHKLTREDRSDAKNQKWQLVEHAVASRSALPG",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP593",
+        "exMax": 562.0,
+        "emMax": 593.0,
+        "extCoeff": 90900.0,
+        "qy": 0.49,
+        "brightness": 44.54,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP593",
+          "exMax": 562.0,
+          "emMax": 593.0,
+          "extCoeff": 90900.0,
+          "qy": 0.49,
+          "brightness": 44.54
+        }
+      ]
+    },
+    {
+      "name": "amilFP597",
+      "slug": "amilfp597",
+      "aliases": [],
+      "seq": "MALSKHGLTKDMTMKYHMEGSVDGHKFVITGHGNGNPFEGKQTVNLCVAEGGPLPFSEDILSAAFDYGNRVFTEYPQGMVDFFKNSCPAGYTWHRSLLFEDGAVCTTSADITVSVEENCFYHNSKFHGVNFPADGPVMKKMTTNWEPSCEKIIPVPRQGILKGDIAMYLLLKDGGRYRCQFDTIYKAKSDPKEMPEWHFIQHKLTREDRSDAKNQKWQLVEHAVASRSALPG",
+      "chromophore": "DYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilFP597",
+        "exMax": 558.0,
+        "emMax": 597.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilFP597",
+          "exMax": 558.0,
+          "emMax": 597.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "amilGFP",
+      "slug": "amilgfp",
+      "aliases": [],
+      "seq": "MSYSKHGIVQEMKTKYHMEGSVNGHEFTIEGVGTGYPYEGKQMSELVIIKPAGKPLPFSFDILSSVFQYGNRCFTKYPADMPDYFKQAFPDGMSYERSFLFEDGAVATASWNIRLEGNCFIHKSIFHGVNFPADGPVMKKKTIDWDKSFEKMTVSKEVLRGDVTMFLMLEGGGSHRCQFHSTYKTEKPVTLPPNHVVEHQIVRTDLGQSAKGFTVKLEAHAAAHVNPLKVK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "amilGFP",
+        "exMax": 503.0,
+        "emMax": 512.0,
+        "extCoeff": 75200.0,
+        "qy": 0.67,
+        "brightness": 50.38,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "amilGFP",
+          "exMax": 503.0,
+          "emMax": 512.0,
+          "extCoeff": 75200.0,
+          "qy": 0.67,
+          "brightness": 50.38
+        }
+      ]
+    },
+    {
+      "name": "anm1GFP1",
+      "slug": "anm1gfp1",
+      "aliases": [],
+      "seq": "MNVMRYNRGFCRVLQNGVKNLRSRNCSTEEKPVILGAMTETFQKKLPYKLELDGDVDGQTFKVIGEGVGDATTGVIEGKYVCTEGEVPISWVSLITSLSYGAKCFVRYPNEINDFFKSTFPSGYHQERKITYENDGVLETAAKITMESGAIVNRINVKGTGFDKDGHVCQKNLESSPPSTTYVVPEGEGIRIIYRNIYPTKDGHYVVADTQQVNRPIRAQGTSAIPTYHHIKSKVDLSTDPEENKDHIIIKETNCAFDADFS",
+      "chromophore": "SYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "anm1GFP1",
+        "exMax": 475.0,
+        "emMax": 495.0,
+        "extCoeff": 75000.0,
+        "qy": 0.65,
+        "brightness": 48.75,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "anm1GFP1",
+          "exMax": 475.0,
+          "emMax": 495.0,
+          "extCoeff": 75000.0,
+          "qy": 0.65,
+          "brightness": 48.75
+        }
+      ]
+    },
+    {
+      "name": "anm1GFP2",
+      "slug": "anm1gfp2",
+      "aliases": [],
+      "seq": "MAEYFEKPLPYKVELEGDVDGQKFTVIGEGQGDASTGRVEGKYVCTKGEVPISWVSLITSLSYGGKCFVRYPNVIKDFFKSTFPTGYHQERKITYEDDGVLETAAKVTLESGAIYNRISVKGVGFKKDGNVCKKRLHSSPPQVSYVVPYGEGIRVLYSNIYPTKDGGYVVADTRQVNRPIKAEGKSAIPKYHYIKSKIDLSTDPNERKDHIIIKEVNVASGIDFS",
+      "chromophore": "SYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "anm1GFP2",
+        "exMax": 490.0,
+        "emMax": 504.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "anm1GFP2",
+          "exMax": 490.0,
+          "emMax": 504.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "anm2CP",
+      "slug": "anm2cp",
+      "aliases": [],
+      "seq": "MEGGPALFQSDMTFKIFIDGVVNDQKFTIIADGSSKFPHGDFNVHAVCETGKLPMSWKPICHLIQYGEPFFAKYPNGISHFAQECFPEGLTIDRTVRFENDGTMTSHHTYELDGTCVISRITVNCDGFQPDGPIMKDQLVDILPTETHMFPHGSNAVRQLCYIGFTTADGGLMMSHFDSKLTFNGSRAIKIPGPHFVTVIIKQMKDTSDKRDHVCQREVTYAHSVPRITSAI",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "anm2CP",
+        "exMax": 572.0,
+        "emMax": 597.0,
+        "extCoeff": 120000.0,
+        "qy": 0.001,
+        "brightness": 0.12,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "anm2CP",
+          "exMax": 572.0,
+          "emMax": 597.0,
+          "extCoeff": 120000.0,
+          "qy": 0.001,
+          "brightness": 0.12
+        }
+      ]
+    },
+    {
+      "name": "anobCFP1",
+      "slug": "anobcfp1",
+      "aliases": [],
+      "seq": "MSYSKQGIAQVMKTKYHMEGSVNGHEFTIEGVGTGNPYEGTQMSELVITKPAGKPLPFSFDILSTVFQYGNRCFTKYPEGMTDYFKQAFPDGMSYERSFLYEDGGVATASWNIRLERDCFIHKSIYHGVNFPADGPVMKKKTIGWDKAFEKMTVSKDVLRGDVTEFLMLEGGGYHSCQFHSTYKPEKPAALPPNHVVEHHIVRTDLGQSAKGFTVKLEEHAAAHVNPLKVQ",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "anobCFP1",
+        "exMax": 462.0,
+        "emMax": 490.0,
+        "extCoeff": 27600.0,
+        "qy": 0.86,
+        "brightness": 23.74,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "anobCFP1",
+          "exMax": 462.0,
+          "emMax": 490.0,
+          "extCoeff": 27600.0,
+          "qy": 0.86,
+          "brightness": 23.74
+        }
+      ]
+    },
+    {
+      "name": "anobCFP2",
+      "slug": "anobcfp2",
+      "aliases": [],
+      "seq": "MSYSKQGIAQVMKTKYHMEGSVNGHEFTIEGVGTGNPYEGTQMSELVITKPAGKPLPFSFDILSTVFQYGNRCFTKYPEGMTDYFKQAFPDGMSYERSFLYEDGGVATAGWNIGLERDCFIHKSIYHGVNFPADGPVMKKKTIGWDKAFEKMTVSKDVLRGDVTGFLMLEGGGYHSCQFHSTYKPEKPAALPPNHVVEHHIVRTDLGQSAKGFTVKLEEHAAAHVNPLKVQ",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "anobCFP2",
+        "exMax": 477.0,
+        "emMax": 495.0,
+        "extCoeff": 67200.0,
+        "qy": 0.49,
+        "brightness": 32.93,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "anobCFP2",
+          "exMax": 477.0,
+          "emMax": 495.0,
+          "extCoeff": 67200.0,
+          "qy": 0.49,
+          "brightness": 32.93
+        }
+      ]
+    },
+    {
+      "name": "anobGFP",
+      "slug": "anobgfp",
+      "aliases": [],
+      "seq": "MSYSKQGIAQEMKTKYHMEGSVNGHEFTIEGVGTGYPYEGKQMSELVIIKPAGKPLPFSFDILSSVFQYGNRCFTKYPADMPDYFKQAFPDGMSYERSFLFEDGAVATASWKIRLEGNCFIHNSIFNGVNFPADGPVMEKKTIGWDKSFEKMTVSKEVLRGDVTMFLMLEGGGSHRCQFHSTYKTEKPVTLPPNHVVEHQIVRTDLGQSAKGFTVKLEAHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "anobGFP",
+        "exMax": 502.0,
+        "emMax": 511.0,
+        "extCoeff": 96200.0,
+        "qy": 0.6,
+        "brightness": 57.72,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "anobGFP",
+          "exMax": 502.0,
+          "emMax": 511.0,
+          "extCoeff": 96200.0,
+          "qy": 0.6,
+          "brightness": 57.72
+        }
+      ]
+    },
+    {
+      "name": "apolCP584",
+      "slug": "apolcp584",
+      "aliases": [],
+      "seq": null,
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "apolCP584",
+        "exMax": 584.0,
+        "emMax": null,
+        "extCoeff": 103000.0,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "apolCP584",
+          "exMax": 584.0,
+          "emMax": null,
+          "extCoeff": 103000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "apulCP584",
+      "slug": "apulcp584",
+      "aliases": [],
+      "seq": "MSVIAKQMTYKVYMSGTVNGHYFEVEGDGKGKPYEGEQTVRLAVTKGGPLPFAWDILSPQCQYGSIPFTKYPEDIPDYVKQSFPEGYTWERIMNFEDGAVCTVSNDSSIQGNCFIYHVKFSGLNFPPNGPVMQKKTQGWEPNTERLFARDGMLIGNNFMALKLEGGGHYLCEFKSTYKAKKPVKMPGYHYVDRKLDVTNHNKDYTSVEQCEISIARKPVVA",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": [
+        {
+          "name": "apulCP584",
+          "exMax": 584.0,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "apulFP483",
+      "slug": "apulfp483",
+      "aliases": [],
+      "seq": "MSYSKQGIVQVMKTKYHMEGSVNGHEFTIEGVGTGNPYEGTQMSELVITKPAGKPLPFSFDILSTVFQYGNRCFTKYPEGMTDYFKQAFPDGMSYERSFLYEDGGVATASWNIRLERDCFIHKSIYHGVNFPADGPVMKKKTIGWDKAFEKMTVSKDVLRGDVTEFLMLEGGGYHSCQFHSTYKPEKPAALPPNHVVEHHIVRTDLGQSAKGFTVKLEEHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "apulFP483",
+        "exMax": 420.0,
+        "emMax": 483.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "apulFP483",
+          "exMax": 420.0,
+          "emMax": 483.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AQ14",
+      "slug": "aq14",
+      "aliases": [],
+      "seq": "MASLVTEDMCIKMTMEGTVNGHHFKCVGEGEGKPFEGTQVEKIRITEGGPLPFAYDILAPCCMYGSKTFIKHVSGIPDYFKESFPEGFTWERTQIFEDGGSLTIHQDTSLQGNNFIFKVNVIGANFPANGPVMQKKTAGWEPSVEILYPRDGVLCGQALMALKCTDGNHLTSHLRTTYRSRKPSNAVNMPEFHFGDHRIEILKAEQGKFYEQYESAVARYCEAAPSKLGHH",
+      "chromophore": "MYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AQ14",
+        "exMax": 595.0,
+        "emMax": 663.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AQ14",
+          "exMax": 595.0,
+          "emMax": 663.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AQ143",
+      "slug": "aq143",
+      "aliases": [],
+      "seq": "MAPLVTEDMCIKMTMEGTINGHHFKCVGEGEGKPFEGTQVEKIRITEGGPLPFAYDILAPCCMYGSKTFIKHVSGIPDYFKESFPEGFTWERTQIFEDGGSLTIHQDTSLQGNNFIFKVNVIGANFPANGPVMQKKTAGWEPSVEILYPRDGVLCGQALMALKCTDGDHLTSHLRTTYRSRKPSNAVNMPEFHFGDHRIEILKAEQGKFYEQYESAVARYCEAAPSKLGHH",
+      "chromophore": "MYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AQ143",
+        "exMax": 595.0,
+        "emMax": 655.0,
+        "extCoeff": 90000.0,
+        "qy": 0.04,
+        "brightness": 3.6,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AQ143",
+          "exMax": 595.0,
+          "emMax": 655.0,
+          "extCoeff": 90000.0,
+          "qy": 0.04,
+          "brightness": 3.6
+        }
+      ]
+    },
+    {
+      "name": "Aquamarine",
+      "slug": "aquamarine",
+      "aliases": [],
+      "seq": "MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSWGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYISGNVYITADKQKNGIKANFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK",
+      "chromophore": "SWG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "Aquamarine",
+        "exMax": 430.0,
+        "emMax": 474.0,
+        "extCoeff": 26000.0,
+        "qy": 0.89,
+        "brightness": 23.14,
+        "lifetime": 4.1
+      },
+      "states": [
+        {
+          "name": "Aquamarine",
+          "exMax": 430.0,
+          "emMax": 474.0,
+          "extCoeff": 26000.0,
+          "qy": 0.89,
+          "brightness": 23.14
+        }
+      ]
+    },
+    {
+      "name": "asCP562",
+      "slug": "ascp562",
+      "aliases": [
+        "asulCP562"
+      ],
+      "seq": "MASFLKKTMPFKTTIEGTVNGHYFKCTGKGEGNPFEGTQEMKIEVIEGGPLPFAFHILSTSCMYGSKTFIKYVSGIPDYFKQSFPEGFTWERTTTYEDGGFLTAHQDTSLDGDCLVYKVKILGNNFPADGPVMQNKAERWEPATEILYEVDGVLRGQSLMALKCPGGRHLTCHLHSTYRSKKPASALKMPGFHFGDHRIEIMEEVEKGKCYKQYEAAVARYCDAAPSKLGHH",
+      "chromophore": "MYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "asCP562",
+        "exMax": 562.0,
+        "emMax": 595.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "asCP562",
+          "exMax": 562.0,
+          "emMax": 595.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "asFP499",
+      "slug": "asfp499",
+      "aliases": [
+        "asulGFP"
+      ],
+      "seq": "MYPSIKETMRVQLSMEGSVNYHAFKCTGKGEGKPYEGTQSLNITITEGGPLPFAFDILSHAFQYGIKVFAKYPKEIPDFFKQSLPGGFSWERVSTYEDGGVLSATQETSLQGDCIICKVKVLGTNFPANGPVMQKKTCGWEPSTETVIPRDGGLLLRDTPALMLADGGHLSCFMETTYKSKKEVKLPELHFHHLRMEKLNISDDWKTVEQHESVVASYSQVPSKLGHN",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "asFP499",
+        "exMax": 480.0,
+        "emMax": 499.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "asFP499",
+          "exMax": 480.0,
+          "emMax": 499.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AsRed2",
+      "slug": "asred2",
+      "aliases": [],
+      "seq": "MASLLKKTMPFRTTIEGTVNGHYFKCTGKGEGNPLEGTQEMKIEVIEGGPLPFAFHILSTSCMYGSKAFIKYVSGIPDYFKQSLPEGFTWERTTTYEDGGFLTAHQDTSLDGDCLVYKVKILGNNFPADGPVMQNKAGRWEPSTEIVYEVDGVLRGQSLMALECPGGRHLTCHLHTTYRSKKPASALKMPGFHFEDHRIEILEEVEKGKCYKQYEAAVGRYCDAAPSKLGH",
+      "chromophore": "MYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AsRed2",
+        "exMax": 576.0,
+        "emMax": 592.0,
+        "extCoeff": 56200.0,
+        "qy": 0.05,
+        "brightness": 2.81,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AsRed2",
+          "exMax": 576.0,
+          "emMax": 592.0,
+          "extCoeff": 56200.0,
+          "qy": 0.05,
+          "brightness": 2.81
+        }
+      ]
+    },
+    {
+      "name": "asulCP",
+      "slug": "asulcp",
+      "aliases": [
+        "asCP",
+        "asCP595",
+        "asFP595",
+        "asPink",
+        "FP595"
+      ],
+      "seq": "MASFLKKTMPFKTTIEGTVNGHYFKCTGKGEGNPFEGTQEMKIEVIEGGPLPFAFHILSTSCMYGSKTFIKYVSGIPDYFKQSFPEGFTWERTTTYEDGGFLTAHQDTSLDGDCLVYKVKILGNNFPADGPVMQNKAGRWEPATEIVYEVDGVLRGQSLMALKCPGGRHLTCHLHTTYRSKKPASALKMPGFHFEDHRIEIMEEVEKGKCYKQYEAAVGRYCDAAPSKLGHN",
+      "chromophore": "MYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "asulCP",
+        "exMax": 572.0,
+        "emMax": 595.0,
+        "extCoeff": 120000.0,
+        "qy": 0.001,
+        "brightness": 0.12,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "asulCP",
+          "exMax": 572.0,
+          "emMax": 595.0,
+          "extCoeff": 120000.0,
+          "qy": 0.001,
+          "brightness": 0.12
+        }
+      ]
+    },
+    {
+      "name": "atenFP",
+      "slug": "atenfp",
+      "aliases": [],
+      "seq": "MRTKYHMEGSVNGHEFTIEGVGTGNPYEGTQTAELVIIKPVGKPLPFSFDILSSVFQYGNLCFTKYPADMTDYFKQAFPAGMSYERSFLFEDGAVATASWNIRLEGNCFIHNSIFHGVNFPADGPVMKKKTIGWDKSFQKMTVSKEVLRGDLAMFLLLEGGGYHRCQFHSTYKTERPVTLPPNHVVEHQIVRTDLGQSAKGFTVKLEEHAAAHVNPLKVK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "atenFP",
+        "exMax": 504.0,
+        "emMax": 515.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "atenFP",
+          "exMax": 504.0,
+          "emMax": 515.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avalCP580",
+      "slug": "avalcp580",
+      "aliases": [],
+      "seq": null,
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": null,
+      "states": [
+        {
+          "name": "avalCP580",
+          "exMax": 580.0,
+          "emMax": null,
+          "extCoeff": 183000.0,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avGFP",
+      "slug": "avgfp",
+      "aliases": [
+        "wtGFP",
+        "GFP",
+        "gfp10",
+        "Green Fluorescent Protein"
+      ],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "MP",
+      "defaultState": {
+        "name": "avGFP",
+        "exMax": 395.0,
+        "emMax": 509.0,
+        "extCoeff": 25000.0,
+        "qy": 0.79,
+        "brightness": 19.75,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP",
+          "exMax": 395.0,
+          "emMax": 509.0,
+          "extCoeff": 25000.0,
+          "qy": 0.79,
+          "brightness": 19.75
+        }
+      ]
+    },
+    {
+      "name": "avGFP454",
+      "slug": "avgfp454",
+      "aliases": [],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYAVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "SYA",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "avGFP454",
+        "exMax": 410.0,
+        "emMax": 454.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP454",
+          "exMax": 410.0,
+          "emMax": 454.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avGFP480",
+      "slug": "avgfp480",
+      "aliases": [],
+      "seq": "VSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLGYGVQCFSRYPDHMKRHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYISHNVYITADKQKNGIKANFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK",
+      "chromophore": "TWG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "avGFP480",
+        "exMax": 456.0,
+        "emMax": 480.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP480",
+          "exMax": 456.0,
+          "emMax": 480.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avGFP509",
+      "slug": "avgfp509",
+      "aliases": [],
+      "seq": null,
+      "chromophore": "GYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "avGFP509",
+        "exMax": 487.0,
+        "emMax": 509.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP509",
+          "exMax": 487.0,
+          "emMax": 509.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avGFP510",
+      "slug": "avgfp510",
+      "aliases": [],
+      "seq": null,
+      "chromophore": "GYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "avGFP510",
+        "exMax": 488.0,
+        "emMax": 510.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP510",
+          "exMax": 488.0,
+          "emMax": 510.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avGFP514",
+      "slug": "avgfp514",
+      "aliases": [],
+      "seq": null,
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "avGFP514",
+        "exMax": 484.0,
+        "emMax": 514.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP514",
+          "exMax": 484.0,
+          "emMax": 514.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "avGFP523",
+      "slug": "avgfp523",
+      "aliases": [],
+      "seq": null,
+      "chromophore": "AYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "avGFP523",
+        "exMax": 512.0,
+        "emMax": 523.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "avGFP523",
+          "exMax": 512.0,
+          "emMax": 523.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AvicFP1",
+      "slug": "avicfp1",
+      "aliases": [],
+      "seq": "MSKGAELFNGIVPILIELNGDVHGHKFSVRGEGEGDAGSGKIEIKFVCTTGTLPVPWPTLVTTFCYGVQCFTRYPEHMKQHDFYKSAMPDGYIQKRTISFQDDGHYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGNKMEYNYNSHSVYVLSDKANNGIKVNFKIRHNLKGEGIQLADHDQQNIPIGDGPVLLPDYHYLSTQTAITKDPNEKRDHMNLVEFVTACGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AvicFP1",
+        "exMax": 481.0,
+        "emMax": 503.0,
+        "extCoeff": 64000.0,
+        "qy": 0.63,
+        "brightness": 40.32,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AvicFP1",
+          "exMax": 481.0,
+          "emMax": 503.0,
+          "extCoeff": 64000.0,
+          "qy": 0.63,
+          "brightness": 40.32
+        }
+      ]
+    },
+    {
+      "name": "AvicFP2",
+      "slug": "avicfp2",
+      "aliases": [],
+      "seq": "MNCGALLFKQKIPFIVELDGDVNGQVFSVRGNGFGDGSIGKIEIKFVCTTGEIPVAWESLVCSLAYGALVFTKYPSNINDFFKSTMPKGYIQERKITFENDGQYETRAEVTYENGALYNRVKLNGSGFRKDGNILGKKLDATSLGTCIYILSNDEGNGLKGVYNMAYKVIDGNRQIVSHQQTNTPIGDGLVSIPDYHVMHNHISCSKDPTEPRDHLILKESVTAVDCQTAYM",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AvicFP2 (pre-conversion)",
+        "exMax": 480.0,
+        "emMax": 515.0,
+        "extCoeff": 59000.0,
+        "qy": 0.04,
+        "brightness": 2.36,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AvicFP2 (pre-conversion)",
+          "exMax": 480.0,
+          "emMax": 515.0,
+          "extCoeff": 59000.0,
+          "qy": 0.04,
+          "brightness": 2.36
+        },
+        {
+          "name": "AvicFP2 (post-conversion)",
+          "exMax": null,
+          "emMax": null,
+          "extCoeff": 41000.0,
+          "qy": 0.0,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AvicFP3",
+      "slug": "avicfp3",
+      "aliases": [],
+      "seq": "MNCGALLFKQKIPFIVELDGDVNGQVFSVRGNGFGDGSTGKIEIKFVCTTGEIPVAWESLVCSLAYGALVFTKYPSNINDFFKSTMPKGYIQERKITFENDGQYETRAEVTYENGALYNRVKLNGSGFRKDGNILGKKLDATSLGTCIYIMSNDQGNGLKGVYNKAYKVIGGNRQLASHQQTHTPIGDGLVSIPDYHVMHNHTSCSKDPTEPRDHLILKESVTAVDCQTAYM",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AvicFP3 (pre-conversion)",
+        "exMax": 480.0,
+        "emMax": 520.0,
+        "extCoeff": null,
+        "qy": 0.001,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AvicFP3 (pre-conversion)",
+          "exMax": 480.0,
+          "emMax": 520.0,
+          "extCoeff": null,
+          "qy": 0.001,
+          "brightness": null
+        },
+        {
+          "name": "AvicFP3 (post-conversion)",
+          "exMax": null,
+          "emMax": null,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "AvicFP4",
+      "slug": "avicfp4",
+      "aliases": [],
+      "seq": "MDSGALLFKQKIPLVVEFEGDVEGMKFSVRGKGHGDATNGRIEASFICTTGELPVPWSSIISSLTYGFLCFTKYPDGIKDFPKSAMPEGYVQERTISFENDGTYKTRAEVTFENGSVYNRVKLNGEGFNKGGNILGKKLEYSFNPHCIYVLGDKENNGIRCCFNVVHNIVGGGQLIASHSQLNTPLGGGPIAIPEYHHICNHTTLSKDPREPRDHMTVAEVLKAVDCKTAYL",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AvicFP4",
+        "exMax": 500.0,
+        "emMax": 512.0,
+        "extCoeff": 121000.0,
+        "qy": 0.1,
+        "brightness": 12.1,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AvicFP4",
+          "exMax": 500.0,
+          "emMax": 512.0,
+          "extCoeff": 121000.0,
+          "qy": 0.1,
+          "brightness": 12.1
+        }
+      ]
+    },
+    {
+      "name": "AzaleaB5",
+      "slug": "azaleab5",
+      "aliases": [],
+      "seq": "MENVRRKTGIQTEMKTKLHMDGMVNGHSFEIKGEGKGSPYEGVQTMKLKVTKGAPLPFSIDILLPQCMYGSKPFIKYPENIPDYLKLSFPEGITWERTMTFEDGAVCDVSNDSRLVGNCFIYTVKFQGVNFPLDGPVMQKKTRGWEPSTEVLYECDGWMRGLVDIALKLENGGHYMCNFKTTYKSKKGLEVPPYHFVDHKLDLLSHNTDGATFEEFEQGEIAHAHLSKLA",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AzaleaB5",
+        "exMax": 574.0,
+        "emMax": 596.0,
+        "extCoeff": 104000.0,
+        "qy": 0.58,
+        "brightness": 60.32,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AzaleaB5",
+          "exMax": 574.0,
+          "emMax": 596.0,
+          "extCoeff": 104000.0,
+          "qy": 0.58,
+          "brightness": 60.32
+        }
+      ]
+    },
+    {
+      "name": "AzamiGreen",
+      "slug": "azamigreen",
+      "aliases": [
+        "AG"
+      ],
+      "seq": "MSVIKPEMKIKLCMRGTVNGHNFVIEGEGKGNPYEGTQILDLNVTEGAPLPFAYDILTTVFQYGNRAFTKYPADIQDYFKQTFPEGYHWERSMTYEDQGICTATSNISMRGDCFFYDIRFDGVNFPPNGPVMQKKTLKWEPSTEKMYVRDGVLKGDVNMALLLEGGGHYRCDFKTTYKAKKDVRLPDYHFVDHRIEILKHDKDYNKVKLYENAVARYSMLPSQAK",
+      "chromophore": "QYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AzamiGreen",
+        "exMax": 492.0,
+        "emMax": 505.0,
+        "extCoeff": 72300.0,
+        "qy": 0.67,
+        "brightness": 48.44,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AzamiGreen",
+          "exMax": 492.0,
+          "emMax": 505.0,
+          "extCoeff": 72300.0,
+          "qy": 0.67,
+          "brightness": 48.44
+        }
+      ]
+    },
+    {
+      "name": "AzamiRed1.0",
+      "slug": "azamired10",
+      "aliases": [],
+      "seq": "MVSVIKEEMKIKLRMEGTVNGHNFVIEGEGKGNPYEGTQTMDLKVTEGGPLPFAYDILSPQFMYGSKAFIKYPADIPDYFKQSFPEGFHWERVMTYEDGGVCTATQNTSLRGDCFFYDVRFDGVNFPPNGPVMQKKTLGWEPSTEKMYVRDGVLKGDVIKALLLEGGGHYRCDFKTTYKAKKDVRLPGYHFVDHRIEILKHDKDYNKVKQYENAVARYSMLPSQAK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "AzamiRed1.0",
+        "exMax": 571.0,
+        "emMax": 606.0,
+        "extCoeff": 34100.0,
+        "qy": 0.65,
+        "brightness": 22.16,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "AzamiRed1.0",
+          "exMax": 571.0,
+          "emMax": 606.0,
+          "extCoeff": 34100.0,
+          "qy": 0.65,
+          "brightness": 22.16
+        }
+      ]
+    },
+    {
+      "name": "Azurite",
+      "slug": "azurite",
+      "aliases": [
+        "BFP.B3"
+      ],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSHGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNIYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFRTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "Azurite",
+        "exMax": 383.0,
+        "emMax": 447.0,
+        "extCoeff": 26200.0,
+        "qy": 0.55,
+        "brightness": 14.41,
+        "lifetime": 3.65
+      },
+      "states": [
+        {
+          "name": "Azurite",
+          "exMax": 383.0,
+          "emMax": 447.0,
+          "extCoeff": 26200.0,
+          "qy": 0.55,
+          "brightness": 14.41
+        }
+      ]
+    },
+    {
+      "name": "BDFP1.6",
+      "slug": "bdfp16",
+      "aliases": [],
+      "seq": "MANREVVETLKELLADGEKRVQVAGVIGTNAAEVVKTAVSLLFQEYPELVSPGGCAYTTRRYNMCVRDMNYFLRMCSYAIVAGGASVLDGRMLAGFRDTFNSLGIPLCPAARGIQLMKKIVKEKLATAGMTNIAFVDEPFDYIARVISETEI",
+      "chromophore": "",
+      "cofactor": "BV",
+      "switchType": "B",
+      "defaultState": {
+        "name": "BDFP1.6",
+        "exMax": 642.0,
+        "emMax": 666.0,
+        "extCoeff": 100000.0,
+        "qy": 0.197,
+        "brightness": 19.7,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "BDFP1.6",
+          "exMax": 642.0,
+          "emMax": 666.0,
+          "extCoeff": 100000.0,
+          "qy": 0.197,
+          "brightness": 19.7
+        }
+      ]
+    },
+    {
+      "name": "BDFP1.8",
+      "slug": "bdfp18",
+      "aliases": [],
+      "seq": "MANREVVETLKELLADGEKRVQVAGVIGTNAAEVVKTAVSLLFQEYPELVSPGGCAYTTRRYNKCVRDMNYFLRMCSYAIVAGGASVLDGRMLAGLRDTFNSLGIPLGPVARGIQLMKKIVKEKLATAGMTNIAFVDEPFDYIARVISETEI",
+      "chromophore": "",
+      "cofactor": "BV",
+      "switchType": "B",
+      "defaultState": {
+        "name": "BDFP1.8",
+        "exMax": 678.0,
+        "emMax": 702.0,
+        "extCoeff": 77027.0,
+        "qy": 0.061,
+        "brightness": 4.7,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "BDFP1.8",
+          "exMax": 678.0,
+          "emMax": 702.0,
+          "extCoeff": 77027.0,
+          "qy": 0.061,
+          "brightness": 4.7
+        }
+      ]
+    },
+    {
+      "name": "BDFP2.0",
+      "slug": "bdfp20",
+      "aliases": [],
+      "seq": "MVSKGEEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASSERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYKGHGTGSGSTGSGGMANREVVETLKELLADGEKRVQVAGVIGTNAAEVVKTAVSLLFQEYPELVSPGGCAYTTRRYNMCVRDMNYFLRMCSYAIVAGGASVLDGRMLAGFRDTFNSLGIPLCPAARGIQLMKKIVKEKLATAGMTNIAFVDEPFDYIARVISETEI",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "BDFP2.0 (Fret)",
+        "exMax": 587.0,
+        "emMax": 666.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "BDFP2.0 (Fret)",
+          "exMax": 587.0,
+          "emMax": 666.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "bfloGFPa1",
+      "slug": "bflogfpa1",
+      "aliases": [],
+      "seq": "MPLPATHDIHLHGSINGHEFDMVGGGKGDPNAGSLVTTAKSTKGALKFSPYLMIPHLGYGYYQYLPYPDGPSPFQVSMLEGSGYAVYRVFDFEDGGKLSTEFKYSYEGSHIKADMKLMGSGFPDDGPVMTSQIVDQDGCVSKKTYLNNNTIVDSFDWSYNLQNGKRYRARVSSHYIFDKPFSADLMKKQPVFVYRKCHVKATKTEVTLDEREKAFYELA",
+      "chromophore": "GYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "bfloGFPa1",
+        "exMax": 500.0,
+        "emMax": 512.0,
+        "extCoeff": 120900.0,
+        "qy": 1.0,
+        "brightness": 120.9,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "bfloGFPa1",
+          "exMax": 500.0,
+          "emMax": 512.0,
+          "extCoeff": 120900.0,
+          "qy": 1.0,
+          "brightness": 120.9
+        }
+      ]
+    },
+    {
+      "name": "bfloGFPc1",
+      "slug": "bflogfpc1",
+      "aliases": [],
+      "seq": "LPTTHEVHVYGSINGVEFDLVGSGKGNPKDGSEEIQVKSTKGPLGFSPYIVVPNIGYGFHQYLPFPDGMSPFQAAADDGSGYVVHRTIQFEDGASLTGNYRYSYDGGHIKGEFHVVGSGFPADGPVMTKSLTAVDWSVATMLFPNDTTVVSTIDWTCPTTSGKRYHATLRTNYTFAKPIAATILQKQPMFVFRKTEVKASDAEINLKEWQKAFHDL",
+      "chromophore": "GYG",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "bfloGFPc1",
+        "exMax": 493.0,
+        "emMax": 521.0,
+        "extCoeff": 98800.0,
+        "qy": 0.0015,
+        "brightness": 0.15,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "bfloGFPc1",
+          "exMax": 493.0,
+          "emMax": 521.0,
+          "extCoeff": 98800.0,
+          "qy": 0.0015,
+          "brightness": 0.15
+        }
+      ]
+    },
+    {
+      "name": "BFP",
+      "slug": "bfp",
+      "aliases": [
+        "P4-3"
+      ],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSHGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "BFP",
+        "exMax": 381.0,
+        "emMax": 445.0,
+        "extCoeff": 14000.0,
+        "qy": 0.38,
+        "brightness": 5.32,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "BFP",
+          "exMax": 381.0,
+          "emMax": 445.0,
+          "extCoeff": 14000.0,
+          "qy": 0.38,
+          "brightness": 5.32
+        }
+      ]
+    },
+    {
+      "name": "BFP5",
+      "slug": "bfp5",
+      "aliases": [],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTMSHGIQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "BFP5",
+        "exMax": 385.0,
+        "emMax": 450.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "BFP5",
+          "exMax": 385.0,
+          "emMax": 450.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "BFP.A5",
+      "slug": "bfpa5",
+      "aliases": [],
+      "seq": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLSHGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNANSHNIYIMADKQKNGIKANFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFRTAAGITHGMDELYK",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "BFP.A5",
+        "exMax": 383.0,
+        "emMax": 447.0,
+        "extCoeff": 27400.0,
+        "qy": 0.48,
+        "brightness": 13.15,
+        "lifetime": 3.27
+      },
+      "states": [
+        {
+          "name": "BFP.A5",
+          "exMax": 383.0,
+          "emMax": 447.0,
+          "extCoeff": 27400.0,
+          "qy": 0.48,
+          "brightness": 13.15
+        }
+      ]
+    },
+    {
+      "name": "BFPsol",
+      "slug": "bfpsol",
+      "aliases": [],
+      "seq": "MASKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTLTHGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTISFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSGNVYITADKQKNGIKANFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+      "chromophore": "THG",
+      "cofactor": null,
+      "switchType": null,
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "Blue102",
+      "slug": "blue102",
+      "aliases": [],
+      "seq": "EEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFLYGSRAYVKHPADIPDYWKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEAISERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYK",
+      "chromophore": "LYG",
+      "cofactor": null,
+      "switchType": "T",
+      "defaultState": {
+        "name": "Blue102 (Blue form)",
+        "exMax": 403.0,
+        "emMax": 454.0,
+        "extCoeff": 11400.0,
+        "qy": 0.9,
+        "brightness": 10.26,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "Blue102 (Blue form)",
+          "exMax": 403.0,
+          "emMax": 454.0,
+          "extCoeff": 11400.0,
+          "qy": 0.9,
+          "brightness": 10.26
+        }
+      ]
+    },
+    {
+      "name": "Bluebonnet2",
+      "slug": "bluebonnet2",
+      "aliases": [],
+      "seq": "MSEELIKENMHMKLYMEGWVDNHHFKCTAEGEGKPYEGTQTMRIKVVEGGPLPFAFDILATSFLYGSKTFIDHTQGIPDFFKQSFPEGFTWERVTTYEDGGVLTATQDTSLQDGVLIYNVKIRGWDFPSNGPVMQKKTLGWEAFTETLYPADGGLEGRTDMALKLVGGSHLIATAKTTYRSKKPAKNLKMPGVYYVDYRLERIKEANDETYVEQHEVAVARYSDLPSKLGHKLN",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "Bluebonnet2",
+        "exMax": 399.0,
+        "emMax": 454.0,
+        "extCoeff": null,
+        "qy": null,
+        "brightness": null,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "Bluebonnet2",
+          "exMax": 399.0,
+          "emMax": 454.0,
+          "extCoeff": null,
+          "qy": null,
+          "brightness": null
+        }
+      ]
+    },
+    {
+      "name": "Bovine serum albumin",
+      "slug": "bovine-serum-albumin",
+      "aliases": [
+        "bsa"
+      ],
+      "seq": null,
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": null,
+      "states": []
+    },
+    {
+      "name": "BP02",
+      "slug": "bp02",
+      "aliases": [],
+      "seq": "ELSKETALKKSFKFLVLIILWNNTVDAIHI",
+      "chromophore": "",
+      "cofactor": null,
+      "switchType": "B",
+      "defaultState": {
+        "name": "BP02",
+        "exMax": 342.0,
+        "emMax": 382.0,
+        "extCoeff": 4494.0,
+        "qy": 0.1139,
+        "brightness": 0.51,
+        "lifetime": 0.69
+      },
+      "states": [
+        {
+          "name": "BP02",
+          "exMax": 342.0,
+          "emMax": 382.0,
+          "extCoeff": 4494.0,
+          "qy": 0.1139,
+          "brightness": 0.51
+        }
+      ]
+    },
+    {
+      "name": "BR1",
+      "slug": "br1",
+      "aliases": [],
+      "seq": "MIEKNYVITDPRLPDNPIIFASDGFLELTGYSREEILGRNARFLQGPETDQATVQKIRDAIRDQRETTVQLINYTKSGRKFWNLLHLQPVRDQKGELQYFIGVQLDGSDRV",
+      "chromophore": "",
+      "cofactor": "FL",
+      "switchType": "B",
+      "defaultState": {
+        "name": "BR1 (BR1)",
+        "exMax": 450.0,
+        "emMax": 495.0,
+        "extCoeff": 12500.0,
+        "qy": 0.45,
+        "brightness": 5.62,
+        "lifetime": null
+      },
+      "states": [
+        {
+          "name": "BR1 (BR1)",
+          "exMax": 450.0,
+          "emMax": 495.0,
+          "extCoeff": 12500.0,
+          "qy": 0.45,
+          "brightness": 5.62
+        }
+      ]
+    }
+  ],
+  "dyes": []
+}
