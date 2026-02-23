@@ -197,7 +197,7 @@ MODEL_PATTERNS: List[tuple] = [
     (re.compile(r"\bVS120\b"), lambda m: "VS120", "Olympus"),
 
     # Electron microscope models (FEI brand, now owned by Thermo Fisher)
-    (re.compile(r"\bTitan\s*(?:Krios)?\b", re.I), lambda m: "Titan", "FEI"),
+    (re.compile(r"\bTitan\s*(?:Krios)?\b", re.I), lambda m: m.group(0).strip(), "FEI"),
     (re.compile(r"\bGlacios\b", re.I), lambda m: "Glacios", "FEI"),
     (re.compile(r"\bTalos\b", re.I), lambda m: "Talos", "FEI"),
     (re.compile(r"\bTecnai\b", re.I), lambda m: "Tecnai", "FEI"),
@@ -270,7 +270,7 @@ MODEL_PATTERNS: List[tuple] = [
 
     # ---- KB v2: multiphoton models ----
     (re.compile(r"\bUltima\s+(?:Investigator|2Pplus)\b", re.I), lambda m: m.group(0).strip(), "Bruker"),
-    (re.compile(r"\bBergamo\s*(?:II)?\b(?=.{0,30}(?:Thorlabs|multiphoton|two.?photon))", re.I), lambda m: "Bergamo", "Thorlabs"),
+    (re.compile(r"\bBergamo\s*(?:II)?\b(?=.{0,30}(?:Thorlabs|multiphoton|two.?photon))", re.I), lambda m: m.group(0).strip(), "Thorlabs"),
     (re.compile(r"\bHyperScope\b(?=.{0,30}(?:Scientifica|multiphoton))", re.I), lambda m: "HyperScope", "Scientifica"),
     (re.compile(r"\bFEMTO3D\b", re.I), lambda m: "FEMTO3D", "Femtonics"),
     (re.compile(r"\bTriM\s*Scope\b", re.I), lambda m: "TriM Scope", "LaVision BioTec"),
@@ -280,12 +280,12 @@ MODEL_PATTERNS: List[tuple] = [
     (re.compile(r"\bFacility\s+Line\b(?=.{0,30}(?:Abberior|STED))", re.I), lambda m: "Facility Line", "Abberior"),
 
     # ---- KB v2: EM models ----
-    (re.compile(r"\bKrios\s*(?:G[34]i?)?\b", re.I), lambda m: "Titan Krios", "Thermo Fisher"),
-    (re.compile(r"\bGlacios\s*2?\b", re.I), lambda m: "Glacios", "Thermo Fisher"),
-    (re.compile(r"\bAquilos\s*2?\b", re.I), lambda m: "Aquilos", "Thermo Fisher"),
-    (re.compile(r"\bScios\s*2?\b", re.I), lambda m: "Scios", "Thermo Fisher"),
+    (re.compile(r"\bKrios\s*(?:G[34]i?)?\b", re.I), lambda m: f"Titan {m.group(0).strip()}", "Thermo Fisher"),
+    (re.compile(r"\bGlacios\s*2?\b", re.I), lambda m: m.group(0).strip(), "Thermo Fisher"),
+    (re.compile(r"\bAquilos\s*2?\b", re.I), lambda m: m.group(0).strip(), "Thermo Fisher"),
+    (re.compile(r"\bScios\s*2?\b", re.I), lambda m: m.group(0).strip(), "Thermo Fisher"),
     (re.compile(r"\bHelios\s*(?:5|G4|NanoLab)?\b", re.I), lambda m: m.group(0).strip(), "Thermo Fisher"),
-    (re.compile(r"\bApreo\s*2?\b", re.I), lambda m: "Apreo", "Thermo Fisher"),
+    (re.compile(r"\bApreo\s*2?\b", re.I), lambda m: m.group(0).strip(), "Thermo Fisher"),
     (re.compile(r"\bCRYO\s*ARM\b", re.I), lambda m: "CRYO ARM 300", "JEOL"),
     (re.compile(r"\bJEM-?F200\b"), lambda m: "JEM-F200", "JEOL"),
 
@@ -727,8 +727,32 @@ class EquipmentAgent(BaseAgent):
                 # Cannot resolve to a full KB system — skip
                 continue
             brand = system.get("brand")
-            # Override canonical with full display name (brand + model + category)
-            canonical = self._build_full_name(system)
+            sys_model = system.get("model", "")
+            matched_text = m.group(0).strip()
+
+            # Strip brand prefix from matched text to get the model portion
+            model_part = matched_text
+            eff_brand = brand if brand and brand != "Community" else ""
+            if eff_brand and model_part.lower().startswith(eff_brand.lower()):
+                model_part = model_part[len(eff_brand):].strip()
+
+            # If matched text is a strict specialisation of the KB model name
+            # (starts with KB model and is longer), preserve the full matched
+            # text to avoid shortening (e.g. "Titan Krios" > "Titan").
+            if (sys_model
+                    and model_part.lower().startswith(sys_model.lower())
+                    and len(model_part) > len(sys_model)):
+                if eff_brand and not matched_text.lower().startswith(eff_brand.lower()):
+                    canonical = f"{eff_brand} {matched_text}"
+                else:
+                    canonical = matched_text
+            else:
+                # Use KB canonical form — handles abbreviations like
+                # "lsm 880" → "Zeiss LSM 880" and community systems.
+                canonical = self._build_full_name(system)
+
+            if brand == "Community":
+                brand = None
 
             conf = get_confidence("MICROSCOPE_MODEL", section)
             # Slightly lower confidence for KB alias matches vs direct regex
@@ -763,7 +787,7 @@ class EquipmentAgent(BaseAgent):
         for ext in extractions:
             if ext.label == "MICROSCOPE_MODEL" and not ext.metadata.get("brand"):
                 brand = infer_brand_from_model(ext.canonical())
-                if brand:
+                if brand and brand != "Community":
                     ext.metadata["brand"] = brand
 
         # 2. If we found a model but the corresponding brand is missing
@@ -773,7 +797,7 @@ class EquipmentAgent(BaseAgent):
         for ext in extractions:
             if ext.label == "MICROSCOPE_MODEL":
                 brand = ext.metadata.get("brand") or infer_brand_from_model(ext.canonical())
-                if brand and brand not in found_brands:
+                if brand and brand != "Community" and brand not in found_brands:
                     extractions.append(Extraction(
                         text=brand,
                         label="MICROSCOPE_BRAND",
@@ -893,60 +917,51 @@ class EquipmentAgent(BaseAgent):
 
         return extractions
 
-    # ------------------------------------------------------------------
-    # Category → human-readable suffix for full microscope display names
-    _CATEGORY_DISPLAY: Dict[str, str] = {
-        "confocal": "Confocal",
-        "super_resolution": "Super-Resolution",
-        "light_sheet": "Light Sheet",
-        "spinning_disk": "Spinning Disk",
-        "multiphoton": "Multiphoton",
-        "electron": "Electron Microscope",
-        "slide_scanner": "Slide Scanner",
-        "high_content_screening": "High-Content Screening",
-        # "widefield" and "other" are omitted — widefield bodies (Ti, IX83)
-        # are used with various accessories so the category is not helpful.
-    }
-
     def _build_full_name(self, system: Dict) -> str:
-        """Build a full descriptive name from a KB system dict.
+        """Build a canonical 'Brand Model' name from a KB system dict.
 
         Example: {"brand": "Leica", "model": "SP8", "category": "confocal"}
-        → "Leica SP8 Confocal"
+        → "Leica SP8"
         """
-        base = f"{system['brand']} {system['model']}"
-        cat = system.get("category", "")
-        suffix = self._CATEGORY_DISPLAY.get(cat, "")
-        if suffix and suffix.lower() not in base.lower():
-            return f"{base} {suffix}"
-        return base
+        brand = system.get("brand", "")
+        model = system.get("model", "")
+        if brand and brand != "Community" and not model.lower().startswith(brand.lower()):
+            return f"{brand} {model}"
+        return model
 
     def _match_models(self, text: str, section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
-        for pattern, name_fn, brand in MODEL_PATTERNS:
+        for pattern, name_fn, pattern_brand in MODEL_PATTERNS:
             for m in pattern.finditer(text):
                 short_name = name_fn(m)
                 conf = get_confidence("MICROSCOPE_MODEL", section)
 
-                # Resolve short name → full canonical via KB system lookup.
-                # Try multiple forms: bare short name, "Brand ShortName"
-                system = resolve_alias(short_name)
-                if not system and brand:
-                    system = resolve_alias(f"{brand} {short_name}")
+                brand = pattern_brand  # reset for each match
 
-                if system:
-                    # Build full display name: "Brand Model Category"
-                    canonical = self._build_full_name(system)
-                    brand = brand or system.get("brand")
-                elif brand:
-                    # Not in KB but brand is known — use "Brand Model"
+                if brand:
+                    # Brand known from pattern — build "Brand ShortName" canonical,
+                    # avoiding double-branding when short_name already starts with brand.
                     if not short_name.lower().startswith(brand.lower()):
                         canonical = f"{brand} {short_name}"
                     else:
                         canonical = short_name
                 else:
-                    # No KB entry AND no brand — skip bare short names
-                    continue
+                    # No brand in pattern — look up KB for brand info.
+                    system = resolve_alias(short_name)
+                    if system:
+                        kb_brand = system.get("brand", "")
+                        if kb_brand and kb_brand != "Community":
+                            brand = kb_brand
+                            if not short_name.lower().startswith(brand.lower()):
+                                canonical = f"{brand} {short_name}"
+                            else:
+                                canonical = short_name
+                        else:
+                            # Community / open-source system — keep short name as-is
+                            canonical = short_name
+                    else:
+                        # Standalone system not in KB — keep short name as-is
+                        canonical = short_name
 
                 meta: Dict = {"canonical": canonical}
                 if brand:

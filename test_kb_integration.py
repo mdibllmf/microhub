@@ -88,7 +88,7 @@ def run_tests():
     result = _extract(equip, text)
     ok = (
         _has(result, "MICROSCOPE_BRAND", "Nikon") and
-        _has_any(result, "MICROSCOPE_MODEL", ["AX R", "AX", "Nikon AX"])
+        _has_any(result, "MICROSCOPE_MODEL", ["AX R", "AX", "Nikon AX", "Nikon AX R"])
     )
     if ok:
         passed += 1
@@ -103,7 +103,10 @@ def run_tests():
     result = _extract(equip, text)
     ok = (
         _has_any(result, "MICROSCOPE_BRAND", ["Evident (Olympus)", "Olympus"]) and
-        _has_any(result, "MICROSCOPE_MODEL", ["FV4000", "Olympus FV4000", "Evident FV4000"])
+        _has_any(result, "MICROSCOPE_MODEL", [
+            "FV4000", "Olympus FV4000", "Evident FV4000",
+            "Evident (Olympus) FV4000",
+        ])
     )
     if ok:
         passed += 1
@@ -133,7 +136,10 @@ def run_tests():
     result = _extract(equip, text)
     ok = (
         _has_any(result, "MICROSCOPE_BRAND", ["Thermo Fisher", "FEI"]) and
-        _has_any(result, "MICROSCOPE_MODEL", ["Titan Krios", "Titan", "Krios G4"])
+        _has_any(result, "MICROSCOPE_MODEL", [
+            "Titan Krios", "Titan", "Krios G4",
+            "FEI Titan", "Thermo Fisher Titan Krios",
+        ])
     )
     if ok:
         passed += 1
@@ -168,6 +174,7 @@ def run_tests():
         _has_any(result, "MICROSCOPE_BRAND", ["Revvity", "PerkinElmer"]) and
         _has_any(result, "MICROSCOPE_MODEL", [
             "Opera Phenix Plus", "Opera Phenix",
+            "Revvity Opera Phenix Plus", "Revvity Opera Phenix",
         ])
     )
     if ok:
@@ -201,7 +208,7 @@ def run_tests():
     result = _extract(equip, text)
     ok = (
         _has(result, "MICROSCOPE_BRAND", "Thorlabs") and
-        _has_any(result, "MICROSCOPE_MODEL", ["Bergamo", "Bergamo II"])
+        _has_any(result, "MICROSCOPE_MODEL", ["Bergamo", "Bergamo II", "Thorlabs Bergamo"])
     )
     if ok:
         passed += 1

@@ -148,6 +148,140 @@ SOFTWARE_RENAMES: Dict[str, str] = {
 }
 
 # ======================================================================
+# Microscope model rename map: legacy short names → canonical "Brand Model"
+# ======================================================================
+# Maps old short-name values (from pre-canonicalization data) to the new
+# "Brand Model" canonical names used by MASTER_TAG_DICTIONARY.json.
+
+MICROSCOPE_MODEL_RENAMES: Dict[str, str] = {
+    # Zeiss confocal
+    "LSM 510": "Zeiss LSM 510",
+    "LSM 700": "Zeiss LSM 700",
+    "LSM 710": "Zeiss LSM 710",
+    "LSM 780": "Zeiss LSM 780",
+    "LSM 800": "Zeiss LSM 800",
+    "LSM 880": "Zeiss LSM 880",
+    "LSM 900": "Zeiss LSM 900",
+    "LSM 980": "Zeiss LSM 980",
+    # Zeiss super-resolution / light sheet / widefield
+    "Elyra": "Zeiss Elyra",
+    "Elyra 7": "Zeiss Elyra 7",
+    "Lightsheet Z.1": "Zeiss Lightsheet Z.1",
+    "Lightsheet 7": "Zeiss Lightsheet 7",
+    "Celldiscoverer 7": "Zeiss Celldiscoverer 7",
+    "Axio Observer": "Zeiss Axio Observer",
+    "Axio Imager": "Zeiss Axio Imager",
+    "Axiovert": "Zeiss Axiovert",
+    "Axioskop": "Zeiss Axioskop",
+    "Observer 7": "Zeiss Observer 7",
+    "Axioscan 7": "Zeiss Axioscan 7",
+    "Crossbeam": "Zeiss Crossbeam",
+    "GeminiSEM": "Zeiss GeminiSEM",
+    "Xradia Versa": "Zeiss Xradia Versa",
+    "Xradia Ultra": "Zeiss Xradia Ultra",
+    # Leica confocal / STED / widefield
+    "SP5": "Leica SP5",
+    "SP8": "Leica SP8",
+    "Stellaris": "Leica Stellaris",
+    "STELLARIS 5": "Leica STELLARIS 5",
+    "STELLARIS 8": "Leica STELLARIS 8",
+    "STELLARIS 8 FALCON": "Leica STELLARIS 8 FALCON",
+    "STELLARIS 8 DIVE": "Leica STELLARIS 8 DIVE",
+    "STELLARIS 8 STED": "Leica STELLARIS 8 STED",
+    "STED 3X": "Leica STED 3X",
+    "THUNDER": "Leica THUNDER",
+    "DMi8": "Leica DMi8",
+    "DM6": "Leica DM6",
+    "DM IL": "Leica DM IL",
+    "FALCON": "Leica FALCON",
+    "TauSTED": "Leica TauSTED",
+    "Mica": "Leica Mica",
+    "Aperio": "Leica Aperio",
+    # Nikon confocal / super-resolution / widefield
+    "A1": "Nikon A1",
+    "AX": "Nikon AX",
+    "AX R": "Nikon AX R",
+    "C2+": "Nikon C2+",
+    "Ti": "Nikon Ti",
+    "Ti2": "Nikon Ti2",
+    "N-SIM": "Nikon N-SIM",
+    "N-STORM": "Nikon N-STORM",
+    "NSPARC": "Nikon NSPARC",
+    # Yokogawa spinning disk
+    "CSU-W1": "Yokogawa CSU-W1",
+    "CSU-X1": "Yokogawa CSU-X1",
+    "CSU-W1 SoRa": "Yokogawa CSU-W1 SoRa",
+    "SoRa": "Yokogawa SoRa",
+    "CV7000": "Yokogawa CV7000",
+    "CV8000": "Yokogawa CV8000",
+    "CQ1": "Yokogawa CQ1",
+    # Olympus / Evident confocal / spinning disk / widefield
+    "FV1000": "Olympus FV1000",
+    "FV1200": "Olympus FV1200",
+    "FV3000": "Olympus FV3000",
+    "FV4000": "Evident (Olympus) FV4000",
+    "FV5000": "Evident (Olympus) FV5000",
+    "SpinSR": "Olympus SpinSR",
+    "SpinXL": "Evident (Olympus) SpinXL",
+    "SilVIR": "Evident (Olympus) SilVIR",
+    "IX73": "Olympus IX73",
+    "IX83": "Olympus IX83",
+    "IX85": "Evident (Olympus) IX85",
+    "BX63": "Olympus BX63",
+    "VS120": "Olympus VS120",
+    "VS200": "Evident (Olympus) VS200",
+    "APX100": "Evident (Olympus) APX100",
+    # Andor spinning disk
+    "Dragonfly 200": "Andor Dragonfly 200",
+    "Dragonfly 500": "Andor Dragonfly 500",
+    "Dragonfly 600": "Andor Dragonfly 600",
+    "BC43": "Andor BC43",
+    # High-content screening
+    "Opera Phenix": "Revvity Opera Phenix",
+    "Opera Phenix Plus": "Revvity Opera Phenix Plus",
+    "Operetta CLS": "Revvity Operetta CLS",
+    "ImageXpress Micro": "Molecular Devices ImageXpress Micro",
+    "ImageXpress Confocal": "Molecular Devices ImageXpress Confocal",
+    "CellInsight CX7": "Thermo Fisher CellInsight CX7",
+    # Multiphoton
+    "Ultima Investigator": "Bruker Ultima Investigator",
+    "Ultima 2Pplus": "Bruker Ultima 2Pplus",
+    "Bergamo": "Thorlabs Bergamo",
+    "HyperScope": "Scientifica HyperScope",
+    "FEMTO3D": "Femtonics FEMTO3D",
+    "TriM Scope": "LaVision BioTec TriM Scope",
+    # STED (Abberior)
+    "STEDYCON": "Abberior STEDYCON",
+    "Facility Line": "Abberior Facility Line",
+    # Cryo-EM / FIB-SEM
+    "Titan": "FEI Titan",
+    "Titan Krios": "Thermo Fisher Titan Krios",
+    "Glacios": "Thermo Fisher Glacios",
+    "Talos": "FEI Talos",
+    "Tecnai": "FEI Tecnai",
+    "CM200": "FEI CM200",
+    "Aquilos": "Thermo Fisher Aquilos",
+    "Scios": "Thermo Fisher Scios",
+    "Helios": "Thermo Fisher Helios",
+    "Apreo": "Thermo Fisher Apreo",
+    "CRYO ARM 300": "JEOL CRYO ARM 300",
+    "JEM-1400": "JEOL JEM-1400",
+    "JEM-2100": "JEOL JEM-2100",
+    "JEM-F200": "JEOL JEM-F200",
+    # Slide scanners
+    "NanoZoomer": "Hamamatsu NanoZoomer",
+    "Pannoramic": "3DHISTECH Pannoramic",
+    # Light-sheet — commercial systems that had no brand prefix
+    "UltraMicroscope": "LaVision BioTec UltraMicroscope",
+    "SmartSPIM": "LifeCanvas SmartSPIM",
+    "Marianas": "3i (Intelligent Imaging) Marianas",
+    "MuVi SPIM": "Luxendo MuVi SPIM",
+    # Standalone community / academic systems are unchanged (no entry needed):
+    # MesoSPIM → "MesoSPIM", diSPIM → "diSPIM", iSPIM → "iSPIM",
+    # OpenSPIM → "OpenSPIM", ctASLM → "ctASLM"
+}
+
+# ======================================================================
 # Organism grouping map
 # ======================================================================
 # Maps all variant forms (common names, abbreviations, old canonical forms)
@@ -392,6 +526,7 @@ def normalize_tags(paper: Dict) -> Dict:
     _apply(paper, "fluorophores", FLUOROPHORE_RENAMES, _normalize_fluoro)
     _apply(paper, "microscopy_techniques", TECHNIQUE_RENAMES)
     _apply(paper, "microscope_brands", BRAND_RENAMES)
+    _apply(paper, "microscope_models", MICROSCOPE_MODEL_RENAMES)
     _apply(paper, "image_analysis_software", SOFTWARE_RENAMES)
     _apply(paper, "image_acquisition_software", SOFTWARE_RENAMES)
 
