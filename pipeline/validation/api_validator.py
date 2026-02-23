@@ -80,9 +80,14 @@ class ApiValidator:
         self._ror_cache: Dict[str, Optional[Dict]] = {}
         self._taxon_cache: Dict[str, Optional[Dict]] = {}
 
-        self._fpbase_local: Dict[str, Dict] = {}
-        self._fpbase_local_loaded = False
-        self._fpbase_path = fpbase_path
+        # Delegate to standalone validators (removes duplicated logic)
+        from .fpbase_validator import FPbaseValidator
+        from .scicrunch_validator import SciCrunchValidator
+        from .taxonomy_validator import TaxonomyValidator
+
+        self._fpbase_validator = FPbaseValidator(lookup_path=fpbase_path)
+        self._scicrunch_validator = SciCrunchValidator()
+        self._taxonomy_validator = TaxonomyValidator(local_path=taxonomy_path)
 
         # Cellosaurus client with optional local lookup
         self._cellosaurus = None
@@ -92,118 +97,15 @@ class ApiValidator:
         except ImportError:
             pass
 
-        self._taxonomy_local: Dict[str, int] = {}
-        self._taxonomy_local_loaded = False
-        self._taxonomy_path = taxonomy_path
-
-        # Rate limiting
+        # Rate limiting (only for APIs not delegated to validators)
         self._last_call: Dict[str, float] = {}
         self._delays = {
-            "fpbase": 0.2,
-            "scicrunch": 0.5,
             "ror": 0.3,
-            "ncbi": 0.4,
             "pubtator": 0.5,
         }
 
         # Track exhaustion per API
         self._exhausted: Set[str] = set()
-
-    def _ensure_fpbase_loaded(self) -> None:
-        if not self._fpbase_local_loaded and self._fpbase_path:
-            self._load_fpbase_local(self._fpbase_path)
-
-    def _ensure_taxonomy_loaded(self) -> None:
-        if not self._taxonomy_local_loaded and self._taxonomy_path:
-            self._load_taxonomy_local(self._taxonomy_path)
-
-    def _load_fpbase_local(self, path: str) -> None:
-        """Load fpbase_name_lookup.json into a case-insensitive index."""
-        json_path = path
-        if os.path.isdir(path):
-            json_path = os.path.join(path, "fpbase_name_lookup.json")
-        if not os.path.exists(json_path):
-            logger.warning("FPbase lookup not found at %s", json_path)
-            return
-
-        try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                raw = json.load(f)
-
-            count = 0
-            for key, entry in raw.items():
-                key_lower = str(key).strip().lower()
-                if not key_lower or not isinstance(entry, dict):
-                    continue
-
-                canonical = (
-                    entry.get("canonical_name")
-                    or entry.get("name")
-                    or str(key).strip()
-                )
-                normalized_entry = {
-                    "name": canonical,
-                    "type": entry.get("type", ""),
-                }
-                self._fpbase_local[key_lower] = normalized_entry
-                self._fpbase_local[canonical.lower()] = normalized_entry
-                count += 1
-                if count % 50000 == 0:
-                    logger.info("FPbase local load progress: %d entries", count)
-
-            self._fpbase_local_loaded = True
-            logger.info("FPbase local lookup loaded: %d entries", len(self._fpbase_local))
-        except Exception as exc:
-            logger.warning("Failed to load FPbase lookup: %s", exc)
-
-    def _load_taxonomy_local(self, path: str) -> None:
-        """Load NCBI names.dmp into a case-insensitive name->taxid map."""
-        names_path = path
-        if os.path.isdir(path):
-            names_path = os.path.join(path, "names.dmp")
-        if not os.path.exists(names_path):
-            logger.warning("NCBI names.dmp not found at %s", names_path)
-            return
-
-        count = 0
-        try:
-            with open(names_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    parts = line.strip().split("\t|\t")
-                    if len(parts) < 4:
-                        continue
-
-                    try:
-                        taxid = int(parts[0].strip())
-                    except ValueError:
-                        continue
-
-                    name = parts[1].strip()
-                    name_class = parts[3].rstrip("\t|").strip()
-                    if name_class not in (
-                        "scientific name",
-                        "common name",
-                        "synonym",
-                        "equivalent name",
-                        "genbank common name",
-                    ):
-                        continue
-
-                    key = name.lower()
-                    if key not in self._taxonomy_local or name_class == "scientific name":
-                        self._taxonomy_local[key] = taxid
-                    count += 1
-                    if count % 500000 == 0:
-                        logger.info("NCBI taxonomy local load progress: %d rows", count)
-
-            self._taxonomy_local_loaded = True
-            logger.info(
-                "NCBI taxonomy loaded: %d entries, %d unique names",
-                count,
-                len(self._taxonomy_local),
-            )
-        except Exception as exc:
-            logger.warning("Failed to load NCBI taxonomy: %s", exc)
 
     # ------------------------------------------------------------------
     # Public: validate a full paper result dict
@@ -310,60 +212,16 @@ class ApiValidator:
         return validated
 
     def _query_fpbase(self, name: str) -> Optional[Dict]:
-        """Query FPbase for a fluorescent protein by name."""
+        """Query FPbase for a fluorescent protein by name.
+
+        Delegates to FPbaseValidator (local lookup + API fallback).
+        """
         if name in self._fpbase_cache:
             return self._fpbase_cache[name]
 
-        self._ensure_fpbase_loaded()
-
-        if self._fpbase_local_loaded:
-            local_hit = self._fpbase_local.get(name.lower())
-            if local_hit is not None:
-                self._fpbase_cache[name] = local_hit
-                return local_hit
-
-        if not HAS_REQUESTS:
-            self._fpbase_cache[name] = None
-            return None
-
-        self._rate_limit("fpbase")
-        try:
-            resp = requests.get(
-                "https://www.fpbase.org/api/proteins/",
-                params={"name__iexact": name, "format": "json"},
-                timeout=10,
-            )
-            self._last_call["fpbase"] = time.time()
-
-            if resp.status_code == 429:
-                self._exhausted.add("fpbase")
-                return None
-            if resp.status_code != 200:
-                return None
-
-            data = resp.json()
-            results = data.get("results", [])
-            if results:
-                self._fpbase_cache[name] = results[0]
-                return results[0]
-
-            # Try slug-based lookup (e.g., "mCherry" → slug "mcherry")
-            slug = name.lower().replace(" ", "-")
-            resp2 = requests.get(
-                f"https://www.fpbase.org/api/proteins/{slug}/",
-                params={"format": "json"},
-                timeout=10,
-            )
-            if resp2.status_code == 200:
-                result = resp2.json()
-                self._fpbase_cache[name] = result
-                return result
-
-            self._fpbase_cache[name] = None
-            return None
-
-        except Exception:
-            return None
+        result = self._fpbase_validator.validate(name)
+        self._fpbase_cache[name] = result
+        return result
 
     # ------------------------------------------------------------------
     # RRID validation against SciCrunch
@@ -396,44 +254,16 @@ class ApiValidator:
         return validated
 
     def _query_scicrunch(self, rrid: str) -> Optional[Dict]:
-        """Query SciCrunch resolver for RRID metadata."""
+        """Query SciCrunch resolver for RRID metadata.
+
+        Delegates to SciCrunchValidator (handles rate limiting + caching).
+        """
         if rrid in self._rrid_cache:
             return self._rrid_cache[rrid]
 
-        self._rate_limit("scicrunch")
-        try:
-            # SciCrunch resolver API
-            resp = requests.get(
-                f"https://scicrunch.org/resolver/{rrid}.json",
-                timeout=10,
-            )
-            self._last_call["scicrunch"] = time.time()
-
-            if resp.status_code == 429:
-                self._exhausted.add("scicrunch")
-                return None
-            if resp.status_code != 200:
-                self._rrid_cache[rrid] = None
-                return None
-
-            data = resp.json()
-            # SciCrunch returns nested structure
-            hits = data.get("hits", {}).get("hits", [])
-            if hits:
-                source = hits[0].get("_source", {})
-                result = {
-                    "name": source.get("item", {}).get("name", ""),
-                    "type": source.get("item", {}).get("types", [""])[0]
-                             if source.get("item", {}).get("types") else "",
-                }
-                self._rrid_cache[rrid] = result
-                return result
-
-            self._rrid_cache[rrid] = None
-            return None
-
-        except Exception:
-            return None
+        result = self._scicrunch_validator.validate(rrid)
+        self._rrid_cache[rrid] = result
+        return result
 
     # ------------------------------------------------------------------
     # ROR validation
@@ -543,11 +373,12 @@ class ApiValidator:
         return validated
 
     def _query_ncbi_taxonomy(self, name: str) -> Optional[Dict]:
-        """Query NCBI Taxonomy for organism validation."""
+        """Query NCBI Taxonomy for organism validation.
+
+        Delegates to TaxonomyValidator (local names.dmp + API fallback).
+        """
         if name in self._taxon_cache:
             return self._taxon_cache[name]
-
-        self._ensure_taxonomy_loaded()
 
         # Map common names to Latin for direct lookup
         COMMON_TO_LATIN = {
@@ -576,88 +407,25 @@ class ApiValidator:
             "Tobacco": "Nicotiana tabacum",
         }
 
-        # Use Latin name for NCBI lookup
         query_name = COMMON_TO_LATIN.get(name, name)
 
-        if self._taxonomy_local_loaded:
-            taxid = self._taxonomy_local.get(query_name.lower())
-            if taxid is None:
-                taxid = self._taxonomy_local.get(name.lower())
-            if taxid is not None:
-                result = {
-                    "tax_id": str(taxid),
-                    "scientific_name": query_name if query_name != name else name,
-                    "common_name": name if query_name != name else "",
-                    "rank": "",
-                }
-                self._taxon_cache[name] = result
-                return result
+        # Delegate to TaxonomyValidator (handles local + API lookup)
+        taxid = self._taxonomy_validator.get_taxid(query_name)
+        if taxid is None and query_name != name:
+            taxid = self._taxonomy_validator.get_taxid(name)
 
-        if not HAS_REQUESTS:
-            self._taxon_cache[name] = None
-            return None
+        if taxid is not None:
+            result = {
+                "tax_id": str(taxid),
+                "scientific_name": query_name if query_name != name else name,
+                "common_name": name if query_name != name else "",
+                "rank": "",
+            }
+            self._taxon_cache[name] = result
+            return result
 
-        self._rate_limit("ncbi")
-        try:
-            # Use NCBI ESearch to find taxon ID
-            resp = requests.get(
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-                params={
-                    "db": "taxonomy",
-                    "term": query_name,
-                    "retmode": "json",
-                },
-                timeout=10,
-            )
-            self._last_call["ncbi"] = time.time()
-
-            if resp.status_code == 429:
-                self._exhausted.add("ncbi")
-                return None
-            if resp.status_code != 200:
-                return None
-
-            data = resp.json()
-            id_list = data.get("esearchresult", {}).get("idlist", [])
-            if not id_list:
-                self._taxon_cache[name] = None
-                return None
-
-            tax_id = id_list[0]
-
-            # Fetch taxonomy details
-            self._rate_limit("ncbi")
-            resp2 = requests.get(
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
-                params={
-                    "db": "taxonomy",
-                    "id": tax_id,
-                    "retmode": "json",
-                },
-                timeout=10,
-            )
-            self._last_call["ncbi"] = time.time()
-
-            if resp2.status_code != 200:
-                return None
-
-            data2 = resp2.json()
-            result_data = data2.get("result", {}).get(str(tax_id), {})
-            if result_data:
-                result = {
-                    "tax_id": tax_id,
-                    "scientific_name": result_data.get("scientificname", ""),
-                    "common_name": result_data.get("commonname", ""),
-                    "rank": result_data.get("rank", ""),
-                }
-                self._taxon_cache[name] = result
-                return result
-
-            self._taxon_cache[name] = None
-            return None
-
-        except Exception:
-            return None
+        self._taxon_cache[name] = None
+        return None
 
     # ------------------------------------------------------------------
     # Cellosaurus cell line validation

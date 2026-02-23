@@ -582,14 +582,35 @@ def main():
             # (institution lookup depends on affiliations which may be absent in rescan)
             original_rors = list(paper.get("rors") or [])
 
-            # Optionally re-run agents — merge results with existing data
+            # Re-run agents — agent output is authoritative for tag fields
+            # (replaces scraper tags that bypassed the RoleClassifier)
             if enricher is not None:
                 agent_results = enricher.process_paper(paper)
+
+                # Tag fields: agent output REPLACES existing values because
+                # the agent applied role classification and over-tagging
+                # prevention.  Union would re-introduce scraper tags that
+                # bypassed the classifier.
+                AGENT_TAG_FIELDS = {
+                    "microscopy_techniques", "microscope_brands",
+                    "microscope_models", "reagent_suppliers",
+                    "image_analysis_software", "image_acquisition_software",
+                    "general_software", "fluorophores", "organisms",
+                    "antibody_sources", "cell_lines", "sample_preparation",
+                    "objectives", "lasers", "detectors", "filters",
+                    "institutions",
+                }
+
                 for key, val in agent_results.items():
                     if key.startswith("_"):
                         continue
-                    if isinstance(val, list) and val:
-                        # Union: combine existing + agent, deduplicate
+                    if key in AGENT_TAG_FIELDS:
+                        # Replace: agent output is authoritative
+                        if isinstance(val, list):
+                            paper[key] = val
+                    elif isinstance(val, list) and val:
+                        # Structural lists (protocols, repos, rrids, rors):
+                        # union merge — completeness matters
                         existing = paper.get(key) or []
                         if isinstance(existing, str):
                             try:
@@ -630,9 +651,6 @@ def main():
             if not paper.get("rors") and original_rors:
                 paper["rors"] = original_rors
 
-            # Normalize tag names (scraper variants → canonical forms)
-            normalize_tags(paper)
-
             # Re-scan text fields for repository/protocol references that
             # may have been missed during initial scraping.  This catches
             # Zenodo DOIs, OMERO links, Figshare DOIs, etc. that appear in
@@ -643,6 +661,11 @@ def main():
             # (fallback for papers with "deposited in X" prose but no URLs)
             if not paper.get("repositories"):
                 _mine_data_availability(paper)
+
+            # Normalize tag names AFTER rescan so rescan results are also
+            # normalized (fixes ordering issue where rescan additions
+            # bypassed normalization)
+            normalize_tags(paper)
 
             # Normalize all identifiers (DOIs, RRIDs, RORs, repo URLs)
             id_normalizer.normalize_paper(paper)
