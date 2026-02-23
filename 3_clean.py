@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 """
-Step 3 — Clean and re-tag exported JSON files.
+Step 3 — Segment, tag, enrich, and finalize exported JSON.
 
-Reads the chunked JSON from step 2, applies protocol classification, syncs
-field aliases, sets boolean flags, strips full_text, and writes final
-WordPress-ready files.
+Reads the chunked JSON from step 2 and runs the full processing pipeline:
+  a. Section segmentation  — splits full_text into methods/results/etc.
+  b. Agent extraction      — techniques, equipment, software, organisms, etc.
+  c. Role classification   — filters REFERENCED vs USED entities
+  d. Validation & normalization — tag dictionary, APIs, ontology mapping
+  e. API enrichment        — OpenAlex, Semantic Scholar, GitHub, CrossRef, DataCite, ROR
+  f. Finalization          — protocol classification, boolean flags, field stripping
 
-    python 3_clean.py                                     # defaults (enrichment + API calls)
+    python 3_clean.py                                     # defaults (full pipeline)
     python 3_clean.py --input-dir raw_export/             # read from step 2 output
     python 3_clean.py --output-dir cleaned_export/        # write here
     python 3_clean.py --no-enrich                         # skip agent pipeline (NOT recommended)
+    python 3_clean.py --no-segment                        # skip section segmentation
     python 3_clean.py --skip-api                          # skip all API enrichment
     python 3_clean.py --no-openalex                       # skip OpenAlex enrichment
     python 3_clean.py --no-datacite                       # skip DataCite/OpenAIRE dataset linking
     python 3_clean.py --no-ror                            # skip ROR v2 affiliation matching
 
-Input:  segmented_export/*_chunk_*.json  (from step 2b, preferred)
-        raw_export/*_chunk_*.json        (from step 2, fallback)
+Input:  raw_export/*_chunk_*.json        (from step 2)
 Output: cleaned_export/*_chunk_*.json    (ready for step 4 and WordPress)
 """
 
@@ -426,6 +430,10 @@ def main():
                         help="Disable role classifier (over-tagging prevention)")
     parser.add_argument("--no-scihub", action="store_true",
                         help="Disable SciHub DOI fallback for papers still missing full text")
+    parser.add_argument("--no-segment", action="store_true",
+                        help="Skip section segmentation (not recommended)")
+    parser.add_argument("--no-strip-citations", action="store_true",
+                        help="Do not strip inline citations during segmentation")
     parser.add_argument("--workers", type=int, default=4,
                         help="Number of parallel workers for API enrichment (default: 4)")
 
@@ -463,12 +471,9 @@ def main():
             if not os.path.isabs(input_dir):
                 input_dir = os.path.join(SCRIPT_DIR, input_dir)
         else:
-            # Auto-detect: prefer segmented_export/ > raw_export/ > project root
-            segmented_dir = os.path.join(SCRIPT_DIR, "segmented_export")
+            # Auto-detect: prefer raw_export/, fall back to project root
             raw_export_dir = os.path.join(SCRIPT_DIR, "raw_export")
-            if os.path.isdir(segmented_dir) and glob.glob(os.path.join(segmented_dir, "*.json")):
-                input_dir = segmented_dir
-            elif os.path.isdir(raw_export_dir) and glob.glob(os.path.join(raw_export_dir, "*.json")):
+            if os.path.isdir(raw_export_dir) and glob.glob(os.path.join(raw_export_dir, "*.json")):
                 input_dir = raw_export_dir
             else:
                 input_dir = SCRIPT_DIR
@@ -520,6 +525,7 @@ def main():
     logger.info("Input files: %d", len(input_files))
     logger.info("Output dir:  %s", out_dir)
     logger.info("Lookup tables: %s", "found" if os.path.isdir(lookup_root) else "NOT FOUND (using API fallback)")
+    logger.info("Segment:     %s", "no (--no-segment)" if args.no_segment else "yes")
     logger.info("Enrich:      %s", "no (--no-enrich)" if args.no_enrich else "yes")
     logger.info("PubTator:    %s", "yes" if args.use_pubtator else "no")
     logger.info("Role class.: %s", "no" if args.no_role_classifier else "yes")
@@ -536,6 +542,8 @@ def main():
     logger.info("")
 
     total_papers = 0
+    seg_stats = {"existing": 0, "heuristic": 0, "full_text_fallback": 0,
+                 "abstract_only": 0, "none": 0, "skipped": 0}
 
     for input_file in input_files:
         logger.info("Processing: %s", os.path.basename(input_file))
@@ -577,6 +585,20 @@ def main():
             if paper.get("full_text") and not paper.get("data_availability"):
                 from pipeline.parsing.section_extractor import _extract_data_availability
                 paper["data_availability"] = _extract_data_availability(paper["full_text"])
+
+            # ---- Section segmentation (inline, replaces standalone step 2b) ----
+            # Segments full_text into structured sections, strips citations
+            # and references. This prevents over-tagging from introduction
+            # and literature review mentions.
+            if not args.no_segment and not paper.get("_segmentation_source"):
+                from importlib import import_module as _import_module
+                _seg = _import_module("2b_segment")
+                _seg.segment_paper(
+                    paper,
+                    strip_citations=not args.no_strip_citations,
+                )
+            src = paper.get("_segmentation_source", "skipped")
+            seg_stats[src] = seg_stats.get(src, 0) + 1
 
             # Preserve original RORs in case rescan can't re-derive them
             # (institution lookup depends on affiliations which may be absent in rescan)
@@ -780,8 +802,25 @@ def main():
 
     logger.info("")
     logger.info("=" * 60)
-    logger.info("STEP 3 COMPLETE: %d papers cleaned", total_papers)
+    logger.info("STEP 3 COMPLETE: %d papers processed", total_papers)
     logger.info("=" * 60)
+    if not args.no_segment:
+        logger.info("")
+        logger.info("SEGMENTATION:")
+        logger.info("  Existing sections:    %d", seg_stats.get("existing", 0))
+        logger.info("  Heuristic segmented:  %d", seg_stats.get("heuristic", 0))
+        logger.info("  Full-text fallback:   %d", seg_stats.get("full_text_fallback", 0))
+        logger.info("  Abstract-only:        %d", seg_stats.get("abstract_only", 0))
+    if enricher is not None:
+        logger.info("")
+        logger.info("SCIHUB FALLBACK:")
+        logger.info("  Papers needing text:  %d", enricher.scihub_attempted)
+        logger.info("  Full text retrieved:  %d", enricher.scihub_success)
+        logger.info("  Successfully segmented: %d", enricher.scihub_segmented)
+        if enricher.scihub_attempted > 0:
+            rate = enricher.scihub_success / enricher.scihub_attempted * 100
+            logger.info("  Hit rate:             %.1f%%", rate)
+    logger.info("")
     logger.info("Next step: python 4_validate.py --input-dir %s", out_dir)
 
 

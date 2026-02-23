@@ -106,6 +106,11 @@ class PipelineOrchestrator:
         self.use_three_tier_waterfall = use_three_tier_waterfall
         self.use_scihub_fallback = use_scihub_fallback
 
+        # SciHub stats (tracked per orchestrator lifetime)
+        self.scihub_attempted = 0
+        self.scihub_success = 0
+        self.scihub_segmented = 0
+
         # Validation (with local lookups)
         self.tag_validator = TagValidator(tag_dictionary_path)
         self.api_validator = ApiValidator(
@@ -141,7 +146,7 @@ class PipelineOrchestrator:
         dict
             Extraction results keyed by category, ready for the exporter.
         """
-        # If paper has _segmented_* fields (from step 2b), use those
+        # If paper has _segmented_* fields (from inline segmentation), use those
         has_segmented = any(
             paper.get(f"_segmented_{f}")
             for f in ("methods", "results", "discussion", "figures",
@@ -156,15 +161,45 @@ class PipelineOrchestrator:
         else:
             sections = from_pubmed_dict(paper)
 
-        # SciHub DOI fallback: if waterfall didn't produce full text, try SciHub
-        if self.use_scihub_fallback and not sections.full_text:
+        # SciHub DOI fallback — always try if the paper has no full text,
+        # regardless of what segments exist.  Segments derived from an
+        # abstract-only paper are thin; SciHub can provide the real body.
+        paper_has_fulltext = bool(
+            (paper.get("full_text") or "").strip()
+        )
+        if self.use_scihub_fallback and not paper_has_fulltext:
             doi = paper.get("doi", "") or ""
             if doi:
+                self.scihub_attempted += 1
                 from .parsing.scihub_fetcher import fetch_fulltext_via_scihub
                 scihub_text = fetch_fulltext_via_scihub(doi)
                 if scihub_text:
-                    sections.full_text = scihub_text
-                    logger.debug("SciHub fallback provided full text for DOI %s", doi)
+                    self.scihub_success += 1
+                    # Segment the SciHub text so agents get methods/results,
+                    # not the raw full blob (which would cause over-tagging
+                    # from introduction/literature review sections).
+                    from .parsing.section_extractor import segment_fulltext
+                    seg = segment_fulltext(scihub_text)
+                    if seg.has_methods:
+                        self.scihub_segmented += 1
+                        sections = PaperSections(
+                            title=sections.title or paper.get("title", ""),
+                            abstract=sections.abstract or paper.get("abstract", ""),
+                            methods=seg.methods,
+                            results=seg.results or sections.results,
+                            discussion=seg.discussion or sections.discussion,
+                            figures=seg.figures or sections.figures,
+                            data_availability=seg.data_availability or sections.data_availability,
+                            full_text=scihub_text,
+                            metadata=paper,
+                        )
+                    else:
+                        # Could not segment — use full text as fallback
+                        sections.full_text = scihub_text
+                    logger.info(
+                        "SciHub fallback: DOI %s → %d chars (segmented=%s)",
+                        doi, len(scihub_text), "yes" if seg.has_methods else "no",
+                    )
 
         results = self._run_agents(sections, paper)
 
