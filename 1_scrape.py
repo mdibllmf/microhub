@@ -82,17 +82,11 @@ def acquire_fulltext(
     }
     has_text_acquired = "text_acquired" in columns
 
-    # Select papers missing full text that have EITHER a DOI (for SciHub/
-    # Unpaywall) OR a PMC ID (for Europe PMC).  Previously this query
-    # required DOI, which meant papers with only a PMC ID were skipped.
     query = """
         SELECT id, pmid, pmc_id, doi, title, full_text
         FROM papers
         WHERE (full_text IS NULL OR full_text = '')
-          AND (
-            (doi IS NOT NULL AND doi != '')
-            OR (pmc_id IS NOT NULL AND pmc_id != '')
-          )
+          AND doi IS NOT NULL AND doi != ''
         ORDER BY priority_score DESC, year DESC
     """
     if limit:
