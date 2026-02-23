@@ -486,12 +486,8 @@ class JsonExporter:
             # === MICROSCOPE INFO ===
             "microscope_brands": microscope_brands,
             "microscope_models": microscope_models,
-            "microscope_brand": self.safe_get(row_dict, "microscope_brand"),
-            "microscope": {
-                "brands": microscope_brands,
-                "models": microscope_models,
-                "brand": microscope_brands[0] if microscope_brands else None,
-            } if microscope_brands or microscope_models else None,
+            "microscope_brand": microscope_brands[0] if microscope_brands else None,
+            "microscope": microscope_models[0] if microscope_models else None,
 
             # === REAGENT SUPPLIERS ===
             "reagent_suppliers": reagent_suppliers,
