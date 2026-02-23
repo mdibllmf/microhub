@@ -82,11 +82,17 @@ def acquire_fulltext(
     }
     has_text_acquired = "text_acquired" in columns
 
+    # Select papers missing full text that have EITHER a DOI (for SciHub/
+    # Unpaywall) OR a PMC ID (for Europe PMC).  Previously this query
+    # required DOI, which meant papers with only a PMC ID were skipped.
     query = """
-        SELECT id, pmid, doi, title, full_text
+        SELECT id, pmid, pmc_id, doi, title, full_text
         FROM papers
         WHERE (full_text IS NULL OR full_text = '')
-          AND doi IS NOT NULL AND doi != ''
+          AND (
+            (doi IS NOT NULL AND doi != '')
+            OR (pmc_id IS NOT NULL AND pmc_id != '')
+          )
         ORDER BY priority_score DESC, year DESC
     """
     if limit:
@@ -111,8 +117,10 @@ def acquire_fulltext(
     )
     logger.info("")
 
-    acquired = 0
+    acquired_waterfall = 0
     acquired_scihub = 0
+    scihub_attempted = 0
+    still_missing = 0
     errors = 0
 
     for i, row in enumerate(rows):
@@ -135,7 +143,7 @@ def acquire_fulltext(
                 params_sql.append(paper["id"])
                 conn.execute(updates_sql, params_sql)
                 conn.commit()
-                acquired += 1
+                acquired_waterfall += 1
                 logger.info(
                     "  [%d/%d] PMID %s: full text acquired (%d chars, source=%s)",
                     i + 1,
@@ -148,6 +156,7 @@ def acquire_fulltext(
 
             # ---- SciHub DOI fallback ----
             if use_scihub_fallback and doi:
+                scihub_attempted += 1
                 scihub_text = fetch_fulltext_via_scihub(doi)
                 if scihub_text:
                     if has_text_acquired:
@@ -161,15 +170,21 @@ def acquire_fulltext(
                             (scihub_text, paper["id"]),
                         )
                     conn.commit()
-                    acquired += 1
                     acquired_scihub += 1
                     logger.info(
-                        "  [%d/%d] PMID %s: full text via SciHub fallback (%d chars)",
-                        i + 1,
-                        total,
-                        pmid,
-                        len(scihub_text),
+                        "  [%d/%d] PMID %s: full text via SciHub (%d chars, DOI=%s)",
+                        i + 1, total, pmid, len(scihub_text), doi,
                     )
+                    continue
+
+            # If we're here, paper still has no full text
+            still_missing += 1
+            if (i + 1) <= 20 or (i + 1) % 50 == 0:
+                logger.info(
+                    "  [%d/%d] PMID %s: NO full text (DOI=%s, waterfall=fail, scihub=%s)",
+                    i + 1, total, pmid, doi or "NONE",
+                    "fail" if (use_scihub_fallback and doi) else "skipped",
+                )
 
         except Exception as exc:
             errors += 1
@@ -181,17 +196,22 @@ def acquire_fulltext(
 
     conn.close()
 
+    acquired_total = acquired_waterfall + acquired_scihub
     logger.info("")
     logger.info("=" * 60)
-    logger.info(
-        "PHASE B COMPLETE: %d papers acquired full text (%d via SciHub fallback, %d errors)",
-        acquired,
-        acquired_scihub,
-        errors,
-    )
+    logger.info("PHASE B COMPLETE")
+    logger.info("=" * 60)
+    logger.info("  Total papers processed:   %d", total)
+    logger.info("  Full text via waterfall:   %d", acquired_waterfall)
+    logger.info("  Full text via SciHub:      %d / %d attempted", acquired_scihub, scihub_attempted)
+    logger.info("  Still missing full text:   %d", still_missing)
+    logger.info("  Errors:                    %d", errors)
+    if scihub_attempted > 0:
+        rate = acquired_scihub / scihub_attempted * 100
+        logger.info("  SciHub hit rate:           %.1f%%", rate)
     logger.info("=" * 60)
 
-    return acquired
+    return acquired_total
 
 
 # ======================================================================

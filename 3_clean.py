@@ -788,6 +788,15 @@ def main():
         logger.info("  Heuristic segmented:  %d", seg_stats.get("heuristic", 0))
         logger.info("  Full-text fallback:   %d", seg_stats.get("full_text_fallback", 0))
         logger.info("  Abstract-only:        %d", seg_stats.get("abstract_only", 0))
+    if enricher is not None:
+        logger.info("")
+        logger.info("SCIHUB FALLBACK:")
+        logger.info("  Papers needing text:  %d", enricher.scihub_attempted)
+        logger.info("  Full text retrieved:  %d", enricher.scihub_success)
+        logger.info("  Successfully segmented: %d", enricher.scihub_segmented)
+        if enricher.scihub_attempted > 0:
+            rate = enricher.scihub_success / enricher.scihub_attempted * 100
+            logger.info("  Hit rate:             %.1f%%", rate)
     logger.info("")
     logger.info("Next step: python 4_validate.py --input-dir %s", out_dir)
 

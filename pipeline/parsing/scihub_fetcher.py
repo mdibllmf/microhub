@@ -56,21 +56,27 @@ def fetch_fulltext_via_scihub(doi: str) -> Optional[str]:
             url = f"{base_url}/{doi}"
             resp = requests.get(url, timeout=_TIMEOUT, allow_redirects=True)
             if resp.status_code != 200:
+                logger.debug("SciHub: %s returned HTTP %d for DOI %s",
+                             base_url, resp.status_code, doi)
                 continue
 
             # Extract text from HTML (simple approach — strip tags)
             text = _html_to_text(resp.text)
             if text and len(text) > 500:
-                logger.debug(
-                    "SciHub: retrieved %d chars for DOI %s from %s",
+                logger.info(
+                    "SciHub: retrieved %d chars for DOI %s via %s",
                     len(text), doi, base_url,
                 )
                 return text
+            else:
+                logger.debug("SciHub: %s returned only %d chars for DOI %s (too short)",
+                             base_url, len(text) if text else 0, doi)
 
-        except Exception:
+        except Exception as exc:
+            logger.debug("SciHub: %s failed for DOI %s: %s", base_url, doi, exc)
             continue
 
-    logger.debug("SciHub: no full text available for DOI %s", doi)
+    logger.info("SciHub: no full text available for DOI %s", doi)
     return None
 
 

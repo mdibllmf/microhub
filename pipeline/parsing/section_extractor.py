@@ -620,6 +620,19 @@ def heuristic_segment(text: str) -> List[Dict[str, str]]:
     return sections
 
 
+def segment_fulltext(text: str) -> PaperSections:
+    """Segment raw full text into a PaperSections using heading heuristics.
+
+    Convenience wrapper: heuristic_segment → from_sections_list.
+    Used by the orchestrator when SciHub provides raw text that needs
+    to be split into methods/results/discussion before agent extraction.
+    """
+    section_dicts = heuristic_segment(text)
+    ps = from_sections_list(section_dicts)
+    ps.full_text = text
+    return ps
+
+
 def from_pdf(pdf_path: str, grobid_url: str = "http://localhost:8070") -> PaperSections:
     """Parse a PDF via GROBID into PaperSections."""
     parser = GrobidParser(grobid_url)
