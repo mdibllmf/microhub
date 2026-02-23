@@ -1,0 +1,305 @@
+{
+  "Zeiss": {
+    "acquisition": [
+      "ZEN",
+      "ZEN Blue",
+      "ZEN Black",
+      "ZEN Pro"
+    ],
+    "analysis": [
+      "ZEN",
+      "arivis Pro",
+      "arivis Vision4D"
+    ],
+    "legacy": [
+      "AxioVision",
+      "LSM Image Browser",
+      "LSM 510 software"
+    ],
+    "slide_scanner": [
+      "ZEN Blue"
+    ],
+    "electron": [
+      "SmartSEM",
+      "ATLAS 5"
+    ],
+    "notes": "ZEN Blue = widefield/light sheet. ZEN Black = confocal/super-res (legacy). Merging toward unified ZEN."
+  },
+  "Leica": {
+    "acquisition": [
+      "LAS X"
+    ],
+    "analysis": [
+      "LAS X",
+      "Aivia"
+    ],
+    "legacy": [
+      "LAS AF",
+      "Leica Confocal Software",
+      "Leica Application Suite"
+    ],
+    "slide_scanner": [
+      "Aperio ImageScope",
+      "Aperio eSlide Manager"
+    ],
+    "modules": [
+      "LIGHTNING",
+      "FALCON",
+      "TauSense",
+      "ImageCompass",
+      "Navigator",
+      "Dye Finder",
+      "MicroLab"
+    ],
+    "notes": "LAS X is universal acquisition/analysis. Modules add functionality."
+  },
+  "Nikon": {
+    "acquisition": [
+      "NIS-Elements",
+      "NIS-Elements AR",
+      "NIS-Elements C"
+    ],
+    "analysis": [
+      "NIS-Elements"
+    ],
+    "legacy": [
+      "NIS-Elements BR",
+      "NIS-Elements D"
+    ],
+    "notes": "AR = Advanced Research. C = Confocal. BR = Basic Research. D = Documentation."
+  },
+  "Olympus": {
+    "acquisition": [
+      "cellSens",
+      "FluoView"
+    ],
+    "analysis": [
+      "cellSens",
+      "OlyVIA"
+    ],
+    "legacy": [
+      "FluoView (FV10-ASW)",
+      "MetaMorph (third-party)"
+    ],
+    "notes": "cellSens for widefield/spinning disk. FluoView for confocal. Now Evident."
+  },
+  "Evident": {
+    "acquisition": [
+      "cellSens",
+      "FluoView (FV40)"
+    ],
+    "analysis": [
+      "cellSens",
+      "OlyVIA"
+    ],
+    "notes": "Continuation of Olympus software. FV40 for FV4000."
+  },
+  "Andor": {
+    "acquisition": [
+      "Fusion"
+    ],
+    "analysis": [
+      "Fusion",
+      "Imaris"
+    ],
+    "legacy": [
+      "iQ",
+      "iQ3"
+    ],
+    "notes": "Fusion for Dragonfly and BC43. Imaris integration."
+  },
+  "3i": {
+    "acquisition": [
+      "SlideBook"
+    ],
+    "analysis": [
+      "SlideBook"
+    ],
+    "notes": "SlideBook for ALL 3i systems."
+  },
+  "Bruker": {
+    "acquisition": [
+      "Prairie View"
+    ],
+    "analysis": [
+      "Prairie View"
+    ],
+    "notes": "For multiphoton systems (formerly Prairie Technologies)."
+  },
+  "Thorlabs": {
+    "acquisition": [
+      "ThorImageLS"
+    ],
+    "analysis": [
+      "ThorImageLS"
+    ],
+    "notes": "For Bergamo and custom multiphoton."
+  },
+  "Scientifica": {
+    "acquisition": [
+      "SciScan"
+    ],
+    "analysis": [
+      "SciScan"
+    ],
+    "notes": "For HyperScope/VivoScope."
+  },
+  "Abberior": {
+    "acquisition": [
+      "Imspector"
+    ],
+    "analysis": [
+      "Imspector"
+    ],
+    "notes": "For all Abberior STED systems."
+  },
+  "LaVision BioTec": {
+    "acquisition": [
+      "ImspectorPro"
+    ],
+    "analysis": [
+      "ImspectorPro"
+    ],
+    "notes": "For UltraMicroscope and TriM Scope. Now Miltenyi."
+  },
+  "Revvity": {
+    "acquisition": [
+      "Harmony"
+    ],
+    "analysis": [
+      "Harmony",
+      "Columbus"
+    ],
+    "legacy": [
+      "Harmony (PerkinElmer)"
+    ],
+    "notes": "For Opera Phenix and Operetta. Formerly PerkinElmer."
+  },
+  "Molecular Devices": {
+    "acquisition": [
+      "MetaXpress"
+    ],
+    "analysis": [
+      "MetaXpress"
+    ],
+    "notes": "For ImageXpress systems."
+  },
+  "Keyence": {
+    "acquisition": [
+      "BZ-X Viewer",
+      "BZ-X Analyzer"
+    ],
+    "analysis": [
+      "BZ-X Analyzer"
+    ],
+    "notes": "For BZ-X series."
+  },
+  "Hamamatsu": {
+    "acquisition": [
+      "NDP.scan"
+    ],
+    "analysis": [
+      "NDP.view",
+      "NDP.serve"
+    ],
+    "notes": "For NanoZoomer slide scanners."
+  },
+  "3DHISTECH": {
+    "acquisition": [
+      "Pannoramic Scanner"
+    ],
+    "analysis": [
+      "CaseViewer",
+      "SlideViewer",
+      "QuantCenter"
+    ],
+    "notes": "For Pannoramic slide scanners."
+  },
+  "Yokogawa": {
+    "acquisition": [
+      "CellPathfinder"
+    ],
+    "analysis": [
+      "CellPathfinder"
+    ],
+    "notes": "For CellVoyager (CQ1, CV8000). Spinning disk units use host microscope software."
+  },
+  "Sutter": {
+    "acquisition": [
+      "ScanImage",
+      "\u00b5Manager"
+    ],
+    "analysis": [
+      "ScanImage"
+    ],
+    "notes": "ScanImage (MATLAB-based) common for MOM multiphoton. \u00b5Manager also used."
+  },
+  "Femtonics": {
+    "acquisition": [
+      "MES"
+    ],
+    "analysis": [
+      "MES"
+    ],
+    "notes": "MATLAB Electrophysiology Suite."
+  },
+  "Thermo Fisher": {
+    "acquisition": [
+      "EPU",
+      "SerialEM",
+      "Leginon",
+      "TIA",
+      "xT",
+      "MAPS",
+      "Auto Slice and View"
+    ],
+    "analysis": [
+      "cryoSPARC",
+      "RELION",
+      "Avizo",
+      "Amira",
+      "MAPS"
+    ],
+    "notes": "EPU for cryo-EM automated collection. SerialEM/Leginon third-party alternatives."
+  },
+  "JEOL": {
+    "acquisition": [
+      "JEOL JADAS",
+      "JEOL TEM Center",
+      "SerialEM"
+    ],
+    "analysis": [
+      "cryoSPARC",
+      "RELION"
+    ],
+    "notes": "JADAS for cryo-EM. TEM Center for routine TEM."
+  },
+  "Gatan": {
+    "acquisition": [
+      "DigitalMicrograph"
+    ],
+    "analysis": [
+      "DigitalMicrograph"
+    ],
+    "notes": "For all Gatan cameras. Also known as GMS."
+  },
+  "Community/Open-Source": {
+    "acquisition": [
+      "\u00b5Manager",
+      "Micro-Manager",
+      "napari",
+      "ScanImage"
+    ],
+    "analysis": [
+      "FIJI",
+      "ImageJ",
+      "napari",
+      "CellProfiler",
+      "QuPath",
+      "Icy",
+      "Ilastik",
+      "BigStitcher"
+    ],
+    "notes": "Open-source tools used across all brands."
+  }
+}

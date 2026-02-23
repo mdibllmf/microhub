@@ -11,6 +11,7 @@ WordPress JSON export format to prevent upload issues.
 import logging
 import os
 import re
+import json
 from typing import Any, Dict, List, Optional, Set
 
 from .agents.base_agent import Extraction
@@ -27,6 +28,7 @@ from .agents.pubtator_agent import PubTatorAgent
 from .agents.ollama_agent import OllamaVerificationAgent
 from .agents.openalex_agent import OpenAlexAgent
 from .agents.datacite_linker_agent import DataCiteLinkerAgent
+from .agents.rrid_validation_agent import RRIDValidationAgent
 from .parsing.section_extractor import PaperSections, from_pubmed_dict, three_tier_waterfall
 from .validation.tag_validator import TagValidator
 from .validation.api_validator import ApiValidator
@@ -125,6 +127,10 @@ class PipelineOrchestrator:
         # FBbi ontology normalization (with local lookup)
         self.ontology_normalizer = OntologyNormalizer(local_path=fbbi_path)
 
+        # RRID validation agent (validates RRIDs against SciCrunch,
+        # cross-references against paper's software/cell line tags)
+        self.rrid_validator = RRIDValidationAgent()
+
     # ------------------------------------------------------------------
     def process_paper(self, paper: Dict[str, Any]) -> Dict[str, Any]:
         """Process a single paper dict and return agent-enriched results.
@@ -215,6 +221,11 @@ class PipelineOrchestrator:
         if self.api_validator:
             self.api_validator.validate_paper(results)
 
+        # Post-extraction: validate RRIDs against SciCrunch and
+        # cross-reference with extracted software/cell line tags
+        if self.rrid_validator and results.get("rrids"):
+            self.rrid_validator.validate(results)
+
         # Post-extraction: Ollama LLM verification of Methods section
         if self.ollama_agent and self.ollama_agent.is_available():
             llm_results = self.ollama_agent.verify_and_extract(paper, results)
@@ -241,11 +252,158 @@ class PipelineOrchestrator:
         # Post-extraction: normalize all identifiers
         self.id_normalizer.normalize_paper(results)
 
+        # Post-extraction: mine data availability from full text
+        # (catches "deposited in Zenodo" prose when no URL was found)
+        if not results.get("repositories"):
+            self._mine_data_availability(results, paper)
+
+        # Post-extraction: rescan full text for repos/RRIDs the section-
+        # aware pass may have missed (e.g., repos in Introduction or
+        # data availability statements outside segmented sections)
+        self._rescan_full_text(results, paper)
+
         return results
 
     def process_sections(self, sections: PaperSections) -> Dict[str, Any]:
         """Process pre-parsed PaperSections."""
         return self._run_agents(sections, sections.metadata)
+
+    # ------------------------------------------------------------------
+    # Data availability mining and full-text rescan
+    # ------------------------------------------------------------------
+
+    _DEPOSITION_VERBS = (
+        r"(?:deposited|available|stored|hosted|uploaded|shared|accessible)"
+    )
+    _PREPOSITIONS = r"(?:in|on|at|to|via|through|from)"
+
+    _DATA_AVAIL_REPOS = {
+        "Zenodo": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?Zenodo\b", re.I),
+        "Dryad": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?Dryad\b", re.I),
+        "Figshare": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?[Ff]ig[Ss]hare\b", re.I),
+        "GEO": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:GEO|Gene Expression Omnibus)\b", re.I),
+        "SRA": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:SRA|Sequence Read Archive)\b", re.I),
+        "EMPIAR": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?EMPIAR\b", re.I),
+        "BioImage Archive": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?BioImage Archive\b", re.I),
+        "IDR": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:Image Data Resource|IDR)\b", re.I),
+        "OMERO": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:an?\s+|and\s+)?OMERO\b", re.I),
+        "SSBD": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?SSBD\b", re.I),
+        "OSF": re.compile(
+            _DEPOSITION_VERBS + r"\s+" + _PREPOSITIONS + r"\s+(?:the\s+)?(?:OSF|Open Science Framework)\b", re.I),
+    }
+
+    def _mine_data_availability(self, results: Dict, paper: Dict) -> None:
+        """Scan text fields for natural-language repository references.
+
+        Fallback for papers where URL-based extraction found nothing.
+        """
+        text = paper.get("full_text") or paper.get("abstract") or ""
+        methods = paper.get("methods") or ""
+        if methods:
+            text = text + "\n" + methods
+        data_avail = paper.get("data_availability") or ""
+        if data_avail:
+            text = text + "\n" + data_avail
+        if not text:
+            return
+
+        repos = []
+        seen = set()
+        for repo_name, pattern in self._DATA_AVAIL_REPOS.items():
+            if pattern.search(text) and repo_name not in seen:
+                seen.add(repo_name)
+                repos.append({
+                    "name": repo_name,
+                    "source": "data_availability_mining",
+                })
+
+        if repos:
+            results["repositories"] = repos
+
+    def _rescan_full_text(self, results: Dict, paper: Dict) -> None:
+        """Rescan all text fields for repos/RRIDs missed by section-aware pass.
+
+        The section-aware extraction runs agents on segmented sections.
+        This rescan catches things in unsegmented text (e.g., Introduction,
+        Supplementary, or data availability statements that weren't part
+        of the segmented output).
+        """
+        texts_to_scan = []
+        for field in ("title", "abstract", "methods", "data_availability", "full_text"):
+            val = paper.get(field) or ""
+            if val and isinstance(val, str) and len(val) > 10:
+                texts_to_scan.append((val, field))
+
+        if not texts_to_scan:
+            return
+
+        all_exts = []
+        for text, section in texts_to_scan:
+            all_exts.extend(self.protocol_agent.analyze(text, section))
+
+        if not all_exts:
+            return
+
+        # Merge new repositories
+        existing_repos = results.get("repositories") or []
+        existing_urls = {
+            (r.get("url") or "").lower().rstrip("/")
+            for r in existing_repos if isinstance(r, dict) and r.get("url")
+        }
+
+        for ext in all_exts:
+            if ext.label == "REPOSITORY":
+                url = ext.metadata.get("url", "")
+                url_lower = url.lower().rstrip("/") if url else ""
+                if url_lower and url_lower not in existing_urls:
+                    entry = {"name": ext.canonical(), "source": "rescan"}
+                    if url:
+                        entry["url"] = url
+                    accession = ext.metadata.get("accession_id", "")
+                    if accession:
+                        entry["accession"] = accession
+                    existing_repos.append(entry)
+                    existing_urls.add(url_lower)
+
+        results["repositories"] = existing_repos
+
+        # Merge new RRIDs
+        existing_rrids = results.get("rrids") or []
+        existing_rrid_ids = {
+            (r.get("id") or "").lower()
+            for r in existing_rrids if isinstance(r, dict)
+        }
+
+        for ext in all_exts:
+            if ext.label == "RRID":
+                rrid_id = ext.metadata.get("rrid_id", "")
+                full_id = f"RRID:{rrid_id}"
+                if full_id.lower() not in existing_rrid_ids:
+                    existing_rrids.append({
+                        "id": full_id,
+                        "type": ext.metadata.get("rrid_type", ""),
+                        "url": ext.metadata.get("url", ""),
+                    })
+                    existing_rrid_ids.add(full_id.lower())
+
+        results["rrids"] = existing_rrids
+
+        # Merge GitHub URL
+        if not results.get("github_url"):
+            for ext in all_exts:
+                if ext.label == "GITHUB_URL":
+                    results["github_url"] = ext.metadata.get("url")
+                    break
 
     # ------------------------------------------------------------------
     def _run_agents(self, sections: PaperSections,

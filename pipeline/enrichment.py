@@ -152,6 +152,30 @@ class Enricher:
                     )
         return self._ror_client
 
+    @property
+    def crossref_agent(self):
+        """Lazy-initialize CrossRef validation agent (thread-safe)."""
+        if not hasattr(self, "_crossref_agent") or self._crossref_agent is None:
+            with self._init_lock:
+                if not hasattr(self, "_crossref_agent") or self._crossref_agent is None:
+                    from .agents.crossref_agent import CrossRefValidationAgent
+                    self._crossref_agent = CrossRefValidationAgent(
+                        s2_api_key=self.s2_api_key
+                    )
+        return self._crossref_agent
+
+    @property
+    def doi_linker_agent(self):
+        """Lazy-initialize DOI-Repository linker agent (thread-safe)."""
+        if not hasattr(self, "_doi_linker_agent") or self._doi_linker_agent is None:
+            with self._init_lock:
+                if not hasattr(self, "_doi_linker_agent") or self._doi_linker_agent is None:
+                    from .agents.doi_linker_agent import DOILinkerAgent
+                    self._doi_linker_agent = DOILinkerAgent(
+                        github_token=self.github_token
+                    )
+        return self._doi_linker_agent
+
     # ------------------------------------------------------------------
     # Public: batch enrichment (called from 3_clean.py)
     # ------------------------------------------------------------------
@@ -162,7 +186,9 @@ class Enricher:
                      fetch_citations: bool = True,
                      fetch_crossref_repos: bool = True,
                      fetch_datacite: bool = True,
-                     fetch_ror: bool = True) -> None:
+                     fetch_ror: bool = True,
+                     fetch_crossref_metadata: bool = True,
+                     validate_repo_dois: bool = True) -> None:
         """Enrich a list of papers.  Mutates each paper in-place.
 
         Pipeline order follows the recommended architecture:
@@ -186,6 +212,7 @@ class Enricher:
         any_per_paper = (
             (fetch_github and not self._gh_exhausted)
             or fetch_crossref_repos or fetch_datacite or fetch_ror
+            or fetch_crossref_metadata or validate_repo_dois
         )
         if any_per_paper and papers:
             def _enrich_one(paper):
@@ -193,10 +220,14 @@ class Enricher:
                     self._enrich_github_tools(paper)
                 if fetch_crossref_repos:
                     self._enrich_crossref_repos(paper)
+                if fetch_crossref_metadata:
+                    self._enrich_crossref_metadata(paper)
                 if fetch_datacite:
                     self._enrich_datacite(paper)
                 if fetch_ror:
                     self._enrich_ror_affiliations(paper)
+                if validate_repo_dois:
+                    self._validate_repo_dois(paper)
 
             if self._max_workers <= 1:
                 for paper in papers:
@@ -401,6 +432,16 @@ class Enricher:
             updated.append(tool)
 
         paper["github_tools"] = updated
+
+        # Set validation_status on each tool (from GitHubHealthAgent logic)
+        for tool in updated:
+            if isinstance(tool, dict):
+                if tool.get("exists") is False:
+                    tool["validation_status"] = "dead"
+                elif tool.get("is_archived"):
+                    tool["validation_status"] = "archived"
+                elif tool.get("health_score", 0) > 0:
+                    tool["validation_status"] = "active"
 
         # Ensure github_url is set (prefer 'introduces' relationship)
         if not paper.get("github_url") and updated:
@@ -739,6 +780,45 @@ class Enricher:
 
         if existing_rors:
             paper["rors"] = existing_rors
+
+    # ------------------------------------------------------------------
+    # CrossRef metadata gap-filling (via CrossRefValidationAgent)
+    # ------------------------------------------------------------------
+
+    def _enrich_crossref_metadata(self, paper: Dict) -> None:
+        """Fill metadata gaps (journal, year, license, funders) via CrossRef.
+
+        Delegates to CrossRefValidationAgent which also queries S2 for
+        citation counts and fields of study.
+        """
+        doi = paper.get("doi")
+        if not doi:
+            return
+        try:
+            self.crossref_agent.validate(paper)
+        except Exception as exc:
+            logger.debug("CrossRef metadata error for %s: %s", doi, exc)
+
+    # ------------------------------------------------------------------
+    # DOI-Repository link validation (via DOILinkerAgent)
+    # ------------------------------------------------------------------
+
+    def _validate_repo_dois(self, paper: Dict) -> None:
+        """Validate repository URLs against paper DOIs.
+
+        Delegates to DOILinkerAgent which checks Zenodo, Figshare, GitHub,
+        Dryad for DOI cross-references and URL liveness.
+        """
+        repos = paper.get("repositories")
+        if not repos or not isinstance(repos, list):
+            return
+        doi = paper.get("doi")
+        if not doi:
+            return
+        try:
+            self.doi_linker_agent.validate(paper)
+        except Exception as exc:
+            logger.debug("DOI linker error for %s: %s", doi, exc)
 
     # ------------------------------------------------------------------
     # Helpers

@@ -1,0 +1,275 @@
+{
+  "metadata": {
+    "total_lasers": 13,
+    "build_date": "2026-02-22"
+  },
+  "lasers": [
+    {
+      "brand": "Coherent",
+      "model": "Chameleon Discovery",
+      "aliases": [
+        "Chameleon Discovery",
+        "Discovery NX"
+      ],
+      "type": "Tunable Ti:Sapphire + OPO",
+      "wavelength_range": "680-1320 nm (signal) + 1000-1600 nm (OPO)",
+      "pulse_width": "~100 fs",
+      "rep_rate": "80 MHz",
+      "power": ">1.4W at 800nm",
+      "techniques": [
+        "Two-Photon",
+        "Three-Photon",
+        "Multiphoton",
+        "SHG",
+        "THG"
+      ]
+    },
+    {
+      "brand": "Coherent",
+      "model": "Chameleon Ultra/Vision",
+      "aliases": [
+        "Chameleon Ultra",
+        "Chameleon Vision",
+        "Chameleon Ultra II",
+        "Chameleon Vision II",
+        "Chameleon Vision-S"
+      ],
+      "type": "Tunable Ti:Sapphire",
+      "wavelength_range": "680-1080 nm",
+      "pulse_width": "~140 fs",
+      "rep_rate": "80 MHz",
+      "power": ">3.5W at 800nm",
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "SHG"
+      ]
+    },
+    {
+      "brand": "Spectra-Physics",
+      "model": "InSight X3+",
+      "aliases": [
+        "InSight X3+",
+        "InSight X3",
+        "InSight DeepSee",
+        "InSight DS+"
+      ],
+      "type": "Tunable Ti:Sapphire + OPO",
+      "wavelength_range": "680-1300 nm + 1000-1600nm (OPO)",
+      "pulse_width": "~120 fs",
+      "rep_rate": "80 MHz",
+      "power": ">2.5W",
+      "techniques": [
+        "Two-Photon",
+        "Three-Photon",
+        "Multiphoton",
+        "SHG",
+        "THG"
+      ]
+    },
+    {
+      "brand": "Spectra-Physics",
+      "model": "MaiTai",
+      "aliases": [
+        "MaiTai",
+        "Mai Tai",
+        "MaiTai HP",
+        "MaiTai DeepSee",
+        "Mai Tai HP DeepSee"
+      ],
+      "type": "Tunable Ti:Sapphire",
+      "wavelength_range": "690-1040 nm",
+      "pulse_width": "~100 fs",
+      "rep_rate": "80 MHz",
+      "power": ">2.5W at 800nm",
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton",
+        "SHG"
+      ]
+    },
+    {
+      "brand": "Spectra-Physics",
+      "model": "Tsunami",
+      "aliases": [
+        "Tsunami"
+      ],
+      "type": "Tunable Ti:Sapphire",
+      "wavelength_range": "700-1000 nm",
+      "techniques": [
+        "Two-Photon",
+        "Multiphoton"
+      ],
+      "notes": "Legacy. Pump-laser required (Millennia)."
+    },
+    {
+      "brand": "NKT Photonics",
+      "model": "SuperK",
+      "aliases": [
+        "SuperK",
+        "SuperK EXTREME",
+        "SuperK FIANIUM",
+        "NKT SuperK",
+        "White Light Laser"
+      ],
+      "type": "Supercontinuum (white light laser)",
+      "wavelength_range": "400-2400 nm",
+      "pulse_width": "~ps",
+      "rep_rate": "78 MHz",
+      "techniques": [
+        "Confocal (WLL)",
+        "STED excitation",
+        "Spectral Imaging"
+      ],
+      "notes": "Used as WLL in some custom systems. Leica's WLL is proprietary but similar principle."
+    },
+    {
+      "brand": "Cobolt/H\u00dcBNER",
+      "model": "Skyra",
+      "aliases": [
+        "Cobolt Skyra",
+        "Skyra",
+        "H\u00dcBNER Skyra"
+      ],
+      "type": "Multi-line combiner",
+      "wavelength_range": "Up to 4 lines: 405/488/561/640 nm",
+      "techniques": [
+        "Confocal",
+        "Widefield",
+        "TIRF",
+        "STORM"
+      ]
+    },
+    {
+      "brand": "Coherent",
+      "model": "OBIS",
+      "aliases": [
+        "OBIS",
+        "Coherent OBIS",
+        "OBIS Galaxy"
+      ],
+      "type": "Diode laser family",
+      "wavelength_range": "375-785 nm (individual modules)",
+      "available_lines": [
+        375,
+        405,
+        420,
+        445,
+        458,
+        473,
+        488,
+        514,
+        532,
+        552,
+        561,
+        594,
+        637,
+        640,
+        647,
+        660,
+        685,
+        730,
+        785
+      ],
+      "notes": "Modular laser family. OBIS Galaxy is a smart combiner for up to 8 lines."
+    },
+    {
+      "brand": "Oxxius",
+      "model": "LaserBoxx",
+      "aliases": [
+        "LaserBoxx",
+        "Oxxius LaserBoxx",
+        "LBX"
+      ],
+      "type": "Diode/DPSS modules",
+      "available_lines": [
+        375,
+        405,
+        445,
+        457,
+        473,
+        488,
+        505,
+        515,
+        520,
+        532,
+        553,
+        561,
+        594,
+        633,
+        638,
+        642,
+        660,
+        730,
+        785
+      ],
+      "notes": "Compact laser modules. Popular for custom systems and spinning disk integrations."
+    },
+    {
+      "brand": "Toptica",
+      "model": "iChrome CLE",
+      "aliases": [
+        "iChrome",
+        "Toptica iChrome",
+        "iChrome CLE"
+      ],
+      "type": "Multi-line combiner",
+      "wavelength_range": "Up to 6 lines",
+      "notes": "Compact laser engine for microscopy."
+    },
+    {
+      "brand": "Toptica",
+      "model": "iBeam Smart",
+      "aliases": [
+        "iBeam",
+        "Toptica iBeam"
+      ],
+      "type": "Single-line diode",
+      "available_lines": [
+        375,
+        405,
+        445,
+        488,
+        515,
+        640
+      ],
+      "notes": "Individual diode lasers."
+    },
+    {
+      "brand": "Omicron",
+      "model": "LuxX+",
+      "aliases": [
+        "LuxX",
+        "Omicron LuxX",
+        "LuxX+"
+      ],
+      "type": "Diode laser family",
+      "available_lines": [
+        375,
+        405,
+        445,
+        488,
+        520,
+        638
+      ],
+      "notes": "Diode lasers for microscopy."
+    },
+    {
+      "brand": "MPB Communications",
+      "model": "VFL fiber lasers",
+      "aliases": [
+        "MPB VFL",
+        "MPB fiber laser"
+      ],
+      "type": "Fiber laser",
+      "available_lines": [
+        488,
+        552,
+        560,
+        592,
+        635
+      ],
+      "notes": "Fiber-coupled lasers for microscopy."
+    }
+  ]
+}
