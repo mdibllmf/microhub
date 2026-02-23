@@ -22,6 +22,7 @@ from ..confidence import get_confidence
 from ..kb_loader import (
     load_kb, resolve_alias, infer_brand_from_model,
     get_all_aliases, is_ambiguous, has_microscopy_context,
+    get_system_category,
 )
 
 # ======================================================================
@@ -720,9 +721,14 @@ class EquipmentAgent(BaseAgent):
             if canonical.lower() in seen_canonicals:
                 continue
 
-            # Look up the system in KB for brand info
+            # Look up the system in KB for brand info and full display name
             system = resolve_alias(matched_lower)
-            brand = system.get("brand") if system else None
+            if not system:
+                # Cannot resolve to a full KB system — skip
+                continue
+            brand = system.get("brand")
+            # Override canonical with full display name (brand + model + category)
+            canonical = self._build_full_name(system)
 
             conf = get_confidence("MICROSCOPE_MODEL", section)
             # Slightly lower confidence for KB alias matches vs direct regex
@@ -888,12 +894,60 @@ class EquipmentAgent(BaseAgent):
         return extractions
 
     # ------------------------------------------------------------------
+    # Category → human-readable suffix for full microscope display names
+    _CATEGORY_DISPLAY: Dict[str, str] = {
+        "confocal": "Confocal",
+        "super_resolution": "Super-Resolution",
+        "light_sheet": "Light Sheet",
+        "spinning_disk": "Spinning Disk",
+        "multiphoton": "Multiphoton",
+        "electron": "Electron Microscope",
+        "slide_scanner": "Slide Scanner",
+        "high_content_screening": "High-Content Screening",
+        # "widefield" and "other" are omitted — widefield bodies (Ti, IX83)
+        # are used with various accessories so the category is not helpful.
+    }
+
+    def _build_full_name(self, system: Dict) -> str:
+        """Build a full descriptive name from a KB system dict.
+
+        Example: {"brand": "Leica", "model": "SP8", "category": "confocal"}
+        → "Leica SP8 Confocal"
+        """
+        base = f"{system['brand']} {system['model']}"
+        cat = system.get("category", "")
+        suffix = self._CATEGORY_DISPLAY.get(cat, "")
+        if suffix and suffix.lower() not in base.lower():
+            return f"{base} {suffix}"
+        return base
+
     def _match_models(self, text: str, section: str = None) -> List[Extraction]:
         extractions: List[Extraction] = []
         for pattern, name_fn, brand in MODEL_PATTERNS:
             for m in pattern.finditer(text):
-                canonical = name_fn(m)
+                short_name = name_fn(m)
                 conf = get_confidence("MICROSCOPE_MODEL", section)
+
+                # Resolve short name → full canonical via KB system lookup.
+                # Try multiple forms: bare short name, "Brand ShortName"
+                system = resolve_alias(short_name)
+                if not system and brand:
+                    system = resolve_alias(f"{brand} {short_name}")
+
+                if system:
+                    # Build full display name: "Brand Model Category"
+                    canonical = self._build_full_name(system)
+                    brand = brand or system.get("brand")
+                elif brand:
+                    # Not in KB but brand is known — use "Brand Model"
+                    if not short_name.lower().startswith(brand.lower()):
+                        canonical = f"{brand} {short_name}"
+                    else:
+                        canonical = short_name
+                else:
+                    # No KB entry AND no brand — skip bare short names
+                    continue
+
                 meta: Dict = {"canonical": canonical}
                 if brand:
                     meta["brand"] = brand
