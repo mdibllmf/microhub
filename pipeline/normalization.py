@@ -141,6 +141,139 @@ BRAND_RENAMES: Dict[str, str] = {
     "Prior": "Prior Scientific",
 }
 
+# Legacy short model names → full "Brand Model [Category]" canonical names.
+# Handles data produced before the equipment agent started emitting full names.
+MODEL_RENAMES: Dict[str, str] = {
+    # Zeiss confocals
+    "LSM 510": "Zeiss LSM 510 Confocal",
+    "LSM 700": "Zeiss LSM 700 Confocal",
+    "LSM 710": "Zeiss LSM 710 Confocal",
+    "LSM 780": "Zeiss LSM 780 Confocal",
+    "LSM 800": "Zeiss LSM 800 Confocal",
+    "LSM 880": "Zeiss LSM 880 Confocal",
+    "LSM 900": "Zeiss LSM 900 Confocal",
+    "LSM 980": "Zeiss LSM 980 Confocal",
+    # Zeiss super-resolution / light sheet / widefield
+    "Elyra": "Zeiss Elyra 7 Super-Resolution",
+    "Elyra 7": "Zeiss Elyra 7 Super-Resolution",
+    "Lightsheet Z.1": "Zeiss Lightsheet Z.1 Light Sheet",
+    "Lightsheet 7": "Zeiss Lightsheet 7 Light Sheet",
+    "Celldiscoverer 7": "Zeiss Celldiscoverer 7",
+    "Axio Observer": "Zeiss Axio Observer 7",
+    "Axio Imager": "Zeiss Axio Imager 2",
+    "Axiovert": "Zeiss Axiovert 200M",
+    "Axioskop": "Zeiss Axioskop",
+    "Observer 7": "Zeiss Axio Observer 7",
+    # Zeiss slide scanners / EM
+    "Axioscan 7": "Zeiss Axioscan 7 Slide Scanner",
+    "Crossbeam": "Zeiss Crossbeam 550 Electron Microscope",
+    "GeminiSEM": "Zeiss GeminiSEM Electron Microscope",
+    "Xradia Versa": "Zeiss Xradia Versa",
+    "Xradia Ultra": "Zeiss Xradia Ultra",
+    # Leica confocals
+    "SP5": "Leica SP5 Confocal",
+    "SP8": "Leica SP8 Confocal",
+    "Stellaris": "Leica STELLARIS 8 Confocal",
+    "STELLARIS 5": "Leica STELLARIS 5 Confocal",
+    "STELLARIS 8": "Leica STELLARIS 8 Confocal",
+    "STELLARIS 8 FALCON": "Leica STELLARIS 8 FALCON Confocal",
+    "STELLARIS 8 DIVE": "Leica STELLARIS 8 DIVE Multiphoton",
+    "STELLARIS 8 STED": "Leica STELLARIS 8 STED Super-Resolution",
+    # Leica super-resolution / widefield
+    "STED 3X": "Leica STED 3X Super-Resolution",
+    "THUNDER": "Leica THUNDER",
+    "DMi8": "Leica DMi8",
+    "DM6": "Leica DM6",
+    "DM IL": "Leica DM IL",
+    "FALCON": "Leica STELLARIS 8 FALCON Confocal",
+    "TauSTED": "Leica STELLARIS 8 STED Super-Resolution",
+    "Mica": "Leica Mica",
+    "Aperio": "Leica Aperio Slide Scanner",
+    # Nikon
+    "A1": "Nikon A1 Confocal",
+    "AX": "Nikon AX Confocal",
+    "AX R": "Nikon AX R Confocal",
+    "C2+": "Nikon C2+ Confocal",
+    "Ti": "Nikon ECLIPSE Ti",
+    "Ti2": "Nikon ECLIPSE Ti2",
+    "N-SIM": "Nikon N-SIM S Super-Resolution",
+    "N-STORM": "Nikon N-STORM Super-Resolution",
+    "NSPARC": "Nikon NSPARC",
+    # Yokogawa
+    "CSU-W1": "Yokogawa CSU-W1 Spinning Disk",
+    "CSU-X1": "Yokogawa CSU-X1 Spinning Disk",
+    "CSU-W1 SoRa": "Yokogawa CSU-W1 SoRa Spinning Disk",
+    "SoRa": "Yokogawa CSU-W1 SoRa Spinning Disk",
+    "CV7000": "Yokogawa CV8000 High-Content Screening",
+    "CV8000": "Yokogawa CV8000 High-Content Screening",
+    "CQ1": "Yokogawa CQ1 High-Content Screening",
+    # Olympus / Evident
+    "FV1000": "Olympus FV1000 Confocal",
+    "FV1200": "Olympus FV1200 Confocal",
+    "FV3000": "Evident FV3000 Confocal",
+    "FV4000": "Evident FV4000 Confocal",
+    "FV5000": "Olympus FV5000",
+    "SpinSR": "Evident IXplore IX85 SpinSR Spinning Disk",
+    "SpinXL": "Evident IXplore IX85 SpinXL Spinning Disk",
+    "SilVIR": "Evident SilVIR",
+    "IX73": "Olympus IX73",
+    "IX83": "Olympus IX83",
+    "IX85": "Evident IX85",
+    "BX63": "Olympus BX63",
+    "VS120": "Olympus VS120 Slide Scanner",
+    "VS200": "Evident VS200 Slide Scanner",
+    "APX100": "Evident APX100",
+    # Andor
+    "Dragonfly 200": "Andor Dragonfly 200 Spinning Disk",
+    "Dragonfly 500": "Andor Dragonfly 500",
+    "Dragonfly 600": "Andor Dragonfly 600 Spinning Disk",
+    "BC43": "Andor BC43 Spinning Disk",
+    # HCS
+    "Opera Phenix": "Revvity Opera Phenix Plus High-Content Screening",
+    "Opera Phenix Plus": "Revvity Opera Phenix Plus High-Content Screening",
+    "Operetta CLS": "Revvity Operetta CLS High-Content Screening",
+    "ImageXpress Micro": "Molecular Devices ImageXpress Micro Confocal High-Content Screening",
+    "ImageXpress Confocal": "Molecular Devices ImageXpress Micro Confocal High-Content Screening",
+    "CellInsight CX7": "Thermo Fisher CellInsight CX7 High-Content Screening",
+    # Multiphoton
+    "Ultima Investigator": "Bruker Ultima Investigator Multiphoton",
+    "Ultima 2Pplus": "Bruker Ultima Investigator Multiphoton",
+    "Bergamo": "Thorlabs Bergamo Multiphoton",
+    "HyperScope": "Scientifica HyperScope Multiphoton",
+    "FEMTO3D": "Femtonics FEMTO3D Atlas Multiphoton",
+    "TriM Scope": "LaVision BioTec TriM Scope II Multiphoton",
+    # STED
+    "STEDYCON": "Abberior STEDYCON Super-Resolution",
+    "Facility Line": "Abberior Facility Line Super-Resolution",
+    # Electron microscopes
+    "Titan": "Thermo Fisher Titan Krios Electron Microscope",
+    "Titan Krios": "Thermo Fisher Titan Krios Electron Microscope",
+    "Glacios": "Thermo Fisher Glacios Electron Microscope",
+    "Talos": "Thermo Fisher Talos Arctica Electron Microscope",
+    "Tecnai": "Thermo Fisher Tecnai Electron Microscope",
+    "CM200": "FEI CM200",
+    "Aquilos": "Thermo Fisher Aquilos Electron Microscope",
+    "Scios": "Thermo Fisher Scios Electron Microscope",
+    "Helios": "Thermo Fisher Helios Electron Microscope",
+    "Apreo": "Thermo Fisher Apreo Electron Microscope",
+    "CRYO ARM 300": "JEOL CRYO ARM 300 Electron Microscope",
+    "JEM-1400": "JEOL JEM-1400 Electron Microscope",
+    "JEM-2100": "JEOL JEM-2100 Electron Microscope",
+    "JEM-F200": "JEOL JEM-F200 Electron Microscope",
+    # Slide scanners
+    "NanoZoomer": "Hamamatsu NanoZoomer S360 Slide Scanner",
+    "Pannoramic": "3DHISTECH Pannoramic Slide Scanner",
+    # SPIM / light sheet systems
+    "MesoSPIM": "Community mesoSPIM Light Sheet",
+    "diSPIM": "ASI diSPIM Light Sheet",
+    "iSPIM": "ASI iSPIM Light Sheet",
+    "OpenSPIM": "Community OpenSPIM Light Sheet",
+    "UltraMicroscope": "LaVision BioTec UltraMicroscope Light Sheet",
+    "SmartSPIM": "LifeCanvas SmartSPIM Light Sheet",
+    "Marianas": "3i Marianas",
+    "MuVi SPIM": "Luxendo MuVi SPIM Light Sheet",
+}
+
 SOFTWARE_RENAMES: Dict[str, str] = {
     "segment-anything": "SAM",
     "Chimera": "UCSF Chimera",
@@ -392,6 +525,7 @@ def normalize_tags(paper: Dict) -> Dict:
     _apply(paper, "fluorophores", FLUOROPHORE_RENAMES, _normalize_fluoro)
     _apply(paper, "microscopy_techniques", TECHNIQUE_RENAMES)
     _apply(paper, "microscope_brands", BRAND_RENAMES)
+    _apply(paper, "microscope_models", MODEL_RENAMES)
     _apply(paper, "image_analysis_software", SOFTWARE_RENAMES)
     _apply(paper, "image_acquisition_software", SOFTWARE_RENAMES)
 
