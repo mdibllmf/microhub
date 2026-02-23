@@ -155,16 +155,13 @@ class PipelineOrchestrator:
         else:
             sections = from_pubmed_dict(paper)
 
-        # SciHub DOI fallback — trigger when we lack substantive text for
-        # agents to work on.  The key check is whether methods text exists
-        # (len > 100), because that's what agents primarily extract from.
-        # When a paper was segmented from an abstract-only source, the
-        # segmented fields are empty/tiny so we still need SciHub.
-        needs_text = (
-            not sections.has_methods
-            and not sections.full_text
+        # SciHub DOI fallback — always try if the paper has no full text,
+        # regardless of what segments exist.  Segments derived from an
+        # abstract-only paper are thin; SciHub can provide the real body.
+        paper_has_fulltext = bool(
+            (paper.get("full_text") or "").strip()
         )
-        if self.use_scihub_fallback and needs_text:
+        if self.use_scihub_fallback and not paper_has_fulltext:
             doi = paper.get("doi", "") or ""
             if doi:
                 self.scihub_attempted += 1
