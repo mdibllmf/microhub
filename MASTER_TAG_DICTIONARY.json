@@ -65,9 +65,9 @@
     "cleanup_key": "MICROSCOPE_BRAND_CANONICAL",
     "cleanup_extraction_dict": "MICROSCOPE_BRANDS",
     "export_field": "microscope_brands",
-    "wp_taxonomy": "mh_microscope",
+    "wp_taxonomy": null,
     "wp_meta_key": "_mh_microscope_brands",
-    "import_call": "wp_set_object_terms($post_id, $data['microscope_brands'], 'mh_microscope', true)",
+    "import_call": "update_post_meta($post_id, '_mh_microscope_brands', wp_json_encode($data['microscope_brands']))",
     "all_valid_values": [
       "3i (Intelligent Imaging)", "3DHISTECH", "ASI", "Abberior", "Andor",
       "Becker & Hickl", "Bruker",
@@ -93,9 +93,9 @@
     "cleanup_key": null,
     "cleanup_extraction_dict": null,
     "export_field": "microscope_models",
-    "wp_taxonomy": "mh_microscope_model",
+    "wp_taxonomy": "mh_microscope",
     "wp_meta_key": "_mh_microscope_models",
-    "import_call": "wp_set_object_terms($post_id, $data['microscope_models'], 'mh_microscope_model')",
+    "import_call": "wp_set_object_terms($post_id, $data['microscope_models'], 'mh_microscope', true); wp_set_object_terms($post_id, $data['microscope_models'], 'mh_microscope_model')",
     "all_valid_values": [
       "LSM 510", "LSM 700", "LSM 710", "LSM 780", "LSM 800", "LSM 880", "LSM 900", "LSM 980",
       "Elyra", "Elyra 7", "Lightsheet Z.1", "Lightsheet 7", "Celldiscoverer 7",
