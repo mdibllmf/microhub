@@ -703,7 +703,23 @@ def main():
 
             # Sync aliases
             paper["techniques"] = paper.get("microscopy_techniques", [])
-            paper["tags"] = paper.get("microscopy_techniques", [])
+            # Build comprehensive tags from all extracted categories
+            all_tags = []
+            for _tag_field in [
+                "microscopy_techniques",
+                "sample_preparation",
+                "fluorophores",
+                "image_analysis_software",
+                "image_acquisition_software",
+                "general_software",
+                "cell_lines",
+                "organisms",
+                "microscope_brands",
+                "microscope_models",
+            ]:
+                all_tags.extend(paper.get(_tag_field) or [])
+            # Deduplicate while preserving order
+            paper["tags"] = list(dict.fromkeys(all_tags))
             # software = acquisition software only (microscope control: ZEN, Leica Application Suite X, etc.)
             # Analysis and general software have their own dedicated fields
             paper["software"] = paper.get("image_acquisition_software") or []
