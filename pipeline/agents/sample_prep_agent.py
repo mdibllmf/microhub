@@ -63,7 +63,7 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
     "Terminal Deoxynucleotidyl Transferase dUTP Nick End Labeling": (re.compile(r"\bTUNEL\b"), 0.9),
 
     # Cell handling — full expanded names
-    "Cell Culture": (re.compile(r"\bcell\s+cultur\w*\b", re.I), 0.8),
+    "Cell Culture": (re.compile(r"\b(?:cell\s+cultur\w*|cells?\s+(?:were\s+)?cultur\w+(?:\s+(?:in|at|on))?|cultured?\s+cells?)\b", re.I), 0.8),
     "Primary Culture": (re.compile(r"\bprimary\s+(?:cell\s+)?cultur\w*\b", re.I), 0.85),
     "Transfection": (re.compile(r"\btransfect\w+\b", re.I), 0.85),
     "Transduction": (re.compile(r"\btransduc\w+\b", re.I), 0.8),
@@ -107,6 +107,31 @@ SAMPLE_PREP_PATTERNS: Dict[str, tuple] = {
 
     # Expansion microscopy (both technique and prep)
     "Expansion Microscopy": (re.compile(r"\bexpansion\s+microscop\w*\b", re.I), 0.9),
+
+    # Cryo-EM / structural biology sample preparation
+    "Plunge Freezing": (re.compile(r"\b(?:plunge[- ]?freez\w+|plunge[- ]?frozen|vitrif\w+|vitrobot)\b", re.I), 0.9),
+    "Glow Discharge": (re.compile(r"\bglow[- ]?discharg\w*\b", re.I), 0.9),
+    "Negative Staining": (re.compile(r"\bnegative(?:ly)?[- ]?stain\w*\b", re.I), 0.9),
+    "Grid Preparation": (re.compile(r"\b(?:grid\s+(?:prep\w*|making)|cryo[- ]?grid|carbon[- ]?(?:coat\w*|film)\s+grid)\b", re.I), 0.85),
+
+    # Biochemistry / protein methods
+    "Western Blotting": (re.compile(r"\b(?:western[- ]?blot\w*|immuno[- ]?blot\w*)\b", re.I), 0.9),
+    "SDS-PAGE": (re.compile(r"\b(?:SDS[- ]?PAGE|sodium\s+dodecyl\s+sulfate\s+polyacrylamide|gel\s+electrophoresis)\b", re.I), 0.9),
+    "Affinity Chromatography": (re.compile(r"\b(?:affinity\s+(?:chrom\w+|column|purif\w+)|(?:Ni[- ]?NTA|cobalt|His[- ]?(?:tag|trap)|Protein\s+[AG])\s+(?:column|resin|bead|agarose|purif\w+))\b", re.I), 0.85),
+    "Size Exclusion Chromatography": (re.compile(r"\b(?:size[- ]?exclusion\s+chrom\w+|gel[- ]?filtration(?:\s+chrom\w+)?|(?:Superdex|Superose|Sephacryl|Sephadex)\s*\d*)\b", re.I), 0.85),
+    "Ion Exchange Chromatography": (re.compile(r"\b(?:ion[- ]?exchange\s+chrom\w+|(?:anion|cation)[- ]?exchange)\b", re.I), 0.85),
+    "Protein Purification": (re.compile(r"\bprotein\s+purif\w+\b", re.I), 0.8),
+    "Dialysis": (re.compile(r"\b(?:dialys\w+|dialyz\w+)\b", re.I), 0.75),
+
+    # Flow cytometry / sorting
+    "Flow Cytometry": (re.compile(r"\b(?:flow\s+cytometr\w+|FACS(?:\s+sort\w*)?)\b", re.I), 0.9),
+
+    # Histology / tissue processing
+    "Deparaffinization": (re.compile(r"\b(?:deparaffiniz\w+|de[- ]?paraffiniz\w+)\b", re.I), 0.9),
+    "Decalcification": (re.compile(r"\bdecalcif\w+\b", re.I), 0.9),
+    "Dehydration": (re.compile(r"\b(?:dehydrat\w+\s+(?:in\s+)?(?:ethanol|graded\s+alcohol)|graded\s+(?:ethanol|alcohol)\s+series)\b", re.I), 0.8),
+    "Perfusion Fixation": (re.compile(r"\b(?:perfus\w+[- ]?fix\w*|transcardial(?:ly)?\s+perfus\w+)\b", re.I), 0.9),
+    "Cryopreservation": (re.compile(r"\b(?:cryopreserv\w+|cryo[- ]?preserv\w+)\b", re.I), 0.9),
 }
 
 

@@ -494,6 +494,18 @@ SAMPLE_PREP_RENAMES: Dict[str, str] = {
     # Immunochemistry abbreviations
     "IHC": "Immunohistochemistry",
     "IF": "Immunofluorescence",
+    # Cryo-EM / structural biology
+    "Vitrification": "Plunge Freezing",
+    "Plunge-freezing": "Plunge Freezing",
+    "Plunge frozen": "Plunge Freezing",
+    # Biochemistry
+    "Western blot": "Western Blotting",
+    "Immunoblot": "Western Blotting",
+    "Immunoblotting": "Western Blotting",
+    "Gel filtration": "Size Exclusion Chromatography",
+    "SEC": "Size Exclusion Chromatography",
+    "FACS": "Flow Cytometry",
+    "Perfusion": "Perfusion Fixation",
 }
 
 # Tags that are NOT valid organisms and should be removed entirely

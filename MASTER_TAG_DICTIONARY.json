@@ -465,7 +465,14 @@
       "Immunolabeling-enabled Three-Dimensional Imaging of Solvent-Cleared Organs",
       "Single-Molecule Fluorescence In Situ Hybridization",
       "Ultimate Three-Dimensional Imaging of Solvent-Cleared Organs",
-      "Paraformaldehyde Fixation"
+      "Paraformaldehyde Fixation",
+      "Plunge Freezing", "Glow Discharge", "Negative Staining", "Grid Preparation",
+      "Western Blotting", "SDS-PAGE",
+      "Affinity Chromatography", "Size Exclusion Chromatography",
+      "Ion Exchange Chromatography", "Protein Purification", "Dialysis",
+      "Flow Cytometry",
+      "Deparaffinization", "Decalcification", "Dehydration",
+      "Perfusion Fixation", "Cryopreservation"
     ]
   },
 
